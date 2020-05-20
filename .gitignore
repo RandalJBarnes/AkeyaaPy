@@ -2,6 +2,8 @@
 .pytest_cache/
 AkeyaaGIS/
 references/
+TeXAux/
+*.synctex
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
