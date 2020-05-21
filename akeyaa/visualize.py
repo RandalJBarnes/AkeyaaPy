@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from get_data import get_county_code, get_well_data_by_county, get_county_polygon, get_county_name
+from smith_distribution import smith_pdf
 
 
 # -----------------------------------------------------------------------------
@@ -67,8 +68,11 @@ def visualize_results(results, poly, header):
 
     n = np.empty((len(results), ), dtype='int')
 
+    m = np.empty((len(results), ))
     u = np.empty((len(results), ))
     v = np.empty((len(results), ))
+
+    r = np.empty((len(results), ))
 
     for i, row in enumerate(results):
         x[i] = row[0]
@@ -78,10 +82,18 @@ def visualize_results(results, poly, header):
         evp = row[3]
         Qx = -evp[3]
         Qy = -evp[4]
+
+        m[i] = np.hypot(Qx, Qy)
         u[i] = Qx/np.hypot(Qx, Qy)
         v[i] = Qy/np.hypot(Qx, Qy)
 
-    cty_abbr = header[2]
+        # varp = row[4]
+        # s = 2 * np.sqrt(varp[0,0] + varp[1,1] + 2*varp[0,1])
+        r[i] = -2*(evp[1]+evp[2])
+
+    rlim = np.max(np.abs(r))
+
+    cty_abbr = header[1]
     cty_name = get_county_name(cty_abbr)
 
     #------------------------
@@ -89,23 +101,42 @@ def visualize_results(results, poly, header):
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    plt.scatter(x, y, c=n, zorder=10, cmap='cool')
-    plt.colorbar()
+    plt.scatter(x, y, c=n, zorder=10, cmap='GnBu')
+    cbar = plt.colorbar()
+    cbar.ax.set_title('Count [#]')
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title('{0}: Number of Wells Used'.format(cty_name))
+    plt.title('{0}: Number of Wells Used'.format(cty_name), {'fontsize' : 24})
+    plt.grid(True)
 
     #------------------------
     plt.figure()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    plt.quiver(x, y, u, v, width=0.0018, zorder=10)
+    plt.scatter(x, y, c=r, zorder=10, vmin=-rlim, vmax=rlim, cmap='bwr')
+    cbar = plt.colorbar()
+    cbar.ax.set_title('N/(kH) [1/m]')
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title('{0}: Local Flow Direction'.format(cty_name))
+    plt.title('{0} County: Relative Recharge'.format(cty_name), {'fontsize' : 24})
+    plt.grid(True)
+
+    #------------------------
+    plt.figure()
+    plt.axis('equal')
+
+    plt.fill(xbdry, ybdry, '0.90')
+    plt.quiver(x, y, u, v, m, width=0.0018, zorder=10, cmap='magma')
+    cbar = plt.colorbar()
+    cbar.ax.set_title('Q/(kH) [.]')
+
+    plt.xlabel('Easting [m]')
+    plt.ylabel('Northing [m]')
+    plt.title('{0} County: Local Flow Directions'.format(cty_name), {'fontsize' : 24})
+    plt.grid(True)
 
     #------------------------
     plt.draw_all()
@@ -179,7 +210,7 @@ def aquifer_by_county(cty_abbr, aquifer_list=None):
     cty_name = get_county_name(cty_abbr)
     welldata = get_well_data_by_county(cty_code, aquifer_list)
 
-    poly = get_county_polygon(cty_code)
+    poly = get_county_polygon(cty_abbr)
     xbdry = [pnt.X for pnt in poly.getPart(0)]
     ybdry = [pnt.Y for pnt in poly.getPart(0)]
 
@@ -197,6 +228,20 @@ def aquifer_by_county(cty_abbr, aquifer_list=None):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title('{0}: Well Data Coded By Aquifer'.format(cty_name))
+    plt.title('{0} County: Well Data Coded By Aquifer'.format(cty_name))
 
     return [(uaq[i], naq[i]) for i in range(len(uaq))]
+
+
+# -----------------------------------------------------------------------------
+def pdf_plot(mu, sigma):
+
+    # Create the sweep of angles at which the pdf is evaluated.
+    alpha = np.linspace(0, 2*np.pi, 361)
+
+    # Compute the posterior distribution using all of the data.
+    f = smith_pdf(alpha, mu, sigma)
+
+    plt.figure()
+    plt.polar(alpha, f*np.pi/180.)
+    plt.title("Shith's Distribution PDF")

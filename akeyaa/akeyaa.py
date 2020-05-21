@@ -32,9 +32,10 @@ def by_county(aquifer_list, cty_abbr, radius, reqnum, spacing, stde):
     """
     Compute the full Akeyaa analysis across the specified county.
 
-    Compute the full Akeyaa analysis for a grid of target locations across
-    the specified county. The analysis is carried out using the wells in the
-    specified aquifer(s) only. The analysis may use wells in adjacent counties.
+    Compute the full Akeyaa analysis for a square grid of target locations
+    across the specified county. The grid is defined by <spacing>. The analysis
+    is carried out using the wells in the specified aquifer(s) only. The
+    analysis may use wells in adjacent counties.
 
     Arguments
     ---------

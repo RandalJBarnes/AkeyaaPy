@@ -141,6 +141,14 @@ The resulting flow direction\footnote{In this note we define the ``flow directio
     &= \text{\tt atan2}\left((2By + Cx + E), (2Ax + Cy + D)\right)
 \end{align}
 
+The net recharge, $N~[m/d]$, is given by the divergence of the gradient of the discharge potential.
+%
+\begin{equation}\label{2.12}
+    N = -\nabla^2 \Phi(x,y) = -2(A+B)
+\end{equation}
+%
+Note that $N$ is not a function of location in this model.
+
 
 %==============================================================================
 \section{MEASUREMENTS AND NOISE}
@@ -370,6 +378,22 @@ with
 and $\mathcal{F}$ denotes the standard normal cumulative distribution function.
 
 Smith's distribution model is relatively uncommon in the literature on directional data analysis. The most common model is the von Mises distribution (\citet{Mardia1972} or \citet{Watson1983}). Nonetheless, in our case, Smith's is appropriate because we are not analyzing directional measurements. We are inferring the distribution of the flow directions from a quadratic fit to head measurements.
+
+
+%==============================================================================
+\section{NET RECHARGE}
+%==============================================================================
+Combining \eqref{2.12} and \eqref{4.2} we have
+%
+\begin{equation}\label{101}
+    \frac{N}{kH} = -2(a + b)
+\end{equation}
+%
+The associated variance is
+%
+\begin{equation}\label{102}
+    \var{\frac{N}{kH}} = 4 \big( \var{a} + \var{b} + 2 \cov{a, b} \big)
+\end{equation}
 
 
 %==============================================================================

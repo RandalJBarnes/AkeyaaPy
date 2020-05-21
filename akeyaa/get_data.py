@@ -138,8 +138,8 @@ def get_well_data_by_county(cty_code, aquifer_list=None):
 
     Arguments
     ---------
-    cty_abbr : str
-        The 4-character county abbreviation string.
+    cty_code : str
+        A two digit number written as characters
 
     aquifer_list : list (optional)
         List of 4-character aquifer abbreviation strings. If None, then all
@@ -153,10 +153,7 @@ def get_well_data_by_county(cty_code, aquifer_list=None):
     """
     where = WHERE
 
-    if isinstance(cty_code, int) and (cty_code > 0):
-        where += "AND (allwells.COUNTY_C = '{0:2d}')".format(cty_code)
-    else:
-        raise ArgumentError
+    where += "AND (allwells.COUNTY_C = '{}')".format(cty_code)
 
     if aquifer_list is not None:
         if isinstance(aquifer_list, list):
@@ -248,7 +245,7 @@ def get_county_code(cty_abbr):
         Two-digit county code.
     """
     if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
-        where = "CTY_ABBR = '{}'".format(cty_abbr)
+        where = "CTY_ABBR = '{0}'".format(cty_abbr)
     else:
         raise ArgumentError
 
@@ -274,10 +271,7 @@ def get_county_abbr(cty_code):
     cty_abbr : str
         The 4-character county abbreviation string.
     """
-    if isinstance(cty_code, int) and (cty_code > 0):
-        where = "COUN = {}".format(cty_code)
-    else:
-        raise ArgumentError
+    where = "COUN = {}".format(cty_code)
 
     with arcpy.da.SearchCursor(COUNTIES, ['CTY_ABBR'], where) as cursor:
         try:
@@ -287,28 +281,22 @@ def get_county_abbr(cty_code):
 
 
 # -----------------------------------------------------------------------------
-def get_county_name(cty):
+def get_county_name(cty_abbr):
     """
     Get the county name from the county code or county abbreviation.
 
     Arguments
     ---------
-    cty : either ...
-        cty_code : int
-            Two-digit county code.
-
-        cty_abbr : str
-            The 4-character county abbreviation string.
+    cty_abbr : str
+        The 4-character county abbreviation string.
 
     Returns
     -------
     name : str
         The complete official name of the county.
     """
-    if isinstance(cty, int) and (cty > 0):
-        where = "COUN = {}".format(cty)
-    elif isinstance(cty, str) and len(cty) == 4:
-        where = "CTY_ABBR = '{}'".format(cty)
+    if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
+        where = "CTY_ABBR = '{}'".format(cty_abbr)
     else:
         raise ArgumentError
 
@@ -320,28 +308,22 @@ def get_county_name(cty):
 
 
 # -----------------------------------------------------------------------------
-def get_county_polygon(cty):
+def get_county_polygon(cty_abbr):
     """
     Get the county polygon from the county code or county abbreviation.
 
     Arguments
     ---------
-    cty : either ...
-        cty_code : int
-            Two-digit county code.
-
-        cty_abbr : str
-            The 4-character county abbreviation string.
+    cty_abbr : str
+        The 4-character county abbreviation string.
 
     Returns
     -------
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
     """
-    if isinstance(cty, int) and (cty > 0):
-        where = "COUN = {}".format(cty)
-    elif isinstance(cty, str) and len(cty) == 4:
-        where = "CTY_ABBR = '{}'".format(cty)
+    if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
+        where = "CTY_ABBR = '{}'".format(cty_abbr)
     else:
         raise ArgumentError
 
