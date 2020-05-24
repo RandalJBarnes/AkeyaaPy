@@ -26,8 +26,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import get_data
-from smith_distribution import smith_pdf
+from getdata import get_well_data_by_polygon
+from getdata import get_county_name, get_county_polygon
+from getdata import get_watershed_name, get_watershed_polygon
 
 
 # -----------------------------------------------------------------------------
@@ -54,18 +55,15 @@ def visualize_results(pklzfile):
     ybdry = [pnt.Y for pnt in poly.getPart(0)]
 
     # Extract and collate the run information.
-    x = np.empty((len(results),))
-    y = np.empty(x.shape)
-    n = np.empty(x.shape, dtype='int')
+    x = np.array([row[0] for row in results])
+    y = np.array([row[1] for row in results])
+    n = np.array([row[2] for row in results], dtype=int)
+
     m = np.empty(x.shape)
     u = np.empty(x.shape)
     v = np.empty(x.shape)
 
     for i, row in enumerate(results):
-        x[i] = row[0]
-        y[i] = row[1]
-        n[i] = row[2]
-
         evp = row[3]
         Qx = -evp[3]
         Qy = -evp[4]
@@ -135,10 +133,10 @@ def aquifers_in_county(cty_abbr, aquifer_list=None):
     """
 
     # Get the county polygon.
-    poly = get_data.get_county_polygon(cty_abbr)
+    poly = get_county_polygon(cty_abbr)
 
     # Create the associated tile string.
-    cty_name = get_data.get_county_name(cty_abbr)
+    cty_name = get_county_name(cty_abbr)
     if aquifer_list is not None:
         title_str = '{0} County {1}: '.format(cty_name, aquifer_list)
     else:
@@ -178,10 +176,10 @@ def aquifers_in_watershed(wtrs_code, aquifer_list=None):
     """
 
     # Get the watershed polygon.
-    poly = get_data.get_watershed_polygon(wtrs_code)
+    poly = get_watershed_polygon(wtrs_code)
 
     # Create the associated tile string.
-    wtrs_name = get_data.get_watershed_name(wtrs_code)
+    wtrs_name = get_watershed_name(wtrs_code)
     if aquifer_list is not None:
         title_str = '{0} Watershed {1}: '.format(wtrs_name, aquifer_list)
     else:
@@ -226,7 +224,7 @@ def aquifers_in_polygon(poly, title_str, aquifer_list=None):
     ybdry = [pnt.Y for pnt in poly.getPart(0)]
 
     # Get the data for wells in the polygon.
-    welldata = get_data.get_well_data_by_polygon(poly, aquifer_list)
+    welldata = get_well_data_by_polygon(poly, aquifer_list)
 
     x = [row[0][0] for row in welldata]
     y = [row[0][1] for row in welldata]
@@ -250,20 +248,3 @@ def aquifers_in_polygon(poly, title_str, aquifer_list=None):
     plt.title(title_str + 'Wells Coded By Aquifer', {'fontsize' : 24})
 
     return active_aq
-
-
-# -----------------------------------------------------------------------------
-def pdf_plot(mu, sigma):
-    """
-    Make a polar plot of the specified Smith's distribution.
-    """
-
-    # Create the sweep of angles at which the pdf is evaluated.
-    alpha = np.linspace(0, 2*np.pi, 361)
-
-    # Compute the posterior distribution using all of the data.
-    f = smith_pdf(alpha, mu, sigma)
-
-    plt.figure()
-    plt.polar(alpha, f*np.pi/180.)
-    plt.title("Smith's Distribution PDF")

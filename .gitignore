@@ -6,6 +6,7 @@ TeXAux/
 hold/
 *.synctex
 *.pickle
+*.pklz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -17,7 +17,7 @@ get_well_data_by_county(cty_code, {aquifer_list=None})
     Return a list of well data for selectable wells from the specified
     aquifer(s). Only wells within the specified county are considered.
 
-get_well_data_by_township_and_range(twnshp, rng)
+get_well_data_by_township_and_range(twnshp, rng, aquifer_list=None)
     Return a list of well data for selectable wells from the specified
     aquifer(s). Only wells within the specified township are considered.
 
@@ -549,14 +549,14 @@ def get_watershed_polygon(wtrs_code):
     Notes
     -----
     o   The watershed polygons in WBD_National_GDB.gdb are stored using
-        lat/lon coordinates; more specifically, 'GRS 1980' (EPSG:7019)
+        lat/lon coordinates; more specifically 'GRS 1980' (EPSG:7019),
         which is a precursor of 'WGS 84' (EPSG:4326).
 
     o   All of the Minnesota State agencies use 'NAD 83 UTM 15N'(EPSG:26915).
 
     o   This function gets the polygon from WBD_National_GDB.gdb, then
-        creates new polygon with the original EPSG:7019 coordinates converted
-        to EPSG:26916 coordinates.
+        creates a new polygon with the original EPSG:7019 coordinates
+        converted to EPSG:26916 coordinates.
 
     o   There must be a way to do this conversion within arcpy, but I could
         not figure it out. So this code does the conversion "by hand" using
@@ -587,7 +587,7 @@ def get_watershed_polygon(wtrs_code):
     transformer = Transformer.from_crs(crs_latlon, crs_utm)
     x26915, y26915 = transformer.transform(lat7019, lon7019)
 
-    # Create the new arcpy.Polygon
+    # Create the new arcpy.Polygon.
     xy26915 = list(zip(x26915, y26915))
     array26915 = arcpy.Array([arcpy.Point(pt[0], pt[1]) for pt in xy26915])
     poly = arcpy.Geometry('Polygon', array26915, arcpy.SpatialReference(26915))

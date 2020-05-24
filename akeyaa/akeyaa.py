@@ -12,6 +12,9 @@ by_watershed(aquifer_list, wtrs_code, radius, reqnum, spacing, method, pklzfile)
 by_polygon(aquifer_list, poly, radius, reqnum, spacing, method):
     Compute the full Akeyaa analysis across the specified polygon.
 
+fit_conic(x, y, z, method)
+    Fit the conic potential model using requested method.
+
 Author
 ------
 Dr. Randal J. Barnes
@@ -20,7 +23,7 @@ University of Minnesota
 
 Version
 -------
-23 May 2020
+24 May 2020
 """
 
 import bz2
@@ -29,11 +32,24 @@ import numpy as np
 from scipy import spatial
 import arcpy
 import progressbar
+import statsmodels.api as sm
 
-from conic_potential import fit_conic
-from get_data import get_well_data
-from get_data import get_county_name, get_county_polygon
-from get_data import get_watershed_name, get_watershed_polygon
+from getdata import get_well_data
+from getdata import get_county_name, get_county_polygon
+from getdata import get_watershed_name, get_watershed_polygon
+
+
+# -----------------------------------------------------------------------------
+class Error(Exception):
+    """
+    Local base exception.
+    """
+
+
+class UnknownMethodError(Error):
+    """
+    The requested method is not supported.
+    """
 
 
 # -----------------------------------------------------------------------------
@@ -181,7 +197,7 @@ def by_watershed(wtrs_code, aquifer_list, radius, reqnum, spacing, method, pklzf
 
     Notes
     -----
-    o   Note, data from outside of the wwatershed may also used in the
+    o   Note, data from outside of the watershed may also used in the
         computations. However, only data from the Minnesota CWI are
         considered.
     """
@@ -274,9 +290,12 @@ def by_polygon(aquifer_list, poly, radius, reqnum, spacing, method):
 
     # Get all of the located static water level data from across the state
     # in the selected aquifers and create a KD search tree.
-    well_list = get_well_data(aquifer_list)
-    xyz = np.array([[well[0][0], well[0][1], well[1]] for well in well_list])
-    tree = spatial.cKDTree(xyz[:, 0:2])
+    welldata = get_well_data(aquifer_list)
+    x = np.array([well[0][0] for well in welldata])
+    y = np.array([well[0][1] for well in welldata])
+    z = np.array([well[1] for well in welldata])
+
+    tree = spatial.cKDTree(np.column_stack((x, y)))
 
     # Create the grid of target locations across the specified polygon.
     nx = int(np.ceil((poly.extent.XMax - poly.extent.XMin)/spacing) + 1)
@@ -303,14 +322,92 @@ def by_polygon(aquifer_list, poly, radius, reqnum, spacing, method):
 
                 # Carryout the weighted least squares regression.
                 if n >= reqnum:
-                    x = np.array([xyz[i, 0] for i in active_wells])
-                    y = np.array([xyz[i, 1] for i in active_wells])
-                    z = np.array([xyz[i, 2] for i in active_wells])
+                    xactive = x[active_wells]
+                    yactive = y[active_wells]
+                    zactive = z[active_wells]
 
-                    evp, varp = fit_conic(x-xtarget, y-ytarget, z, method)
+                    evp, varp = fit_conic(xactive-xtarget, yactive-ytarget, zactive, method)
                     results.append((xtarget, ytarget, n, evp, varp))
 
         # Update the progress bar.
         bar.update(i+1)
 
     return results
+
+
+#------------------------------------------------------------------------------
+def fit_conic(x, y, z, method='RLM'):
+    """
+    Fit the conic potential model using robust linear regression.
+
+    Arguments
+    ---------
+    x : ndarray, shape=(N, )
+        x-coordinates of observation locations [m].
+
+    y : ndarray, shape=(N, )
+        y-coordinates of observation locations [m].
+
+    z : ndarray, shape=(N, )
+        observed head values [m].
+
+    method : str (optional)
+        The fitting method. The currently supported methods are:
+            -- 'OLS' ordinary least squares regression.
+            -- 'RLM' robust linear model regression with Tukey biweights.
+            Default = 'RLM'.
+
+    Returns
+    -------
+    evp : ndarray, shape=(6, )
+        The expected value vector for the model parameters.
+
+    varp : ndarray, shape=(6, 6)
+        The variance matrix for the model parameters.
+
+    Raises
+    ------
+    None.
+
+    Notes
+    -----
+    o   The underlying model is
+            z = p[0]*x**2 + p[1]*y**2 + p[2]*x*y + p[3]*x + p[4]*y + p[5] + e
+
+    o   The variable names in this function follow the naming convention in the
+        associated white paper, and not with Python convention.
+
+    o   Most of the work is done by the statsmodels library.
+    """
+
+    # Set up the coefficient matrix.
+    n = len(x)
+    X = np.zeros((n, 6))
+
+    for i in range(n):
+        X[i, 0] = x[i]**2
+        X[i, 1] = y[i]**2
+        X[i, 2] = x[i]*y[i]
+        X[i, 3] = x[i]
+        X[i, 4] = y[i]
+        X[i, 5] = 1.0
+
+    # Apply the statsmodels tools.
+    if method == 'OLS':
+        ols_model = sm.OLS(z, X, M=sm.robust.norms.TukeyBiweight())
+        ols_results = ols_model.fit()
+
+        evp = ols_results.params
+        varp = ols_results.cov_params()
+
+    elif method == 'RLM':
+        rlm_model = sm.RLM(z, X, M=sm.robust.norms.TukeyBiweight())
+        rlm_results = rlm_model.fit()
+
+        evp = rlm_results.params
+        varp = rlm_results.bcov_scaled
+
+    else:
+       raise UnknownMethodError
+
+    return (evp, varp)
