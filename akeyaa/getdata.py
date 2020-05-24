@@ -13,14 +13,6 @@ get_well_data_by_polygon(poly, aquifer_list=None)
     Return a list of well data for selectable wells from the specified
     aquifer(s). Only wells within the specified polygon are considered.
 
-get_well_data_by_county(cty_code, {aquifer_list=None})
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified county are considered.
-
-get_well_data_by_township_and_range(twnshp, rng, aquifer_list=None)
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified township are considered.
-
 ----- county -----
 get_county_code(cty_abbr)
     Get the county code from the county abbreviation.
@@ -41,7 +33,7 @@ get_township_polygon(twnshp, rng)
 get_section_polygon(twnshp, rng, sctn)
     Get the section polygon.
 
------ watershed -----
+----- hydrologic watershed -----
 get_watershed_name(wtrs_code)
     Get the watershed name from the watershed code (HUC10).
 
@@ -50,6 +42,16 @@ get_watershed_code(wtrs_name)
 
 get_watershed_polygon(wtrs_code)
     Get the watershed polygon from the watershed code (HUC10).
+
+----- hydrologic subregion -----
+get_subregion_name(subr_code)
+    Get the subregion name from the watershed code (HUC8).
+
+get_subregion_code(subr_name)
+    Get the subregion code (HUC8) from the watershed name.
+
+get_subregion_polygon(subr_code)
+    Get the subregion polygon from the watershed code (HUC8).
 
 Notes
 -----
@@ -73,12 +75,13 @@ from localization import CTYLOC, CWILOC, TRSLOC, WBDLOC
 
 
 # Feature classes of interest.
-TWNRNG = TRSLOC + r'\tr'
-SECTIONS = TRSLOC + r'\trs'
-COUNTIES = CTYLOC + r'\mn_county_boundaries'
-WELLS = CWILOC + r'\allwells'
-SWLS = CWILOC + r'\C5WL'
-WTRSHD = WBDLOC + r'\WBDHU10'
+TWNRNG = TRSLOC + r'\tr'                        # township and range
+SECTIONS = TRSLOC + r'\trs'                     # township, range, and section
+COUNTIES = CTYLOC + r'\mn_county_boundaries'    # Minnesota counties
+WELLS = CWILOC + r'\allwells'                   # CWI allwells
+SWLS = CWILOC + r'\C5WL'                        # static water levels
+WTRSHD = WBDLOC + r'\WBDHU10'                   # hydrologic watersheds
+SUBREG = WBDLOC + r'\WBDHU8'                    # hydrologic sub-regions
 
 # The attributes to include in well data.
 ATTRIBUTES = ['allwells.SHAPE',
@@ -210,108 +213,6 @@ def get_well_data_by_polygon(poly, aquifer_list=None):
 
 
 # -----------------------------------------------------------------------------
-def get_well_data_by_county(cty_code, aquifer_list=None):
-    """
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified county are considered.
-
-    Arguments
-    ---------
-    cty_code : int
-        A two digit number
-
-    aquifer_list : list (optional)
-        List of 4-character aquifer abbreviation strings. If None, then all
-        available aquifers will be included.
-
-    Returns
-    -------
-    welldata : list
-        Each element in the list is a tuple containing all of the attributes
-        included in the ATTRIBUTES constant (see above).
-    """
-    where = WHERE
-
-    # Note that the COUNTY_C in allwells is a two character str that
-    # contains the county code.
-    where += "AND (allwells.COUNTY_C = '{0:02d}')".format(cty_code)
-
-    if aquifer_list is not None:
-        if isinstance(aquifer_list, list):
-            where += " AND ("
-
-            for i, code in enumerate(aquifer_list):
-                if i != 0:
-                    where += " OR "
-                where += "(allwells.AQUIFER = '{}')".format(code)
-            where += ")"
-        else:
-            raise ArgumentError
-
-    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID', SWLS, 'RELATEID', False)
-
-    welldata = []
-    with arcpy.da.SearchCursor(joined_table, ATTRIBUTES, where) as cursor:
-        for row in cursor:
-            welldata.append(row)
-
-    return welldata
-
-
-# -----------------------------------------------------------------------------
-def get_well_data_by_township_and_range(twnshp, rng, aquifer_list=None):
-    """
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified township are considered.
-
-    Arguments
-    ---------
-    twnshp : int
-        Township number.
-
-    rng : int
-        Range number.
-
-    aquifer_list : list (optional)
-        List of 4-character aquifer abbreviation strings. If None, then all
-        available aquifers will be included.
-
-    Returns
-    -------
-    welldata : list
-        Each element in the list is a tuple containing all of the attributes
-        included in the ATTRIBUTES constant (see above).
-    """
-    where = WHERE
-
-    if isinstance(twnshp, int) and isinstance(rng, int):
-        where += "AND (allwells.TOWNSHIP = {0:d}) AND (allwells.RANGE = {1:d})".format(twnshp, rng)
-    else:
-        raise ArgumentError
-
-    if aquifer_list is not None:
-        if isinstance(aquifer_list, list):
-            where += " AND ("
-
-            for i, code in enumerate(aquifer_list):
-                if i != 0:
-                    where += " OR "
-                where += "(allwells.AQUIFER = '{}')".format(code)
-            where += ")"
-        else:
-            raise ArgumentError
-
-    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID', SWLS, 'RELATEID', False)
-
-    welldata = []
-    with arcpy.da.SearchCursor(joined_table, ATTRIBUTES, where) as cursor:
-        for row in cursor:
-            welldata.append(row)
-
-    return welldata
-
-
-# -----------------------------------------------------------------------------
 def get_county_code(cty_abbr):
     """
     Get the county code from the county abbreviation.
@@ -326,10 +227,7 @@ def get_county_code(cty_abbr):
     cty_code : int
         Two-digit county code.
     """
-    if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
-        where = "CTY_ABBR = '{0}'".format(cty_abbr)
-    else:
-        raise ArgumentError
+    where = "CTY_ABBR = '{0}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['COUN'], where) as cursor:
         try:
@@ -377,10 +275,7 @@ def get_county_name(cty_abbr):
     name : str
         The complete official name of the county.
     """
-    if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
-        where = "CTY_ABBR = '{}'".format(cty_abbr)
-    else:
-        raise ArgumentError
+    where = "CTY_ABBR = '{}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['CTY_NAME'], where) as cursor:
         try:
@@ -404,10 +299,7 @@ def get_county_polygon(cty_abbr):
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
     """
-    if isinstance(cty_abbr, str) and len(cty_abbr) == 4:
-        where = "CTY_ABBR = '{}'".format(cty_abbr)
-    else:
-        raise ArgumentError
+    where = "CTY_ABBR = '{}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['SHAPE@'], where) as cursor:
         try:
@@ -434,10 +326,7 @@ def get_township_polygon(twnshp, rng):
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
     """
-    if isinstance(twnshp, int) and isinstance(rng, int):
-        where = "TOWN = {0:d} AND RANG = {1:d}".format(twnshp, rng)
-    else:
-        raise ArgumentError
+    where = "TOWN = {0:d} AND RANG = {1:d}".format(twnshp, rng)
 
     with arcpy.da.SearchCursor(TWNRNG, ['SHAPE@'], where) as cursor:
         try:
@@ -466,10 +355,7 @@ def get_section_polygon(twnshp, rng, sctn):
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
     """
-    if isinstance(twnshp, int) and isinstance(rng, int) and isinstance(sctn, int):
-        where = "TOWN = {0:d} AND RANG = {1:d} AND SECT = {2:d}".format(twnshp, rng, sctn)
-    else:
-        raise ArgumentError
+    where = "TOWN = {0:d} AND RANG = {1:d} AND SECT = {2:d}".format(twnshp, rng, sctn)
 
     with arcpy.da.SearchCursor(SECTIONS, ['SHAPE@'], where) as cursor:
         try:
@@ -491,19 +377,19 @@ def get_watershed_code(wtrs_name):
     Returns
     -------
     wtrs_code : str
-        10-digit watershed code as a string.
+        10-digit watershed code as a string (HUC10)
     """
-    if isinstance(wtrs_name, str):
-        where = "NAME = '{0}'".format(wtrs_name)
-    else:
-        raise ArgumentError
+    where = "(NAME = '{0}')".format(wtrs_name)
 
-    with arcpy.da.SearchCursor(WTRSHD, ['HUC10'], where) as cursor:
+    code = []
+    with arcpy.da.SearchCursor(WTRSHD, ['HUC10', 'STATES'], where) as cursor:
         try:
-            return cursor.next()[0]
+            for row in cursor:
+                code.append(row)
         except StopIteration:
             raise NotFoundError
 
+    return code
 
 # -----------------------------------------------------------------------------
 def get_watershed_name(wtrs_code):
@@ -513,23 +399,21 @@ def get_watershed_name(wtrs_code):
     Arguments
     ---------
     wtrs_code : str
-        10-digit watershed code as a string.
+        10-digit watershed code as a string (HUC10).
 
     Returns
     -------
     wtrshd : str
         The watershed name string.
     """
-    if isinstance(wtrs_code, str):
-        where = "HUC10 = '{0}'".format(wtrs_code)
-    else:
-        raise ArgumentError
+    where = "HUC10 = '{0}'".format(wtrs_code)
 
     with arcpy.da.SearchCursor(WTRSHD, ['NAME'], where) as cursor:
         try:
             return cursor.next()[0]
         except StopIteration:
             raise NotFoundError
+
 
 # -----------------------------------------------------------------------------
 def get_watershed_polygon(wtrs_code):
@@ -539,7 +423,7 @@ def get_watershed_polygon(wtrs_code):
     Arguments
     ---------
     wtrs_code : str
-        10-digit watershed code as a string.
+        10-digit watershed code as a string (HUC10)
 
     Returns
     -------
@@ -556,6 +440,130 @@ def get_watershed_polygon(wtrs_code):
 
     o   This function gets the polygon from WBD_National_GDB.gdb, then
         creates a new polygon with the original EPSG:7019 coordinates
+        converted to EPSG:26915 coordinates.
+
+    o   There must be a way to do this conversion within arcpy, but I could
+        not figure it out. So this code does the conversion "by hand" using
+        the pyproj library.
+
+    o   However, pyproj does not have 'GRS 1980' (EPSG:7019) built in, so
+        this code uses 'WGS 84' (EPSG:4326) instead. The differences are
+        insignificant for our purposes.
+    """
+    where = "HUC10 = '{0}'".format(wtrs_code)
+
+    with arcpy.da.SearchCursor(WTRSHD, ['SHAPE@'], where) as cursor:
+        try:
+            poly7019 = cursor.next()[0]
+        except StopIteration:
+            raise NotFoundError
+
+    poly26915 = convert_polygon(poly7019)
+    return poly26915
+
+
+# -----------------------------------------------------------------------------
+def get_subregion_code(subr_name):
+    """
+    Get the subregion code (HUC8) from the watershed name.
+
+    Arguments
+    ---------
+    subr_name : str
+        The watershed name string.
+
+    Returns
+    -------
+    subr_code : str
+        8-digit subregion code as a string (HUC8)
+    """
+    where = "NAME = '{0}'".format(subr_name)
+
+    code = []
+    with arcpy.da.SearchCursor(SUBREG, ['HUC8', 'STATES'], where) as cursor:
+        try:
+            for row in cursor:
+                code.append(row)
+        except StopIteration:
+            raise NotFoundError
+
+    return code
+
+
+# -----------------------------------------------------------------------------
+def get_subregion_name(subr_code):
+    """
+    Get the subregion name from the subregion code (HUC8).
+
+    Arguments
+    ---------
+    subr_code : str
+        8-digit subregion code as a string (HUC8).
+
+    Returns
+    -------
+    subr_name : str
+        The subregion name string.
+    """
+    where = "HUC8 = '{0}'".format(subr_code)
+
+    with arcpy.da.SearchCursor(SUBREG, ['NAME'], where) as cursor:
+        try:
+            return cursor.next()[0]
+        except StopIteration:
+            raise NotFoundError
+
+
+# -----------------------------------------------------------------------------
+def get_subregion_polygon(subr_code):
+    """
+    Get the subregion polygon from the subregion code (HUC8).
+
+    Arguments
+    ---------
+    subr_code : str
+        8-digit subregion code as a string (HUC8)
+
+    Returns
+    -------
+    poly26915 : arcpy.Polygon
+        The polygon uses EPSG:26915 coordinates -- i.e. NAD 83 UTM 15N
+    """
+    where = "HUC8 = '{0}'".format(subr_code)
+
+    with arcpy.da.SearchCursor(SUBREG, ['SHAPE@'], where) as cursor:
+        try:
+            poly7019 = cursor.next()[0]
+        except StopIteration:
+            raise NotFoundError
+
+    poly26915 = convert_polygon(poly7019)
+    return poly26915
+
+
+# -----------------------------------------------------------------------------
+def convert_polygon(poly7019):
+    """
+    Arguments
+    ---------
+    poly7019 : arcpy.Polygon
+        The polygon uses EPSG:7019 coordinates -- i.e. lat/lon.
+
+    Returns
+    -------
+    poly26915 : arcpy.Polygon
+        The polygon uses EPSG:26915 coordinates -- i.e. NAD 83 UTM 15N
+
+    Notes
+    -----
+    o   The WBD_National_GDB.gdb polygons are stored using lat/lon coordinates;
+        more specifically 'GRS 1980' (EPSG:7019), which is a precursor of
+        'WGS 84' (EPSG:4326).
+
+    o   All of the Minnesota State agencies use 'NAD 83 UTM 15N'(EPSG:26915).
+
+    o   This function gets the polygon from WBD_National_GDB.gdb, then
+        creates a new polygon with the original EPSG:7019 coordinates
         converted to EPSG:26916 coordinates.
 
     o   There must be a way to do this conversion within arcpy, but I could
@@ -566,16 +574,6 @@ def get_watershed_polygon(wtrs_code):
         this code uses 'WGS 84' (EPSG:4326) instead. The differences are
         insignificant for our purposes.
     """
-    if isinstance(wtrs_code, str):
-        where = "HUC10 = '{0}'".format(wtrs_code)
-    else:
-        raise ArgumentError
-
-    with arcpy.da.SearchCursor(WTRSHD, ['SHAPE@'], where) as cursor:
-        try:
-            poly7019 = cursor.next()[0]
-        except StopIteration:
-            raise NotFoundError
 
     # Extract the polygon vertices in EPSG:7019.
     lon7019 = [pnt.X for pnt in poly7019.getPart(0)]
@@ -590,6 +588,6 @@ def get_watershed_polygon(wtrs_code):
     # Create the new arcpy.Polygon.
     xy26915 = list(zip(x26915, y26915))
     array26915 = arcpy.Array([arcpy.Point(pt[0], pt[1]) for pt in xy26915])
-    poly = arcpy.Geometry('Polygon', array26915, arcpy.SpatialReference(26915))
+    poly26915 = arcpy.Geometry('Polygon', array26915, arcpy.SpatialReference(26915))
 
-    return poly
+    return poly26915

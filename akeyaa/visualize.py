@@ -29,7 +29,7 @@ import seaborn as sns
 from getdata import get_well_data_by_polygon
 from getdata import get_county_name, get_county_polygon
 from getdata import get_watershed_name, get_watershed_polygon
-
+from getdata import get_subregion_name, get_subregion_polygon
 
 # -----------------------------------------------------------------------------
 def visualize_results(pklzfile):
@@ -143,7 +143,7 @@ def aquifers_in_county(cty_abbr, aquifer_list=None):
         title_str = '{0} County [All]: '.format(cty_name)
 
     # Find and plot the well locations, coded by aquifer.
-    aq_info = aquifers_in_polygon(poly, aquifer_list, title_str)
+    aq_info = aquifers_in_polygon(poly, title_str, aquifer_list)
 
     return aq_info
 
@@ -155,8 +155,8 @@ def aquifers_in_watershed(wtrs_code, aquifer_list=None):
 
     Arguments
     ---------
-    cty_abbr : str
-        The 4-character county abbreviation string.
+    wtrs_code : str
+        The unique 10-digit number encoded as a string (HUC10).
 
     aquifer_list : list (optional)
         List of four-character aquifer abbreviation strings. If none, then all
@@ -176,14 +176,57 @@ def aquifers_in_watershed(wtrs_code, aquifer_list=None):
     """
 
     # Get the watershed polygon.
+    wtrs_name = get_watershed_name(wtrs_code)
     poly = get_watershed_polygon(wtrs_code)
 
     # Create the associated tile string.
-    wtrs_name = get_watershed_name(wtrs_code)
     if aquifer_list is not None:
         title_str = '{0} Watershed {1}: '.format(wtrs_name, aquifer_list)
     else:
         title_str = '{0} Watershed [All]: '.format(wtrs_name)
+
+    # Find and plot the well locations, coded by aquifer.
+    aq_info = aquifers_in_polygon(poly, title_str, aquifer_list)
+
+    return aq_info
+
+
+# -----------------------------------------------------------------------------
+def aquifers_in_subregion(subr_code, aquifer_list=None):
+    """
+    Plot the subregion well data locations coded by aquifer.
+
+    Arguments
+    ---------
+    subr_code : str
+        The unique 8-digit number encoded as a string (HUC8).
+
+    aquifer_list : list (optional)
+        List of four-character aquifer abbreviation strings. If none, then all
+        available aquifers will be included. Default = None.
+
+    Returns
+    -------
+    Returns
+    -------
+    aq_info : list of tuples
+        Each element in the list is a tuple (aq_abbr, count)
+        -- aq_abbr : str
+            The four-character aquifer abbreviation.
+        -- count : int
+            The number of wells in the associated aquifer type.
+        The list is sorted in descending order by count.
+    """
+
+    # Get the watershed polygon.
+    subr_name = get_subregion_name(subr_code)
+    poly = get_subregion_polygon(subr_code)
+
+    # Create the associated tile string.
+    if aquifer_list is not None:
+        title_str = '{0} Watershed {1}: '.format(subr_name, aquifer_list)
+    else:
+        title_str = '{0} Watershed [All]: '.format(subr_name)
 
     # Find and plot the well locations, coded by aquifer.
     aq_info = aquifers_in_polygon(poly, title_str, aquifer_list)
