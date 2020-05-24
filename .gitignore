@@ -3,6 +3,7 @@
 AkeyaaGIS/
 references/
 TeXAux/
+hold/
 *.synctex
 *.pickle
 
