@@ -65,11 +65,11 @@ University of Minnesota
 
 Version
 -------
-24 May 2020
+25 May 2020
 """
 
-import arcpy
 from pyproj import CRS, Transformer
+import arcpy
 
 from localization import CTYLOC, CWILOC, TRSLOC, WBDLOC
 
@@ -123,8 +123,8 @@ def get_well_data(aquifer_list=None):
     Return a list of well data for selectable wells from the specified
     aquifer(s). All wells within the state are considered.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     aquifer_list : list (optional)
         List of 4-character aquifer abbreviation strings. If none, then all
         available aquifers will be included.
@@ -166,8 +166,8 @@ def get_well_data_by_polygon(poly, aquifer_list=None):
     Return a list of well data for selectable wells from the specified
     aquifer(s). Only wells within the specified polygon are considered.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
 
@@ -217,8 +217,8 @@ def get_county_code(cty_abbr):
     """
     Get the county code from the county abbreviation.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_abbr : str
         The 4-character county abbreviation string.
 
@@ -241,8 +241,8 @@ def get_county_abbr(cty_code):
     """
     Get the county abbreviation from the county code.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_code : int
         Two-digit county code.
 
@@ -265,8 +265,8 @@ def get_county_name(cty_abbr):
     """
     Get the county name from the county abbreviation.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_abbr : str
         The 4-character county abbreviation string.
 
@@ -289,8 +289,8 @@ def get_county_polygon(cty_abbr):
     """
     Get the county polygon from the county abbreviation.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_abbr : str
         The 4-character county abbreviation string.
 
@@ -313,8 +313,8 @@ def get_township_polygon(twnshp, rng):
     """
     Get the township polygon.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     twnshp : int
         Township number.
 
@@ -339,8 +339,8 @@ def get_section_polygon(twnshp, rng, sctn):
     """
     Get the section polygon.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     twnshp : int
         Township number.
 
@@ -369,8 +369,8 @@ def get_watershed_code(wtrs_name):
     """
     Get the watershed code (HUC10) from the watershed name.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wtrshd : str
         The watershed name string.
 
@@ -396,8 +396,8 @@ def get_watershed_name(wtrs_code):
     """
     Get the watershed name from the watershed code (HUC10).
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wtrs_code : str
         10-digit watershed code as a string (HUC10).
 
@@ -420,8 +420,8 @@ def get_watershed_polygon(wtrs_code):
     """
     Get the watershed polygon from the watershed code (HUC10).
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wtrs_code : str
         10-digit watershed code as a string (HUC10)
 
@@ -467,8 +467,8 @@ def get_subregion_code(subr_name):
     """
     Get the subregion code (HUC8) from the watershed name.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     subr_name : str
         The watershed name string.
 
@@ -495,8 +495,8 @@ def get_subregion_name(subr_code):
     """
     Get the subregion name from the subregion code (HUC8).
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     subr_code : str
         8-digit subregion code as a string (HUC8).
 
@@ -519,8 +519,8 @@ def get_subregion_polygon(subr_code):
     """
     Get the subregion polygon from the subregion code (HUC8).
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     subr_code : str
         8-digit subregion code as a string (HUC8)
 
@@ -544,8 +544,8 @@ def get_subregion_polygon(subr_code):
 # -----------------------------------------------------------------------------
 def convert_polygon(poly7019):
     """
-    Arguments
-    ---------
+    Parameters
+    ----------
     poly7019 : arcpy.Polygon
         The polygon uses EPSG:7019 coordinates -- i.e. lat/lon.
 

@@ -77,8 +77,8 @@ def shortcut(what, aquifer_list=None, radius=3000, reqnum=25, spacing=1000,
     store the results, calls visualize_results, and then deletes the temporary
     file.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     what : str
         -- A 4-character county abbreviation string, or
         -- a watershed name as encoded in WBD_National_GDB.gd, or
@@ -192,8 +192,8 @@ def by_county(cty_abbr, aquifer_list, radius, reqnum, spacing, method,
     analysis is carried out using the wells in the specified aquifer(s) only.
     The analysis may use wells in neighboring counties.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_abbr : str
         The 4-character county abbreviation string.
 
@@ -285,8 +285,8 @@ def by_watershed(wtrs_code, aquifer_list, radius, reqnum, spacing, method,
     analysis is carried out using the wells in the specified aquifer(s) only.
     The analysis may use wells in neighboring watersheds.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wtrs_code : str
         The unique 10-digit number encoded as a string (HUC10).
 
@@ -376,8 +376,8 @@ def by_subregion(subr_code, aquifer_list, radius, reqnum, spacing, method,
     analysis is carried out using the wells in the specified aquifer(s) only.
     The analysis may use wells in neighboring subregions.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     subr_code : str
         The unique 10-digit number encoded as a string (HUC8).
 
@@ -466,8 +466,8 @@ def by_polygon(poly, aquifer_list, radius, reqnum, spacing, method):
     analysis is carried out using the wells in the specified aquifer(s) only.
     The analysis may use wells in neighboring polygons.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     aquifer_list : list
         List of four-character aquifer abbreviation strings. If none, then all
         available aquifers will be included.
@@ -555,8 +555,8 @@ def fit_conic(x, y, z, method='RLM'):
     """
     Fit the conic potential model using robust linear regression.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     x : ndarray, shape=(N, )
         x-coordinates of observation locations [m].
 
@@ -623,6 +623,6 @@ def fit_conic(x, y, z, method='RLM'):
         varp = rlm_results.bcov_scaled
 
     else:
-       raise UnknownMethodError
+        raise UnknownMethodError
 
     return (evp, varp)

@@ -9,7 +9,7 @@ University of Minnesota
 
 Version
 -------
-24 May 2020
+25 May 2020
 """
 
 # From the MN Department of Health.

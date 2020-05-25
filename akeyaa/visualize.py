@@ -38,8 +38,8 @@ def visualize_results(pklzfile):
     """
     Plot the results.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     pklzfile : str
         Compressed pickle file path/name for the run.
     """
@@ -138,8 +138,8 @@ def aquifers_in_county(cty_abbr, aquifer_list=None):
     """
     Plot the county well data locations coded by aquifer.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     cty_abbr : str
         The 4-character county abbreviation string.
 
@@ -181,8 +181,8 @@ def aquifers_in_watershed(wtrs_code, aquifer_list=None):
     """
     Plot the watershed well data locations coded by aquifer.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     wtrs_code : str
         The unique 10-digit number encoded as a string (HUC10).
 
@@ -224,8 +224,8 @@ def aquifers_in_subregion(subr_code, aquifer_list=None):
     """
     Plot the subregion well data locations coded by aquifer.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     subr_code : str
         The unique 8-digit number encoded as a string (HUC8).
 
@@ -267,8 +267,8 @@ def aquifers_in_polygon(poly, title_str, aquifer_list=None):
     """
     Plot the polygon well data locations coded by aquifer.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     poly : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
 
@@ -305,7 +305,7 @@ def aquifers_in_polygon(poly, title_str, aquifer_list=None):
     uaq, naq = np.unique(aq, return_counts=True)
 
     active_aq = [(uaq[i], naq[i]) for i in range(len(uaq))]
-    active_aq.sort(key = lambda tup: tup[1], reverse = True)
+    active_aq.sort(key=lambda tup: tup[1], reverse = True)
 
     # Plot the well locations coded by aquifer.
     plt.figure()
