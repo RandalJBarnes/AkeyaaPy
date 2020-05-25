@@ -17,11 +17,12 @@ University of Minnesota
 
 Version
 -------
-24 May 2020
+25 May 2020
 """
 
 import bz2
 import pickle
+from math import atan2
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -30,6 +31,7 @@ from getdata import get_well_data_by_polygon
 from getdata import get_county_name, get_county_polygon
 from getdata import get_watershed_name, get_watershed_polygon
 from getdata import get_subregion_name, get_subregion_polygon
+from pnorm import pnormcdf
 
 # -----------------------------------------------------------------------------
 def visualize_results(pklzfile):
@@ -59,27 +61,39 @@ def visualize_results(pklzfile):
     y = np.array([row[1] for row in results])
     n = np.array([row[2] for row in results], dtype=int)
 
-    m = np.empty(x.shape)
+    mag = np.empty(x.shape)
     u = np.empty(x.shape)
     v = np.empty(x.shape)
+    p10 = np.empty(x.shape)
 
     for i, row in enumerate(results):
         evp = row[3]
-        Qx = -evp[3]
-        Qy = -evp[4]
+        varp = row[4]
 
-        m[i] = np.hypot(Qx, Qy)
-        u[i] = Qx/np.hypot(Qx, Qy)
-        v[i] = Qy/np.hypot(Qx, Qy)
+        mu = evp[3:5]
+        sigma = varp[3:5, 3:5]
+
+        mag[i] = np.hypot(mu[0], mu[1])
+        u[i] = -mu[0]/mag[i]
+        v[i] = -mu[1]/mag[i]
+
+        theta = atan2(mu[1], mu[0])
+        lb = theta - np.pi/18.0
+        ub = theta + np.pi/18.0
+        p10[i] = pnormcdf(lb, ub, mu, sigma)
+
+    idx = np.argsort(mag)
+    jdx = np.argsort(idx)
+    q = (jdx+0.5)/len(jdx)
 
     #------------------------
     plt.figure()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    plt.quiver(x, y, u, v, m, width=0.0018, zorder=10, cmap='magma')
+    plt.quiver(x, y, u, v, p10, width=0.0018, zorder=10, cmap='Greys')
     cbar = plt.colorbar()
-    cbar.ax.set_title('Q/(kH) [.]')
+    cbar.ax.set_title('p10')
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
@@ -98,6 +112,20 @@ def visualize_results(pklzfile):
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
     plt.title(title_str + 'Number of Local Wells', {'fontsize' : 24})
+    plt.grid(True)
+
+    #------------------------
+    plt.figure()
+    plt.axis('equal')
+
+    plt.fill(xbdry, ybdry, '0.90')
+    plt.scatter(x, y, c=q, zorder=10, cmap='OrRd')
+    cbar = plt.colorbar()
+    cbar.ax.set_title('Percentile')
+
+    plt.xlabel('Easting [m]')
+    plt.ylabel('Northing [m]')
+    plt.title(title_str + 'Magnitude of Head Gradient', {'fontsize' : 24})
     plt.grid(True)
 
     #------------------------

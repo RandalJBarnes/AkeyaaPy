@@ -480,6 +480,42 @@ The divergence of the discharge is given by
 \end{equation}
 
 
+\newpage
+%==============================================================================
+\section{General Project Normal Distribution}\label{8.1}
+%==============================================================================
+As given by \citet[(1)]{Hernandez2017}, the probability density function for the general projected normal distribution is given by
+%
+\begin{equation}\label{8.1}
+    f\left( \theta | \mat{u}, \mat{V} \right)
+    = \left( \frac{1}{AD} \right) \exp{(-C/2)} \left[ 1 + E \frac{\Phi(E)}{\phi(E)} \right]
+\end{equation}
+%
+where $\Phi()$ is the standard normal distribution function, $\phi()$ is the standard normal density function given by
+%
+\begin{equation}\label{8.2}
+    \phi(E) = \frac{1}{\sqrt{2 \pi}} \exp{\left(-E^2/2\right)}
+\end{equation}
+%
+and
+%
+\begin{align}
+    \mat{r}^T &= \begin{bmatrix}\cos{\theta}, \sin{\theta} \end{bmatrix} \\
+    A &= \mat{r}^T \mat{V}^{-1} \mat{r} \\
+    B &= \mat{r}^T \mat{V}^{-1} \mat{u} \\
+    C &= \mat{u}^T \mat{V}^{-1} \mat{u} \\
+    D &= 2 \pi \sqrt{\abs{\mat{V}}} \\
+    E &= \frac{B}{\sqrt{A}}
+\end{align}
+%
+The term $\phi(E)$ goes to $0$ for even moderate values of $\abs{E}$, which causes serious computational problems. To ameliorate this problem, we refactor \eqref{8.1} as follows.
+%
+\begin{equation}\label{8.1}
+    f\left( \theta | \mat{u}, \mat{V} \right)
+    = \left( \frac{1}{AD} \right) \left[ \exp{(-C/2)} + E \Phi(E) \sqrt{2\pi \exp{(E^2 - C)}} \right]
+\end{equation}
+
+
 %==============================================================================
 \end{document}
 %==============================================================================

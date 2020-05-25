@@ -31,7 +31,7 @@ University of Minnesota
 
 Version
 -------
-24 May 2020
+25 May 2020
 """
 
 import bz2
@@ -125,13 +125,17 @@ def shortcut(what, aquifer_list=None, radius=3000, reqnum=25, spacing=1000,
     # Make a pickle filename, if none is given.
     if pklzfile is None:
         pklzfile ='Akeyya' + datetime.now().strftime('%Y%m%dT%H%M%S') + '.pklz'
+        remove_flag = True
+    else:
+        remove_flag = False
 
     # Is 'what' is a cty_abbr?
     try:
         _ = get_county_code(what)
         by_county(what, aquifer_list, radius, reqnum, spacing, method, pklzfile)
         visualize_results(pklzfile)
-        os.remove(pklzfile)
+        if remove_flag:
+            os.remove(pklzfile)
         print('Elapsed time = {0:.4f} seconds'.format(time.time() - start_time))
         return
 
@@ -146,7 +150,8 @@ def shortcut(what, aquifer_list=None, radius=3000, reqnum=25, spacing=1000,
         _ = get_watershed_name(what)
         by_watershed(what, aquifer_list, radius, reqnum, spacing, method, pklzfile)
         visualize_results(pklzfile)
-        os.remove(pklzfile)
+        if remove_flag:
+            os.remove(pklzfile)
         print('Elapsed time = {0:.4f} seconds'.format(time.time() - start_time))
         return
 
@@ -161,7 +166,8 @@ def shortcut(what, aquifer_list=None, radius=3000, reqnum=25, spacing=1000,
         _ = get_subregion_name(what)
         by_subregion(what, aquifer_list, radius, reqnum, spacing, method, pklzfile)
         visualize_results(pklzfile)
-        os.remove(pklzfile)
+        if remove_flag:
+            os.remove(pklzfile)
         print('Elapsed time = {0:.4f} seconds'.format(time.time() - start_time))
         return
 
