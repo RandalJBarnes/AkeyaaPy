@@ -5,13 +5,11 @@ Functions
 ---------
 
 ----- get data -----
-get_well_data({aquifer_list=None})
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). All wells within the state are considered.
+get_well_data(aquifers)
+    Return well data from across Minnesota.
 
-get_well_data_by_polygon(poly, aquifer_list=None)
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified polygon are considered.
+get_well_data_by_polygon(polygon, aquifers)
+    Return well data from across the polygon.
 
 ----- county -----
 get_county_code(cty_abbr)
@@ -65,10 +63,11 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+26 May 2020
+
 """
 
-from pyproj import CRS, Transformer
+import pyproj
 import arcpy
 
 from localization import CTYLOC, CWILOC, TRSLOC, WBDLOC
@@ -83,15 +82,16 @@ SWLS = CWILOC + r'\C5WL'                        # static water levels
 WTRSHD = WBDLOC + r'\WBDHU10'                   # hydrologic watersheds
 SUBREG = WBDLOC + r'\WBDHU8'                    # hydrologic sub-regions
 
-# The attributes to include in well data.
+# The attributes to be include in "well data".
 ATTRIBUTES = ['allwells.SHAPE',
               'C5WL.MEAS_ELEV',
               'C5WL.MEAS_DATE',
               'allwells.AQUIFER',
               'allwells.RELATEID']
 
-# Common selection criteria: must have a recorded SWL, must have an identified
-# aquifer, and must be located.
+# Wells that satisfy all of these criteria are called "authorized wells".
+# These include: must have at least one recorded static water level (SWL),
+# must have an identified aquifer, and must be located.
 WHERE = ("(C5WL.MEAS_ELEV is not NULL) AND "
          "(allwells.AQUIFER is not NULL) AND "
          "(allwells.UTME is not NULL) AND "
@@ -118,31 +118,34 @@ class ArgumentError(Error):
 
 
 # -----------------------------------------------------------------------------
-def get_well_data(aquifer_list=None):
+def get_well_data(aquifers=None):
     """
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). All wells within the state are considered.
+    Return well data from across Minnesota.
+
+    Return the well data from all authorized wells in Minnesota that are
+    completed in one of the identified aquifers.
 
     Parameters
     ----------
-    aquifer_list : list (optional)
-        List of 4-character aquifer abbreviation strings. If none, then all
-        available aquifers will be included.
+    aquifers : list, optional
+        List of four-character aquifer abbreviation strings, as defined in
+        Minnesota Geologic Survey's coding system. The default is None. If
+        None, then all aquifers present will be included.
 
     Returns
     -------
     welldata : list
         Each element in the list is a tuple containing all of the attributes
         included in the ATTRIBUTES constant (see above).
-
     """
+
     where = WHERE
 
-    if aquifer_list is not None:
-        if isinstance(aquifer_list, list):
+    if aquifers is not None:
+        if isinstance(aquifers, list):
             where += " AND ("
 
-            for i, code in enumerate(aquifer_list):
+            for i, code in enumerate(aquifers):
                 if i != 0:
                     where += " OR "
                 where += "(allwells.AQUIFER = '{}')".format(code)
@@ -150,7 +153,8 @@ def get_well_data(aquifer_list=None):
         else:
             raise ArgumentError
 
-    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID', SWLS, 'RELATEID', False)
+    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID',
+                                            SWLS, 'RELATEID', False)
 
     welldata = []
     with arcpy.da.SearchCursor(joined_table, ATTRIBUTES, where) as cursor:
@@ -161,34 +165,38 @@ def get_well_data(aquifer_list=None):
 
 
 # -----------------------------------------------------------------------------
-def get_well_data_by_polygon(poly, aquifer_list=None):
+def get_well_data_by_polygon(polygon, aquifers=None):
     """
-    Return a list of well data for selectable wells from the specified
-    aquifer(s). Only wells within the specified polygon are considered.
+    Return well data from across the polygon.
+
+    Return the well data from all authorized wells in the polygon that are
+    completed in one of the identified aquifers.
 
     Parameters
     ----------
-    poly : arcpy.Polygon
+    polygon : arcpy.polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the run.
 
-    aquifer_list : list (optional)
-        List of 4-character aquifer abbreviation strings. If none, then all
-        available aquifers will be included.
+    aquifers : list, optional
+        List of four-character aquifer abbreviation strings, as defined in
+        Minnesota Geologic Survey's coding system. The default is None. If
+        None, then all aquifers present will be included.
 
     Returns
     -------
     welldata : list
         Each element in the list is a tuple containing all of the attributes
         included in the ATTRIBUTES constant (see above).
-
     """
+
     where = WHERE
 
-    if aquifer_list is not None:
-        if isinstance(aquifer_list, list):
+    if aquifers is not None:
+        if isinstance(aquifers, list):
             where += " AND ("
 
-            for i, code in enumerate(aquifer_list):
+            for i, code in enumerate(aquifers):
                 if i != 0:
                     where += " OR "
                 where += "(allwells.AQUIFER = '{}')".format(code)
@@ -196,11 +204,12 @@ def get_well_data_by_polygon(poly, aquifer_list=None):
         else:
             raise ArgumentError
 
-    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID', SWLS, 'RELATEID', False)
+    joined_table = arcpy.AddJoin_management(WELLS, 'RELATEID',
+                                            SWLS, 'RELATEID', False)
 
     located_wells = arcpy.SelectLayerByLocation_management(
         joined_table,
-        select_features=poly,
+        select_features=polygon,
         overlap_type='WITHIN',
         selection_type='NEW_SELECTION')
 
@@ -215,18 +224,40 @@ def get_well_data_by_polygon(poly, aquifer_list=None):
 # -----------------------------------------------------------------------------
 def get_county_code(cty_abbr):
     """
-    Get the county code from the county abbreviation.
+    Get the county code number from the county abbreviation.
+
+    Return the 2-digit county identification number as defined by the
+    Minnesota County Well Index project of the Minnesota Geologic Survey.
+
+        http://mgsweb2.mngs.umn.edu/cwi_doc/county.asp?=
+
+    These first 87 of these county code numbers align with an alphabetial
+    listing of the Minnesota county names. These county code numbers are NOT
+    the county FIPS numbers.
+
+    These codes includes numbers for wells that are present in the Minnesota
+    County Well Index but located in Iowa (88), Wisconsin (89), North
+    Dakota (90), South Dakota (91), and Canada (92). There is also a code
+    for "Unknown" (99).
+
+    These county code numbers are the same as the COUNTY_C field of the
+    "allwells" geodatabase feature class. However, the COUNTY_C values are
+    encoded as characrter strings.
 
     Parameters
     ----------
     cty_abbr : str
-        The 4-character county abbreviation string.
+        The 4-character county abbreviation string, as defined by the
+        Minnesota Department of Natural Resources.
 
     Returns
     -------
     cty_code : int
-        Two-digit county code.
+        The 2-digit county identification number as defined by the Minnesota
+        County Well Index project of the Minnesota Geologic Survey. These are
+        not the FIPS codes.
     """
+
     where = "CTY_ABBR = '{0}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['COUN'], where) as cursor:
@@ -244,13 +275,17 @@ def get_county_abbr(cty_code):
     Parameters
     ----------
     cty_code : int
-        Two-digit county code.
+        The 2-digit county identification number as defined by the Minnesota
+        County Well Index project of the Minnesota Geologic Survey. These are
+        not the FIPS codes.
 
     Returns
     -------
     cty_abbr : str
-        The 4-character county abbreviation string.
+        The 4-character county abbreviation string, as defined by the
+        Minnesota Department of Natural Resources.
     """
+
     where = "COUN = {}".format(cty_code)
 
     with arcpy.da.SearchCursor(COUNTIES, ['CTY_ABBR'], where) as cursor:
@@ -268,13 +303,15 @@ def get_county_name(cty_abbr):
     Parameters
     ----------
     cty_abbr : str
-        The 4-character county abbreviation string.
+        The 4-character county abbreviation string, as defined by the
+        Minnesota Department of Natural Resources.
 
     Returns
     -------
     name : str
         The complete official name of the county.
     """
+
     where = "CTY_ABBR = '{}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['CTY_NAME'], where) as cursor:
@@ -292,13 +329,16 @@ def get_county_polygon(cty_abbr):
     Parameters
     ----------
     cty_abbr : str
-        The 4-character county abbreviation string.
+        The 4-character county abbreviation string, as defined by the
+        Minnesota Department of Natural Resources.
 
     Returns
     -------
-    poly : arcpy.Polygon
+    polygon : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the query.
     """
+
     where = "CTY_ABBR = '{}'".format(cty_abbr)
 
     with arcpy.da.SearchCursor(COUNTIES, ['SHAPE@'], where) as cursor:
@@ -323,9 +363,11 @@ def get_township_polygon(twnshp, rng):
 
     Returns
     -------
-    poly : arcpy.Polygon
+    polygon : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the query.
     """
+
     where = "TOWN = {0:d} AND RANG = {1:d}".format(twnshp, rng)
 
     with arcpy.da.SearchCursor(TWNRNG, ['SHAPE@'], where) as cursor:
@@ -333,6 +375,7 @@ def get_township_polygon(twnshp, rng):
             return cursor.next()[0]
         except StopIteration:
             raise NotFoundError
+
 
 # -----------------------------------------------------------------------------
 def get_section_polygon(twnshp, rng, sctn):
@@ -352,10 +395,13 @@ def get_section_polygon(twnshp, rng, sctn):
 
     Returns
     -------
-    poly : arcpy.Polygon
+    polygon : arcpy.Polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the query.
     """
-    where = "TOWN = {0:d} AND RANG = {1:d} AND SECT = {2:d}".format(twnshp, rng, sctn)
+
+    where = ("TOWN = {0:d} AND RANG = {1:d} AND SECT = {2:d}"
+             .format(twnshp, rng, sctn))
 
     with arcpy.da.SearchCursor(SECTIONS, ['SHAPE@'], where) as cursor:
         try:
@@ -372,24 +418,42 @@ def get_watershed_code(wtrs_name):
     Parameters
     ----------
     wtrshd : str
-        The watershed name string.
+        The watershed name string as defined in the U.S. Geological Survey
+        Watershed Boundary Dataset.
 
     Returns
     -------
-    wtrs_code : str
-        10-digit watershed code as a string (HUC10)
+    codes : list of tuples
+        (code, state)
+        code : str
+            10-digit watershed number encoded as a string (HUC10).
+        state : str
+            Two character state abbreviations; e.g. 'MN'.
+
+    Notes
+    -----
+    o   Watershed names are NOT unique. For example, there are three unique
+        "Rice Creek" watersheds, two of which are in Minnesota: one north of
+        the Twin Cites, and one near the northtern border of the state.
+
+    References
+    ----------
+    https://www.usgs.gov/core-science-systems/ngp/national-hydrography/
+        access-national-hydrography-products
     """
+
     where = "(NAME = '{0}')".format(wtrs_name)
 
-    code = []
+    codes = []
     with arcpy.da.SearchCursor(WTRSHD, ['HUC10', 'STATES'], where) as cursor:
         try:
             for row in cursor:
-                code.append(row)
+                codes.append(row)
         except StopIteration:
             raise NotFoundError
 
-    return code
+    return codes
+
 
 # -----------------------------------------------------------------------------
 def get_watershed_name(wtrs_code):
@@ -399,13 +463,15 @@ def get_watershed_name(wtrs_code):
     Parameters
     ----------
     wtrs_code : str
-        10-digit watershed code as a string (HUC10).
+        The 10-digit watershed number encoded as a string (HUC10).
 
     Returns
     -------
     wtrshd : str
-        The watershed name string.
+        The watershed name string as defined in the U.S. Geological Survey
+        Watershed Boundary Dataset. These are not unique.
     """
+
     where = "HUC10 = '{0}'".format(wtrs_code)
 
     with arcpy.da.SearchCursor(WTRSHD, ['NAME'], where) as cursor:
@@ -423,33 +489,24 @@ def get_watershed_polygon(wtrs_code):
     Parameters
     ----------
     wtrs_code : str
-        10-digit watershed code as a string (HUC10)
+        The 10-digit watershed number encoded as a string (HUC10).
 
     Returns
     -------
-    poly : arcpy.Polygon
+    poly26915 : arcpy.polygon
         https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the query.
+
+        The returned polygon uses EPSG:26915 coordinates -- i.e. NAD 83
+        UTM zone 15N.
 
     Notes
     -----
-    o   The watershed polygons in WBD_National_GDB.gdb are stored using
-        lat/lon coordinates; more specifically 'GRS 1980' (EPSG:7019),
-        which is a precursor of 'WGS 84' (EPSG:4326).
-
-    o   All of the Minnesota State agencies use 'NAD 83 UTM 15N'(EPSG:26915).
-
     o   This function gets the polygon from WBD_National_GDB.gdb, then
         creates a new polygon with the original EPSG:7019 coordinates
         converted to EPSG:26915 coordinates.
-
-    o   There must be a way to do this conversion within arcpy, but I could
-        not figure it out. So this code does the conversion "by hand" using
-        the pyproj library.
-
-    o   However, pyproj does not have 'GRS 1980' (EPSG:7019) built in, so
-        this code uses 'WGS 84' (EPSG:4326) instead. The differences are
-        insignificant for our purposes.
     """
+
     where = "HUC10 = '{0}'".format(wtrs_code)
 
     with arcpy.da.SearchCursor(WTRSHD, ['SHAPE@'], where) as cursor:
@@ -470,13 +527,15 @@ def get_subregion_code(subr_name):
     Parameters
     ----------
     subr_name : str
-        The watershed name string.
+        The hydrologic subregion name string as defined in the U.S. Geological
+        Survey Watershed Boundary Dataset. These are not unique.
 
     Returns
     -------
     subr_code : str
-        8-digit subregion code as a string (HUC8)
+        The 8-digit subregion number encoded as a string (HUC8).
     """
+
     where = "NAME = '{0}'".format(subr_name)
 
     code = []
@@ -498,13 +557,15 @@ def get_subregion_name(subr_code):
     Parameters
     ----------
     subr_code : str
-        8-digit subregion code as a string (HUC8).
+        The 8-digit subregion number encoded as a string (HUC8).
 
     Returns
     -------
     subr_name : str
-        The subregion name string.
+        The hydrologic subregion name string as defined in the U.S. Geological
+        Survey Watershed Boundary Dataset. These are not unique.
     """
+
     where = "HUC8 = '{0}'".format(subr_code)
 
     with arcpy.da.SearchCursor(SUBREG, ['NAME'], where) as cursor:
@@ -522,13 +583,24 @@ def get_subregion_polygon(subr_code):
     Parameters
     ----------
     subr_code : str
-        8-digit subregion code as a string (HUC8)
+        The 8-digit subregion number encoded as a string (HUC8).
 
     Returns
     -------
-    poly26915 : arcpy.Polygon
-        The polygon uses EPSG:26915 coordinates -- i.e. NAD 83 UTM 15N
+    poly26915 : arcpy.polygon
+        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the query.
+
+        The returned polygon uses EPSG:26915 coordinates -- i.e. NAD 83
+        UTM zone 15N.
+
+    Notes
+    -----
+    o   This function gets the polygon from WBD_National_GDB.gdb, then
+        creates a new polygon with the original EPSG:7019 coordinates
+        converted to EPSG:26915 coordinates.
     """
+
     where = "HUC8 = '{0}'".format(subr_code)
 
     with arcpy.da.SearchCursor(SUBREG, ['SHAPE@'], where) as cursor:
@@ -546,13 +618,13 @@ def convert_polygon(poly7019):
     """
     Parameters
     ----------
-    poly7019 : arcpy.Polygon
-        The polygon uses EPSG:7019 coordinates -- i.e. lat/lon.
+    poly7019 : arcpy.polygon
+        This polygon uses EPSG:7019 coordinates -- i.e. lat/lon.
 
     Returns
     -------
-    poly26915 : arcpy.Polygon
-        The polygon uses EPSG:26915 coordinates -- i.e. NAD 83 UTM 15N
+    poly26915 : arcpy.polygon
+        This polygon uses EPSG:26915 coordinates -- i.e. NAD 83 UTM 15N
 
     Notes
     -----
@@ -580,14 +652,15 @@ def convert_polygon(poly7019):
     lat7019 = [pnt.Y for pnt in poly7019.getPart(0)]
 
     # Convert from EPSG:7019 to EPSG:26915
-    crs_utm = CRS.from_user_input(26915)
-    crs_latlon = CRS.from_user_input(4326)
-    transformer = Transformer.from_crs(crs_latlon, crs_utm)
+    crs_utm = pyproj.CRS.from_user_input(26915)
+    crs_latlon = pyproj.CRS.from_user_input(4326)
+    transformer = pyproj.Transformer.from_crs(crs_latlon, crs_utm)
     x26915, y26915 = transformer.transform(lat7019, lon7019)
 
-    # Create the new arcpy.Polygon.
+    # Create the new arcpy.polygon.
     xy26915 = list(zip(x26915, y26915))
     array26915 = arcpy.Array([arcpy.Point(pt[0], pt[1]) for pt in xy26915])
-    poly26915 = arcpy.Geometry('Polygon', array26915, arcpy.SpatialReference(26915))
+    poly26915 = arcpy.Geometry('polygon', array26915,
+                               arcpy.SpatialReference(26915))
 
     return poly26915

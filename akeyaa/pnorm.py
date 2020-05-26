@@ -1,5 +1,5 @@
 """
-Functions for the care and feeding of Smith's distribution.
+Support for the general projected normal distribution.
 
 Functions
 ---------
@@ -44,7 +44,8 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+26 May 2020
+
 """
 
 from math import cos, sin, exp, sqrt, pi
@@ -53,7 +54,7 @@ from scipy.stats import norm
 from scipy.integrate import quad
 
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def pnormpdf(theta, mu, sigma):
     """
     Evaluate the probability density function for the general projected
@@ -65,11 +66,11 @@ def pnormpdf(theta, mu, sigma):
         The angles at which to evaluate the pdf. The angles are given in
         radians, not degrees.
 
-    mu : ndarray, shape(2,1)
-        The component mean vector.
+    mu : ndarray, shape=(2, 1)
+        The mean vector.
 
-    sigma : ndarray, shape(2,2)
-        The compontnet variance matrix.
+    sigma : ndarray, shape=(2, 2)
+        The variance matrix.
 
     Returns
     -------
@@ -95,11 +96,12 @@ def pnormpdf(theta, mu, sigma):
         pdf = np.empty(len(theta))
     else:
         theta = [theta]
-        pdf = np.empty([1,])
+        pdf = np.empty([1, ])
 
     # Precompute what can be precomputed.
-    detS = sigma[0,0]*sigma[1,1] - sigma[0,1]*sigma[1,0]
-    Sinv = np.array([[sigma[1,1], -sigma[0,1]], [-sigma[1,0], sigma[0,0]]]) / detS
+    detS = sigma[0, 0]*sigma[1, 1] - sigma[0, 1]*sigma[1, 0]
+    Sinv = np.array([[sigma[1, 1], -sigma[0, 1]],
+                     [-sigma[1, 0], sigma[0, 0]]]) / detS
 
     C = mu.T @ Sinv @ mu
     D = 2*pi*sqrt(detS)
@@ -115,7 +117,7 @@ def pnormpdf(theta, mu, sigma):
     return pdf
 
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def pnormcdf(lb, ub, mu, sigma):
     """
     Evaluate the Pr(lb < theta < ub) for a general projected normal
@@ -124,16 +126,16 @@ def pnormcdf(lb, ub, mu, sigma):
     Parameters
     ----------
     lb : float
-        lower bound on the angular range. lb < ub.
+        lower integration bound on the angular range. lb < ub.
 
     ub : float
-        upper bound on the angular range. ub > lb.
+        upper integration bound on the angular range. ub > lb.
 
-    mu : ndarray, shape(2,1)
-        The component mean vector.
+    mu : ndarray, shape=(2, 1)
+        The mean vector.
 
-    sigma : ndarray, shape(2,2)
-        The compontnet variance matrix.
+    sigma : ndarray, shape=(2, 2)
+        The variance matrix.
 
     Returns
     -------
@@ -145,5 +147,5 @@ def pnormcdf(lb, ub, mu, sigma):
     None
     """
 
-    cdf = quad(lambda theta : pnormpdf(theta, mu, sigma), lb, ub)[0]
+    cdf = quad(lambda theta: pnormpdf(theta, mu, sigma), lb, ub)[0]
     return cdf

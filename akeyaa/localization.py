@@ -1,5 +1,5 @@
 """
-Local explicit paths to the necessary gdb.
+Local explicit paths to the necessary gdb files.
 
 Author
 ------
@@ -9,7 +9,8 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+26 May 2020
+
 """
 
 # From the MN Department of Health.
@@ -26,6 +27,6 @@ TRSLOC = r'D:\Google Drive\GIS\fgdb_plan_mngeo_trs\plan_mngeo_trs.gdb'
 # Downloaded from:
 # https://www.usgs.gov/core-science-systems/ngp/national-hydrography/access-national-hydrography-products
 # For more information see: https://pubs.usgs.gov/tm/11/a3/pdf/tm11-a3.pdf
-# Beware: this gdb uses lat/lon coordinates; more specifically 'GRS 1980'
+# Beware! This gdb uses lat/lon coordinates; more specifically 'GRS 1980'
 # (EPSG:7019), which is a precursor of 'WGS 84' (EPSG:4326).
 WBDLOC = r'D:\Google Drive\GIS\WBD_National_GDB\WBD_National_GDB.gdb'
