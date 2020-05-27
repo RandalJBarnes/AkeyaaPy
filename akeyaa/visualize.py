@@ -3,10 +3,10 @@ Akeyaa visualization tools.
 
 Functions
 ---------
-load_and_visualize_results(pklzfile)
+load_and_show_results(pklzfile)
     Load the run from a .pklz file and plot the results.
 
-visualize_results(title_prefix, polygon, results)
+show_results(title_prefix, polygon, results)
     Plot the results.
 
 aquifers_in_county(cty_abbr, aquifers)
@@ -35,8 +35,9 @@ Version
 
 import bz2
 import pickle
-import matplotlib.pyplot as plt
 import math
+
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
@@ -45,7 +46,7 @@ import pnorm
 
 
 # -----------------------------------------------------------------------------
-def load_and_visualize_results(pklzfile):
+def load_and_show_results(pklzfile):
     """
     Load the run from a .pklz file and plot the results.
 
@@ -67,11 +68,11 @@ def load_and_visualize_results(pklzfile):
     polygon = archive.get('polygon')
     results = archive.get('results')
 
-    visualize_results(title_prefix, polygon, results)
+    show_results(title_prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
-def visualize_results(title_prefix, polygon, results):
+def show_results(title_prefix, polygon, results):
     """
     Plot the results.
 

@@ -55,14 +55,14 @@ from scipy.integrate import quad
 
 
 # -----------------------------------------------------------------------------
-def pnormpdf(theta, mu, sigma):
+def pnormpdf(angles, mu, sigma):
     """
     Evaluate the probability density function for the general projected
     normal distribution.
 
     Parameters
     ----------
-    theta : ndarray, shape(M, ); or list; or scalar.
+    angles : ndarray, shape(M, ); or list; or scalar.
         The angles at which to evaluate the pdf. The angles are given in
         radians, not degrees.
 
@@ -90,12 +90,12 @@ def pnormpdf(theta, mu, sigma):
     """
 
     # Preallocate space.
-    if isinstance(theta, np.ndarray):
-        pdf = np.empty(theta.shape[0])
-    elif isinstance(theta, list):
-        pdf = np.empty(len(theta))
+    if isinstance(angles, np.ndarray):
+        pdf = np.empty(angles.shape[0])
+    elif isinstance(angles, list):
+        pdf = np.empty(len(angles))
     else:
-        theta = [theta]
+        angles = [angles]
         pdf = np.empty([1, ])
 
     # Precompute what can be precomputed.
@@ -107,8 +107,8 @@ def pnormpdf(theta, mu, sigma):
     D = 2*pi*sqrt(detS)
 
     # Fill the pdf for all angles.
-    for j, t in enumerate(theta):
-        r = np.array([[cos(t)], [sin(t)]])
+    for j, theta in enumerate(angles):
+        r = np.array([[cos(theta)], [sin(theta)]])
         A = r.T @ Sinv @ r                  # A is always a positive number.
         B = r.T @ Sinv @ mu
         E = B/sqrt(A)
@@ -118,17 +118,17 @@ def pnormpdf(theta, mu, sigma):
 
 
 # -----------------------------------------------------------------------------
-def pnormcdf(lb, ub, mu, sigma):
+def pnormcdf(lowerbound, upperbound, mu, sigma):
     """
     Evaluate the Pr(lb < theta < ub) for a general projected normal
     distribution.
 
     Parameters
     ----------
-    lb : float
+    lowerbound : float
         lower integration bound on the angular range. lb < ub.
 
-    ub : float
+    upperbound : float
         upper integration bound on the angular range. ub > lb.
 
     mu : ndarray, shape=(2, 1)
@@ -140,12 +140,13 @@ def pnormcdf(lb, ub, mu, sigma):
     Returns
     -------
     cdf : float
-        Pr(lb < alpha < ub)
+        Pr(lowerbound < alpha < upperbound)
 
     Raises
     ------
     None
     """
 
-    cdf = quad(lambda theta: pnormpdf(theta, mu, sigma), lb, ub)[0]
+    cdf = quad(lambda theta: pnormpdf(theta, mu, sigma),
+               lowerbound, upperbound)[0]
     return cdf

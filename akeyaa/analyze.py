@@ -36,8 +36,6 @@ Version
 """
 
 import bz2
-import datetime
-import os
 import pickle
 import time
 import numpy as np
@@ -117,27 +115,17 @@ def shortcut(what, aquifers=None, radius=3000, reqnum=25, spacing=1000,
     """
 
     # Initialize the stopwatch.
-    start_time = time.time()
-
-    # Make a pickle filename, if none is given.
-    if pklzfile is None:
-        pklzfile = (
-            'Akeyya'
-            + datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
-            + '.pklz')
-        remove_flag = True
-    else:
-        remove_flag = False
+    start = time.time()
 
     # Is 'what' is a cty_abbr?
     try:
-        _ = getdata.get_county_code(what)
-        by_county(what, aquifers, radius, reqnum, spacing, method, pklzfile)
-        visualize.load_and_visualize_results(pklzfile)
-        if remove_flag:
-            os.remove(pklzfile)
-        print('Elapsed time = {0:.4f} seconds'
-              .format(time.time() - start_time))
+        name = getdata.get_county_name(what)
+        title_prefix, polygon, results = by_county(what, aquifers, radius,
+                                                   reqnum, spacing, method,
+                                                   pklzfile)
+        visualize.show_results(title_prefix, polygon, results)
+        print('Analyze by county: {0}, {1} County'.format(what, name))
+        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
         return
 
     except getdata.NotFoundError:
@@ -145,13 +133,13 @@ def shortcut(what, aquifers=None, radius=3000, reqnum=25, spacing=1000,
 
     # Is 'what' is a watershed code?
     try:
-        _ = getdata.get_watershed_name(what)
-        by_watershed(what, aquifers, radius, reqnum, spacing, method, pklzfile)
-        visualize.load_and_visualize_results(pklzfile)
-        if remove_flag:
-            os.remove(pklzfile)
-        print('Elapsed time = {0:.4f} seconds'
-              .format(time.time() - start_time))
+        name = getdata.get_watershed_name(what)
+        title_prefix, polygon, results = by_watershed(what, aquifers, radius,
+                                                      reqnum, spacing, method,
+                                                      pklzfile)
+        visualize.show_results(title_prefix, polygon, results)
+        print('Analyze by watershed: {0}, {1} Watershed'.format(what, name))
+        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
         return
 
     except getdata.NotFoundError:
@@ -159,20 +147,24 @@ def shortcut(what, aquifers=None, radius=3000, reqnum=25, spacing=1000,
 
     # Is 'what' is a subregion code?
     try:
-        _ = getdata.get_subregion_name(what)
-        by_subregion(what, aquifers, radius, reqnum, spacing, method, pklzfile)
-        visualize.load_and_visualize_results(pklzfile)
-        if remove_flag:
-            os.remove(pklzfile)
-        print('Elapsed time = {0:.4f} seconds'
-              .format(time.time() - start_time))
+        name = getdata.get_subregion_name(what)
+        title_prefix, polygon, results = by_subregion(what, aquifers, radius,
+                                                      reqnum, spacing, method,
+                                                      pklzfile)
+        visualize.show_results(title_prefix, polygon, results)
+        print('Analyze by subregion: {0}, {1} subregion'.format(what, name))
+        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
         return
 
     except getdata.NotFoundError:
         pass
 
     # Apparently, 'what' is unknown...
-    raise getdata.NotFoundError
+    raise getdata.NotFoundError(
+            '"{0}" is not a valid 4-character county abbreviation, a valid '
+            '10-character watershed code, or a valid 8-character hydrologic '
+            'subregion code.'.format(what)
+            )
 
 
 # -----------------------------------------------------------------------------
@@ -217,6 +209,16 @@ def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
 
     Returns
     -------
+    : tuple
+    (title_prefix, polygon, results)
+
+    title_prefix : str
+        The project-specifc (but not plot-specific) part of each plot title.
+
+    polygon : arcpy.Polygon
+        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the run.
+
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
         -- xtarget : float
@@ -225,9 +227,9 @@ def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
                y-coordinate of target location.
         -- n : int
                number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6, 1)
+        -- evp : ndarray, shape=(6,1)
                expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6, 6)
+        -- varp : ndarray, shape=(6,6)
                variance/covariance matrix of the parameters.
 
     Notes
@@ -240,7 +242,7 @@ def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
     # Get the county polygon.
     polygon = getdata.get_county_polygon(cty_abbr)
 
-    # Create the associated tile string.
+    # Create the associated title prefix string.
     cty_name = getdata.get_county_name(cty_abbr)
     if aquifers is not None:
         title_prefix = '{0} County {1}: '.format(cty_name, aquifers)
@@ -267,7 +269,7 @@ def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
         with bz2.open(pklzfile, 'wb') as fileobject:
             pickle.dump(archive, fileobject)
 
-    return results
+    return (title_prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
@@ -312,6 +314,16 @@ def by_watershed(wtrs_code, aquifers, radius, reqnum, spacing, method,
 
     Returns
     -------
+    : tuple
+    (title_prefix, polygon, results)
+
+    title_prefix : str
+        The project-specifc (but not plot-specific) part of each plot title.
+
+    polygon : arcpy.Polygon
+        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the run.
+
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
         -- xtarget : float
@@ -320,9 +332,9 @@ def by_watershed(wtrs_code, aquifers, radius, reqnum, spacing, method,
                y-coordinate of target location.
         -- n : int
                number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6, 1)
+        -- evp : ndarray, shape=(6,1)
                expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6, 6)
+        -- varp : ndarray, shape=(6,6)
                variance/covariance matrix of the parameters.
 
     Notes
@@ -334,7 +346,7 @@ def by_watershed(wtrs_code, aquifers, radius, reqnum, spacing, method,
     wtrs_name = getdata.get_watershed_name(wtrs_code)
     polygon = getdata.get_watershed_polygon(wtrs_code)
 
-    # Create the associated tile string.
+    # Create the associated title prefix string.
     if aquifers is not None:
         title_prefix = '{0} Watershed {1}: '.format(wtrs_name, aquifers)
     else:
@@ -360,7 +372,7 @@ def by_watershed(wtrs_code, aquifers, radius, reqnum, spacing, method,
         with bz2.open(pklzfile, 'wb') as fileobject:
             pickle.dump(archive, fileobject)
 
-    return results
+    return (title_prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
@@ -405,6 +417,16 @@ def by_subregion(subr_code, aquifers, radius, reqnum, spacing, method,
 
     Returns
     -------
+    : tuple
+    (title_prefix, polygon, results)
+
+    title_prefix : str
+        The project-specifc (but not plot-specific) part of each plot title.
+
+    polygon : arcpy.Polygon
+        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
+        The geographic focus of the run.
+
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
         -- xtarget : float
@@ -413,9 +435,9 @@ def by_subregion(subr_code, aquifers, radius, reqnum, spacing, method,
                y-coordinate of target location.
         -- n : int
                number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6, 1)
+        -- evp : ndarray, shape=(6,1)
                expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6, 6)
+        -- varp : ndarray, shape=(6,6)
                variance/covariance matrix of the parameters.
 
     Notes
@@ -427,7 +449,7 @@ def by_subregion(subr_code, aquifers, radius, reqnum, spacing, method,
     subr_name = getdata.get_subregion_name(subr_code)
     polygon = getdata.get_subregion_polygon(subr_code)
 
-    # Create the associated tile string.
+    # Create the associated title prefix string.
     if aquifers is not None:
         title_prefix = '{0} Subregion {1}: '.format(subr_name, aquifers)
     else:
@@ -453,7 +475,7 @@ def by_subregion(subr_code, aquifers, radius, reqnum, spacing, method,
         with bz2.open(pklzfile, 'wb') as fileobject:
             pickle.dump(archive, fileobject)
 
-    return results
+    return (title_prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
@@ -598,7 +620,7 @@ def fit_conic(x, y, z, method='RLM'):
 
             z = A*x**2 + B*y**2 + C*x*y + D*x + E*y + F + noise
 
-        where the parameters maps as: [A, B, C, D, E, F] = p[0:5].
+        where the parameters map as: [A, B, C, D, E, F] = p[0:5].
 
     o   Note that most of the work is done by the statsmodels library. There
         are other fitting methods available.
