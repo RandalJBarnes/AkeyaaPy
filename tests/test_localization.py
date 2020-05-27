@@ -9,17 +9,19 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+27 May 2020
+
 """
 
 import os
 
-from localization import CWILOC, CTYLOC, TRSLOC, WBDLOC
+import localization as loc
 
 
 # -----------------------------------------------------------------------------
 def test_localization():
-    assert(os.path.isdir(CWILOC))
-    assert(os.path.isdir(CTYLOC))
-    assert(os.path.isdir(TRSLOC))
-    assert(os.path.isdir(WBDLOC))
+    assert(os.path.isdir(loc.CWILOC))
+    assert(os.path.isdir(loc.CTYLOC))
+    assert(os.path.isdir(loc.STALOC))
+    assert(os.path.isdir(loc.TRSLOC))
+    assert(os.path.isdir(loc.WBDLOC))
