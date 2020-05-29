@@ -1,50 +1,12 @@
-"""
-Akeyaa analyses functions.
-
-Functions
----------
-shortcut(what, aquifers=None, radius=3000, reqnum=25, spacing=1000,
-              method='RLM', pklzfile=None):
-    A shortcut way to run Akeyaa analysis and visualization with mostly
-    default parameters.
-
-by_county(aquifers, cty_abbr, radius, reqnum, spacing, method, pklzfile)
-    Compute the full Akeyaa analysis across the specified county.
-
-by_watershed(aquifers, wtrs_code, radius, reqnum, spacing, method, pklzfile)
-    Compute the full Akeyaa analysis across the specified watershed.
-
-by_subregion(subr_name, aquifers, radius, reqnum, spacing, method, pklzfile)
-    Compute the full Akeyaa analysis across the specified hydrologic subregion.
-
-by_polygon(aquifers, polygon, radius, reqnum, spacing, method):
-    Compute the full Akeyaa analysis across the specified polygon.
-
-fit_conic(x, y, z, method)
-    Fit the conic potential model using requested method.
-
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-25 May 2020
-
-"""
-
 import bz2
 import pickle
-import time
 import numpy as np
-import scipy
 import statsmodels.api as sm
+
 import arcpy
 
-import getdata
-import visualize
+import venue
+import wells
 
 
 # -----------------------------------------------------------------------------
@@ -59,195 +21,19 @@ class UnknownMethodError(Error):
     The requested method is not supported.
     """
 
-
 # -----------------------------------------------------------------------------
-def shortcut(what, aquifers=None, radius=3000, reqnum=25, spacing=1000,
-             method='RLM', pklzfile=None):
-    """
-    A shortcut to run Akeyaa analysis and visualization.
+def by_venue(, aquifers, database, radius, reqnum, spacing, method, pklzfile=None):
 
-    The selection, 'what', can be a county abbreviation, a watershed name, or
-    a watershed code. This function the appropriate version of the akeyaa
-    engine (by_county or by_watershed), creates a temporary .pklz file to
-    store the results, calls visualize_results, and then deletes the temporary
-    file.
-
-    Parameters
-    ----------
-    what : str
-        -- a 4-character county abbreviation string,
-        -- a 10-digit watershed number encoded as a string (HUC10), or
-        -- an 8-digit subregion number encoded as a string (HUC8).
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    radius : float (optional)
-        Search radius for neighboring wells. radius > 0. Default = 3000 [m].
-
-    reqnum : int (optional)
-        Required number of neighboring wells. If fewer are found, the target
-        location is skipped. reqnum > 6. Default = 25.
-
-    spacing : float (optional)
-        Grid spacing for target locations across the county. spacing > 0.
-        Default = 1000 [m].
-
-    method : str (optional)
-        The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-        Default = 'RLM'.
-
-    pklzfile : str (optional)
-        Compressed pickle file path/name. If None, the output file is not
-        created. Default = None.
-
-    Returns
-    -------
-    None
-
-    Notes
-    -----
-    o   Beware! Watershed names are not unique.
-    """
-
-    # Initialize the stopwatch.
-    start = time.time()
-
-    # Is 'what' is a cty_abbr?
-    try:
-        name = getdata.get_county_name(what)
-        title_prefix, polygon, results = by_county(what, aquifers, radius,
-                                                   reqnum, spacing, method,
-                                                   pklzfile)
-        visualize.show_results(title_prefix, polygon, results)
-        print('Analyze by county: {0}, {1} County'.format(what, name))
-        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
-        return
-
-    except getdata.NotFoundError:
-        pass
-
-    # Is 'what' is a watershed code?
-    try:
-        name = getdata.get_watershed_name(what)
-        title_prefix, polygon, results = by_watershed(what, aquifers, radius,
-                                                      reqnum, spacing, method,
-                                                      pklzfile)
-        visualize.show_results(title_prefix, polygon, results)
-        print('Analyze by watershed: {0}, {1} Watershed'.format(what, name))
-        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
-        return
-
-    except getdata.NotFoundError:
-        pass
-
-    # Is 'what' is a subregion code?
-    try:
-        name = getdata.get_subregion_name(what)
-        title_prefix, polygon, results = by_subregion(what, aquifers, radius,
-                                                      reqnum, spacing, method,
-                                                      pklzfile)
-        visualize.show_results(title_prefix, polygon, results)
-        print('Analyze by subregion: {0}, {1} subregion'.format(what, name))
-        print('Elapsed time = {0:.4f} seconds'.format(time.time() - start))
-        return
-
-    except getdata.NotFoundError:
-        pass
-
-    # Apparently, 'what' is unknown...
-    raise getdata.NotFoundError(
-            '"{0}" is not a valid 4-character county abbreviation, a valid '
-            '10-character watershed code, or a valid 8-character hydrologic '
-            'subregion code.'.format(what)
-            )
-
-
-# -----------------------------------------------------------------------------
-def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
-              pklzfile=None):
-    """
-    Compute the full Akeyaa analysis across the specified county.
-
-    Compute the full Akeyaa analysis for a square grid of target locations
-    across the specified county. The grid is defined by <spacing>. The
-    analysis is carried out using the wells in the specified aquifer(s) only.
-    The analysis may use wells in neighboring counties.
-
-    Parameters
-    ----------
-    cty_abbr : str
-        The 4-character county abbreviation string.
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    radius : float
-        Search radius for neighboring wells. radius > 0.
-
-    reqnum : int
-        Required number of neighboring wells. If fewer are found, the target
-        location is skipped. reqnum > 6.
-
-    spacing : float
-        Grid spacing for target locations across the county. spacing > 0.
-
-    method : str
-        The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-
-    pklzfile : str (optional)
-        Compressed pickle file path/name. If None, the output file is not
-        created. Default = None.
-
-    Returns
-    -------
-    : tuple
-    (title_prefix, polygon, results)
-
-    title_prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
-
-    results : list of tuples
-        (xtarget, ytarget, n, evp, varp)
-        -- xtarget : float
-               x-coordinate of target location.
-        -- ytarget : float
-               y-coordinate of target location.
-        -- n : int
-               number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6,1)
-               expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the parameters.
-
-    Notes
-    -----
-    o   Note, data from outside of the county may also used in the
-        computations. However, only data from the Minnesota CWI are
-        considered.
-    """
-
-    # Get the county polygon.
-    polygon = getdata.get_county_polygon(cty_abbr)
+    # Get the polygon.
+    polygon = getdata.get_city_polygon(code)
 
     # Create the associated title prefix string.
-    cty_name = getdata.get_county_name(cty_abbr)
+    name = getdata.get_city_name(code)
+
     if aquifers is not None:
-        title_prefix = '{0} County {1}: '.format(cty_name, aquifers)
+        prefix = 'City of {0} {1}: '.format(name, aquifers)
     else:
-        title_prefix = '{0} County [All]: '.format(cty_name)
+        prefix = 'City of {0} [All]: '.format(name)
 
     # Carry out the Akeyaa analisis.
     results = by_polygon(polygon, aquifers, radius, reqnum, spacing, method)
@@ -256,293 +42,26 @@ def by_county(cty_abbr, aquifers, radius, reqnum, spacing, method,
     if pklzfile is not None:
         archive = {
             'aquifers': aquifers,
-            'cty_abbr': cty_abbr,
-            'cty_name': cty_name,
+            'code': code,
+            'name': name,
             'radius': radius,
             'reqnum': reqnum,
             'spacing': spacing,
             'method': method,
-            'title_prefix': title_prefix,
+            'prefix': prefix,
             'polygon': polygon,
             'results': results
             }
         with bz2.open(pklzfile, 'wb') as fileobject:
             pickle.dump(archive, fileobject)
 
-    return (title_prefix, polygon, results)
+    return (prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
-def by_watershed(wtrs_code, aquifers, radius, reqnum, spacing, method,
-                 pklzfile=None):
+def by_polygon(polygon, aquifers, database, radius, reqnum, spacing, method):
     """
-    Compute the full Akeyaa analysis across the specified hydrologic watershed.
-
-    Compute the full Akeyaa analysis for a square grid of target locations
-    across the specified watershed. The grid is defined by <spacing>. The
-    analysis is carried out using the wells in the specified aquifer(s) only.
-    The analysis may use wells in neighboring watersheds.
-
-    Parameters
-    ----------
-    wtrs_code : str
-        The unique 10-digit number encoded as a string (HUC10).
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    radius : float
-        Search radius for neighboring wells. radius > 0.
-
-    reqnum : int
-        Required number of neighboring wells. If fewer are found, the target
-        location is skipped. reqnum > 6.
-
-    spacing : float
-        Grid spacing for target locations across the county. spacing > 0.
-
-    method : str
-        The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-
-    pklzfile : str (optional)
-        Compressed pickle file path/name. If None, the output file is not
-        created. Default = None.
-
-    Returns
-    -------
-    : tuple
-    (title_prefix, polygon, results)
-
-    title_prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
-
-    results : list of tuples
-        (xtarget, ytarget, n, evp, varp)
-        -- xtarget : float
-               x-coordinate of target location.
-        -- ytarget : float
-               y-coordinate of target location.
-        -- n : int
-               number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6,1)
-               expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the parameters.
-
-    Notes
-    -----
-    o   Beware! Subregion names are not unique.
     """
-
-    # Get the watershed polygon.
-    wtrs_name = getdata.get_watershed_name(wtrs_code)
-    polygon = getdata.get_watershed_polygon(wtrs_code)
-
-    # Create the associated title prefix string.
-    if aquifers is not None:
-        title_prefix = '{0} Watershed {1}: '.format(wtrs_name, aquifers)
-    else:
-        title_prefix = '{0} Watershed [All]: '.format(wtrs_name)
-
-    # Carry out the Akeyaa analisis.
-    results = by_polygon(polygon, aquifers, radius, reqnum, spacing, method)
-
-    # If requested, save the run to a compressed pickle file.
-    if pklzfile is not None:
-        archive = {
-            'aquifers': aquifers,
-            'wtrs_code': wtrs_code,
-            'wtrs_name': wtrs_name,
-            'radius': radius,
-            'reqnum': reqnum,
-            'spacing': spacing,
-            'method': method,
-            'title_prefix': title_prefix,
-            'polygon': polygon,
-            'results': results
-            }
-        with bz2.open(pklzfile, 'wb') as fileobject:
-            pickle.dump(archive, fileobject)
-
-    return (title_prefix, polygon, results)
-
-
-# -----------------------------------------------------------------------------
-def by_subregion(subr_code, aquifers, radius, reqnum, spacing, method,
-                 pklzfile=None):
-    """
-    Compute the full Akeyaa analysis across the specified hydrologic subregion.
-
-    Compute the full Akeyaa analysis for a square grid of target locations
-    across the specified subregion. The grid is defined by <spacing>. The
-    analysis is carried out using the wells in the specified aquifer(s) only.
-    The analysis may use wells in neighboring subregions.
-
-    Parameters
-    ----------
-    subr_code : str
-        The unique 10-digit number encoded as a string (HUC8).
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    radius : float
-        Search radius for neighboring wells. radius > 0.
-
-    reqnum : int
-        Required number of neighboring wells. If fewer are found, the target
-        location is skipped. reqnum > 6.
-
-    spacing : float
-        Grid spacing for target locations across the county. spacing > 0.
-
-    method : str
-        The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-
-    pklzfile : str (optional)
-        Compressed pickle file path/name. If None, the output file is not
-        created. Default = None.
-
-    Returns
-    -------
-    : tuple
-    (title_prefix, polygon, results)
-
-    title_prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
-
-    results : list of tuples
-        (xtarget, ytarget, n, evp, varp)
-        -- xtarget : float
-               x-coordinate of target location.
-        -- ytarget : float
-               y-coordinate of target location.
-        -- n : int
-               number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6,1)
-               expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the parameters.
-
-    Notes
-    -----
-    o The subregion names are NOT unique.
-    """
-
-    # Get the subregion polygon.
-    subr_name = getdata.get_subregion_name(subr_code)
-    polygon = getdata.get_subregion_polygon(subr_code)
-
-    # Create the associated title prefix string.
-    if aquifers is not None:
-        title_prefix = '{0} Subregion {1}: '.format(subr_name, aquifers)
-    else:
-        title_prefix = '{0} Subregion [All]: '.format(subr_name)
-
-    # Carry out the Akeyaa analisis.
-    results = by_polygon(polygon, aquifers, radius, reqnum, spacing, method)
-
-    # If requested, save the run to a compressed pickle file.
-    if pklzfile is not None:
-        archive = {
-            'aquifers': aquifers,
-            'subr_name': subr_name,
-            'subr_code': subr_code,
-            'radius': radius,
-            'reqnum': reqnum,
-            'spacing': spacing,
-            'method': method,
-            'title_prefix': title_prefix,
-            'polygon': polygon,
-            'results': results
-            }
-        with bz2.open(pklzfile, 'wb') as fileobject:
-            pickle.dump(archive, fileobject)
-
-    return (title_prefix, polygon, results)
-
-
-# -----------------------------------------------------------------------------
-def by_polygon(polygon, aquifers, radius, reqnum, spacing, method):
-    """
-    Compute the full Akeyaa analysis across the specified polygon.
-
-    Compute the full Akeyaa analysis for a square grid of target locations
-    across the specified polygon. The grid is defined by <spacing>. The
-    analysis is carried out using the wells in the specified aquifer(s) only.
-    The analysis may use wells in neighboring polygons.
-
-    Parameters
-    ----------
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    radius : float
-        Search radius for neighboring wells. radius > 0.
-
-    reqnum :
-        Required number of neighboring wells. If fewer are found, the target
-        location is skipped. reqnum > 6.
-
-    spacing : float
-        Grid spacing for target locations across the county. spacing > 0.
-
-    method : str
-        The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-
-    Returns
-    -------
-    results : list of tuples
-        (xtarget, ytarget, n, evp, varp)
-        -- xtarget : float
-               x-coordinate of target location.
-        -- ytarget : float
-               y-coordinate of target location.
-        -- n : int
-               number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6, 1)
-               expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6, 6)
-               variance/covariance matrix of the parameters.
-
-    Notes
-    -----
-    o   Note, data from outside of the polygon may also used in the
-        computations.
-    """
-
-    # Get the well data from all authorized wells in Minnesota that are
-    # completed in one of the identified aquifers.
-    welldata = getdata.get_well_data(aquifers)
-    xwell = np.array([well[0][0] for well in welldata])
-    ywell = np.array([well[0][1] for well in welldata])
-    zwell = np.array([well[1] for well in welldata])
-
-    tree = scipy.spatial.cKDTree(np.column_stack((xwell, ywell)))
 
     # Create the grid of target locations across the specified polygon.
     xmin = polygon.extent.XMin
@@ -561,21 +80,17 @@ def by_polygon(polygon, aquifers, radius, reqnum, spacing, method):
 
     for i in range(ny):
         for j in range(nx):
-            xtarget = xgrd[j]
-            ytarget = ygrd[i]
+            xo = xgrd[j]
+            yo = ygrd[i]
 
-            if polygon.contains(arcpy.Point(xtarget, ytarget)):
-                neighbors = tree.query_ball_point([xtarget, ytarget], radius)
-                count = len(neighbors)
+            if polygon.contains(arcpy.Point(xo, yo)):
+                xw, yw, zw = database.fetch([xo, yo], radius, aquifers)
 
                 # Carryout the weighted least squares regression.
-                if count >= reqnum:
-                    xactive = xwell[neighbors] - xtarget
-                    yactive = ywell[neighbors] - ytarget
-                    zactive = zwell[neighbors]
-
-                    evp, varp = fit_conic(xactive, yactive, zactive, method)
-                    results.append((xtarget, ytarget, count, evp, varp))
+                # Note that we are converting the z in [ft] to [m].
+                if len(xw) >= reqnum:
+                    evp, varp = fit_conic(xw-xo, yw-yo, 0.3048*zw, method)
+                    results.append((xo, yo, len(xw), evp, varp))
 
     return results
 

@@ -8,34 +8,24 @@ Functions
 load_and_show_results(pklzfile)
     Load the run from a .pklz file and plot the results.
 
-show_results(title_prefix, polygon, results)
+show_results(prefix, polygon, results)
     Plot the results.
 
-show_local_flow_direction(title_prefix, polygon, results)
+show_local_flow_direction(prefix, polygon, results)
     Plot the local flow directions.
 
-show_local_number_of_wells(title_prefix, polygon, results)
+show_local_number_of_wells(prefix, polygon, results)
     Plot the local number of wells.
 
-show_local_head_gradient_magnitude(title_prefix, polygon, results)
+show_local_head_gradient_magnitude(prefix, polygon, results)
     Plot the relative magnitude of the local head gradient.
 
 ----- geography -----
-show_polygon_in_state(polygon)
+whereis(obj)
+    Plots the objects polygon over the state.
 
-
------ geology -----
-show_aquifers_in_county(cty_abbr, aquifers)
-    Plot the wells in the county coded by aquifer.
-
-show_aquifers_in_watershed(wtrs_code, aquifers)
-    Plot the wells in the watershed coded by aquifer.
-
-show_aquifers_in_subregion(subr_code, aquifers)
-    Plot the wells in the subregion coded by aquifer.
-
-show_aquifers_in_polygon(polygon, title_prefix, aquifers)
-    Plot the wells in the polygon coded by aquifer.
+show_polygon_in_state(polygon, title_str=None)
+    Plot the polygon in the state.
 
 Author
 ------
@@ -45,7 +35,7 @@ University of Minnesota
 
 Version
 -------
-27 May 2020
+28 May 2020
 
 """
 
@@ -57,8 +47,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-import getdata
 import pnorm
+import wells
+
+
+# -----------------------------------------------------------------------------
+class Error(Exception):
+    """
+    The base exception for the module.
+    """
+
+
+class NotFoundError(Error):
+    """
+    Requested item was not found.
+    """
+
+
+class ArgumentError(Error):
+    """
+    Invalid argument.
+    """
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -80,15 +93,15 @@ def load_and_show_results(pklzfile):
     with bz2.open(pklzfile, 'rb') as fileobject:
         archive = pickle.load(fileobject)
 
-    title_prefix = archive.get('title_prefix')
+    prefix = archive.get('prefix')
     polygon = archive.get('polygon')
     results = archive.get('results')
 
-    show_results(title_prefix, polygon, results)
+    show_results(prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------
-def show_results(title_prefix, polygon, results):
+def show_results(prefix, polygon, results):
     """
     Plot the results.
 
@@ -106,7 +119,7 @@ def show_results(title_prefix, polygon, results):
 
     Parameters
     ----------
-    title_prefix : str
+    prefix : str
         The project-specifc (but not plot-specific) part of each plot title.
 
     polygon : arcpy.Polygon
@@ -131,15 +144,15 @@ def show_results(title_prefix, polygon, results):
     None
     """
 
-    show_local_flow_direction(title_prefix, polygon, results)
-    show_local_number_of_wells(title_prefix, polygon, results)
-    show_local_head_gradient_magnitude(title_prefix, polygon, results)
+    show_local_flow_direction(prefix, polygon, results)
+    show_local_number_of_wells(prefix, polygon, results)
+    show_local_head_gradient_magnitude(prefix, polygon, results)
 
     plt.draw_all()
 
 
 # -----------------------------------------------------------------------------
-def show_local_flow_direction(title_prefix, polygon, results):
+def show_local_flow_direction(prefix, polygon, results):
     """
     Plot the local flow directions.
 
@@ -149,7 +162,7 @@ def show_local_flow_direction(title_prefix, polygon, results):
 
     Parameters
     ----------
-    title_prefix : str
+    prefix : str
         The project-specifc (but not plot-specific) part of each plot title.
 
     polygon : arcpy.Polygon
@@ -202,7 +215,7 @@ def show_local_flow_direction(title_prefix, polygon, results):
         upperbound = theta + np.pi/18.0
         p10[i] = pnorm.pnormcdf(lowerbound, upperbound, mu, sigma)
 
-    plt.figure()
+    fig, ax1 = plt.subplots()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
@@ -213,12 +226,12 @@ def show_local_flow_direction(title_prefix, polygon, results):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(title_prefix + 'Local Flow Directions', {'fontsize': 24})
+    plt.title(prefix + 'Local Flow Directions', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_local_number_of_wells(title_prefix, polygon, results):
+def show_local_number_of_wells(prefix, polygon, results):
     """
     Plot the local number of wells.
 
@@ -227,7 +240,7 @@ def show_local_number_of_wells(title_prefix, polygon, results):
 
     Parameters
     ----------
-    title_prefix : str
+    prefix : str
         The project-specifc (but not plot-specific) part of each plot title.
 
     polygon : arcpy.Polygon
@@ -271,12 +284,12 @@ def show_local_number_of_wells(title_prefix, polygon, results):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(title_prefix + 'Number of Local Wells', {'fontsize': 24})
+    plt.title(prefix + 'Number of Local Wells', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_local_head_gradient_magnitude(title_prefix, polygon, results):
+def show_local_head_gradient_magnitude(prefix, polygon, results):
     """
     Plot the relative magnitude of the local head gradient.
 
@@ -286,7 +299,7 @@ def show_local_head_gradient_magnitude(title_prefix, polygon, results):
 
     Parameters
     ----------
-    title_prefix : str
+    prefix : str
         The project-specifc (but not plot-specific) part of each plot title.
 
     polygon : arcpy.Polygon
@@ -339,194 +352,27 @@ def show_local_head_gradient_magnitude(title_prefix, polygon, results):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(title_prefix + '|Head Gradient|', {'fontsize': 24})
+    plt.title(prefix + '|Head Gradient|', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_polygon_in_state(polygon):
+def show_aquifers(prefix, polygon, aquifers=None):
     """
-    """
+    Plot the wells in the vnue coded by aquifer.
 
-    # Get the polygon boundary information.
-    xpoly = [pnt.X for pnt in polygon.getPart(0)]
-    ypoly = [pnt.Y for pnt in polygon.getPart(0)]
-
-    # Get the state boundary information.
-    state = getdata.get_state_polygon()
-    xstate = [pnt.X for pnt in state.getPart(0)]
-    ystate = [pnt.Y for pnt in state.getPart(0)]
-
-    # Plot the well locations coded by aquifer.
-    plt.figure()
-    plt.axis('equal')
-    plt.axis('off')
-
-    plt.fill(xstate, ystate, '0.90')
-    plt.fill(xpoly, ypoly, 'b')
-
-
-# -----------------------------------------------------------------------------
-def show_aquifers_in_county(cty_abbr, aquifers=None):
-    """
-    Plot the wells in the county coded by aquifer.
-
-    Plot the locations of the authorized wells in the selected county that are
-    completed in one of the identified aquifers. The plotted marker for a well
-    is color-coded by the aquifer in which it is completed.
+    Plot the locations of the authorized wells in the venue that are completed
+    in one of the identified aquifers. The plotted marker for a well is
+    color-coded by the aquifer in which it is completed.
 
     Parameters
     ----------
-    cty_abbr : str
-        The 4-character county abbreviation string, as defined by the
-        Minnesota Department of Natural Resources.
+    venue : Venue
 
     aquifers : list, optional
         List of four-character aquifer abbreviation strings, as defined in
         Minnesota Geologic Survey's coding system. The default is None. If
         None, then all aquifers present will be included.
-
-    Returns
-    -------
-    aquifer_info : list of tuples
-        (aquifer_abbr, count)
-        -- aquifer_abbr : str
-                The four-character aquifer abbreviation string.
-        -- count : int
-                The number of wells in the associated aquifer type.
-        The list is sorted in descending order by count.
-    """
-
-    # Get the county polygon.
-    polygon = getdata.get_county_polygon(cty_abbr)
-
-    # Create the associated title string.
-    cty_name = getdata.get_county_name(cty_abbr)
-    if aquifers is not None:
-        title_prefix = '{0} County {1}: '.format(cty_name, aquifers)
-    else:
-        title_prefix = '{0} County [All]: '.format(cty_name)
-
-    # Find and plot the well locations, coded by aquifer.
-    aquifer_info = show_aquifers_in_polygon(polygon, title_prefix, aquifers)
-
-    return aquifer_info
-
-
-# -----------------------------------------------------------------------------
-def show_aquifers_in_watershed(wtrs_code, aquifers=None):
-    """
-    Plot the wells in the watershed coded by aquifer.
-
-    Plot the locations of the authorized wells in the selected watershed that
-    are completed in one of the identified aquifers. The plotted marker for a
-    well is color-coded by the aquifer in which it is completed.
-
-    Parameters
-    ----------
-    wtrs_code : str
-        The unique 10-digit watershed number encoded as a string (HUC10).
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    Returns
-    -------
-    aquifer_info : list of tuples
-        (aquifer_abbr, count)
-        -- aquifer_abbr : str
-                The four-character aquifer abbreviation string.
-        -- count : int
-                The number of wells in the associated aquifer type.
-        The list is sorted in descending order by count.
-    """
-
-    # Get the watershed polygon.
-    wtrs_name = getdata.get_watershed_name(wtrs_code)
-    polygon = getdata.get_watershed_polygon(wtrs_code)
-
-    # Create the associated title string.
-    if aquifers is not None:
-        title_prefix = '{0} Watershed {1}: '.format(wtrs_name, aquifers)
-    else:
-        title_prefix = '{0} Watershed [All]: '.format(wtrs_name)
-
-    # Find and plot the well locations, coded by aquifer.
-    aquifer_info = show_aquifers_in_polygon(polygon, title_prefix, aquifers)
-
-    return aquifer_info
-
-
-# -----------------------------------------------------------------------------
-def show_aquifers_in_subregion(subr_code, aquifers=None):
-    """
-    Plot the wells in the subregion coded by aquifer.
-
-    Plot the locations of the authorized wells in the selected subregion that
-    are completed in one of the identified aquifers. The plotted marker for a
-    well is color-coded by the aquifer in which it is completed.
-
-    Parameters
-    ----------
-    subr_code : str
-        The unique 8-digit subregion number encoded as a string (HUC8).
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    Returns
-    -------
-    aquifer_info : list of tuples
-        (aquifer_abbr, count)
-        -- aquifer_abbr : str
-                The four-character aquifer abbreviation string.
-        -- count : int
-                The number of wells in the associated aquifer type.
-        The list is sorted in descending order by count.
-    """
-
-    # Get the watershed polygon.
-    subr_name = getdata.get_subregion_name(subr_code)
-    polygon = getdata.get_subregion_polygon(subr_code)
-
-    # Create the associated title string.
-    if aquifers is not None:
-        title_prefix = '{0} Watershed {1}: '.format(subr_name, aquifers)
-    else:
-        title_prefix = '{0} Watershed [All]: '.format(subr_name)
-
-    # Find and plot the well locations, coded by aquifer.
-    aquifer_info = show_aquifers_in_polygon(polygon, title_prefix, aquifers)
-
-    return aquifer_info
-
-
-# -----------------------------------------------------------------------------
-def show_aquifers_in_polygon(polygon, title_prefix, aquifers=None):
-    """
-    Plot the wells in the polygon coded by aquifer.
-
-    Plot the locations of the authorized wells in the selected polygon that
-    are completed in one of the identified aquifers. The plotted marker for a
-    well is color-coded by the aquifer in which it is completed.
-
-    Parameters
-    ----------
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the query.
-
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
-    title_prefix : str
-        The identifiying generic title prefix.
 
     Returns
     -------
@@ -544,11 +390,11 @@ def show_aquifers_in_polygon(polygon, title_prefix, aquifers=None):
     ybdry = [pnt.Y for pnt in polygon.getPart(0)]
 
     # Get the data for wells in the polygon.
-    welldata = getdata.get_well_data_by_polygon(polygon, aquifers)
+    welldata = wells.get_welldata_by_polygon(polygon, aquifers)
 
     xwell = [row[0][0] for row in welldata]
     ywell = [row[0][1] for row in welldata]
-    awell = [row[3] for row in welldata]
+    awell = [row[2] for row in welldata]
 
     # Determine a list of unique aquifers present and their associated counts.
     uaq, naq = np.unique(awell, return_counts=True)
@@ -565,6 +411,6 @@ def show_aquifers_in_polygon(polygon, title_prefix, aquifers=None):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(title_prefix + 'Wells Coded By Aquifer', {'fontsize': 24})
+    plt.title(prefix + 'Wells Coded By Aquifer', {'fontsize': 24})
 
     return aquifer_info
