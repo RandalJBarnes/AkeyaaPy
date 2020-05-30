@@ -5,9 +5,6 @@ Functions
 ---------
 
 ----- groundwater -----
-load_and_show_results(pklzfile)
-    Load the run from a .pklz file and plot the results.
-
 show_results(prefix, polygon, results)
     Plot the results.
 
@@ -39,8 +36,6 @@ Version
 
 """
 
-import bz2
-import pickle
 import math
 
 import matplotlib.pyplot as plt
@@ -68,36 +63,6 @@ class ArgumentError(Error):
     """
     Invalid argument.
     """
-
-
-
-
-
-
-# -----------------------------------------------------------------------------
-def load_and_show_results(pklzfile):
-    """
-    Load the run from a .pklz file and plot the results.
-
-    Parameters
-    ----------
-    pklzfile : str
-        Compressed pickle file path/name for the run.
-
-    Returns
-    -------
-    None
-    """
-
-    # Get the run data from the pickle file.
-    with bz2.open(pklzfile, 'rb') as fileobject:
-        archive = pickle.load(fileobject)
-
-    prefix = archive.get('prefix')
-    polygon = archive.get('polygon')
-    results = archive.get('results')
-
-    show_results(prefix, polygon, results)
 
 
 # -----------------------------------------------------------------------------

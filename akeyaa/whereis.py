@@ -158,32 +158,3 @@ def show_polygon_in_state(title_str, polygon):
     plt.title(title_str, {'fontsize': 24})
     plt.grid(True)
 # -*- coding: utf-8 -*-
-
-
-# -----------------------------------------------------------------------------
-def get_state_polygon():
-    """
-    Get the Minnesota state boundary polygon.
-
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    polygon : arcpy.Polygon
-        The state boundary polygon.
-
-    Notes
-    -----
-    o   Coordinates are in 'NAD 83 UTM 15N'(EPSG:26915).
-    """
-
-    attributes = ['SHAPE@']
-
-    with arcpy.da.SearchCursor(MNBDRY, attributes) as cursor:
-        try:
-            return cursor.next()[0]
-        except StopIteration:
-            raise NotFoundError
-

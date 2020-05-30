@@ -4,13 +4,12 @@ Define and implement the wells Database class.
 Classes
 -------
 Database
-    A load-once-fast-lookup database of authorized wells.
+    A load-once-fast-lookup database of authorized wells in Minnesota
 
 Functions
 ---------
-get_welldata_by_polygon(polygon, aquifers=None)
+get_welldata_by_polygon(polygon, aquifers)
     Return well data from across the polygon.
-
 
 Author
 ------
@@ -20,7 +19,7 @@ University of Minnesota
 
 Version
 -------
-27 May 2020
+29 May 2020
 
 """
 
@@ -54,9 +53,22 @@ WHERE = (
 
 
 # -----------------------------------------------------------------------------
+class Error(Exception):
+    """
+    Local base exception.
+    """
+
+
+class ArgumentError(Error):
+    """
+    The invalid argument.
+    """
+
+
+# -----------------------------------------------------------------------------
 class Database:
     """
-    A load-once-fast-lookup database of authorized wells.
+    A load-once-fast-lookup database of authorized wells in Minnesota.
 
     Attributes
     ----------
@@ -174,7 +186,7 @@ class Database:
             if (aquifers is None) or (wd[2] in aquifers):
                 x.append(wd[0][0])
                 y.append(wd[0][1])
-                z.append(wd[1]])
+                z.append(wd[1])
 
         return (np.array(x), np.array(y), np.array(z))
 
@@ -208,6 +220,8 @@ def get_welldata_by_polygon(polygon, aquifers=None):
     o   Coordinates are in 'NAD 83 UTM 15N'(EPSG:26915).
     """
 
+    where = WHERE
+
     if aquifers is not None:
         if isinstance(aquifers, list):
             where += " AND ("
@@ -230,7 +244,7 @@ def get_welldata_by_polygon(polygon, aquifers=None):
         selection_type='NEW_SELECTION')
 
     welldata = []
-    with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
+    with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, where) as cursor:
         for row in cursor:
             welldata.append(row)
 
