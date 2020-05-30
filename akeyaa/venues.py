@@ -195,17 +195,11 @@ class Venue:
         else:
             self.polygon = polygon
 
-    # -----------------------
     def __repr__(self):
-        return self.__str__()
+        return f'{self.__class__}: {self.code}, {self.name}'
 
-    # -----------------------
-    def __str__(self):
-        return "{0.__class__}: '{0.code}', '{0.name}', '{0.fullname}'".format(self)
-
-    # -----------------------
     def __eq__(self, other):
-        return self.__class__ == other.__class__ and self.code == other.code
+        return (self.__class__ == other.__class__) and (self.code == other.code)
 
 
 # -----------------------------------------------------------------------------
@@ -304,7 +298,7 @@ def convert_polygon(polygon):
 
 
 # -----------------------------------------------------------------------------
-def lookup(kind, name):
+def lookup(name, kind):
     """
     Attempt to find the unique venue code from the kind and name.
 
@@ -314,16 +308,16 @@ def lookup(kind, name):
 
     Parameters
     ----------
-    kind : str
-        The case-insensitve kind of Venue: one of the members of the set:
-        {'CITY', 'TOWNSHIP', 'COUNTY', 'WATERSHED', 'SUBREGION', 'STATE'}
-
     name : str
         The case-sensitive venue name. This name must match exactly to the
         name in the associated .gdf feature class.
 
         Note: this name does NOT include the words like "City of", "Township",
         "County", "Watershed", or "Subregion".
+
+    kind : str
+        The case-insensitve kind of Venue: one of the members of the set:
+        {'CITY', 'TOWNSHIP', 'COUNTY', 'WATERSHED', 'SUBREGION', 'STATE'}
 
     Returns
     -------

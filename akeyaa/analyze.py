@@ -12,6 +12,9 @@ by_venue(venue, database, parameters)
 by_polygon(polygon, database, parameters)
     Compute the Akeyaa analysis across the specified polygon.
 
+layout_the_grid(polygon, spacing)
+    Determine the locations of the x and y grid lines.
+
 fit_conic(x, y, z, method)
     Fit the local conic potential model to the selected heads.
 
@@ -23,7 +26,7 @@ University of Minnesota
 
 Version
 -------
-29 May 2020
+30 May 2020
 
 """
 
@@ -102,11 +105,11 @@ AQUIFERS = {
 
 # -----------------------------------------------------------------------------
 def settings(*,
-     aquifers=DEFAULT_AQUIFERS,
-     method=DEFAULT_METHOD,
-     radius=DEFAULT_RADIUS,
-     required=DEFAULT_REQUIRED,
-     spacing=DEFAULT_SPACING):
+         aquifers=DEFAULT_AQUIFERS,
+         method=DEFAULT_METHOD,
+         radius=DEFAULT_RADIUS,
+         required=DEFAULT_REQUIRED,
+         spacing=DEFAULT_SPACING):
     """
     Create a dictionary with a complete set of valid parameters.
 
@@ -266,7 +269,7 @@ def by_venue(venue, database, parameters=None):
         computations. However, only data from the Minnesota CWI are
         considered.
     """
-    return by_polygon(venue.polygon, parameters)
+    return by_polygon(venue.polygon, database, parameters)
 
 
 # -----------------------------------------------------------------------------
@@ -279,8 +282,9 @@ def by_polygon(polygon, database, parameters=None):
     grid covering the <polygon>.
 
     The square grid of target locations is anchored at the centroid of the
-    <polygon?, and the grid lines are separated by <spacing>. If a target
-    location is not inside of the <polygon> it is discarded.
+    <polygon>, axes aligned, and the grid lines are separated by <spacing>.
+    The extent of the grid captures all of the vertices of the polygon.
+    If a target location is not inside of the <polygon> it is discarded.
 
     For each remaining target location all wells in the <database> that
     satisfy the following two conditions are identified:
@@ -294,8 +298,9 @@ def by_polygon(polygon, database, parameters=None):
 
     Parameters
     ----------
-    venue: venues.Venue (concrete subclass)
-        An instance of a concrete subclass of venues.Venue, e.g. City.
+    polygon : arcpy.arcobjects.geometries.Polygon
+        An arcpy.Polygon with the vertex coordinates represented in
+        'NAD 83 UTM zone 15N' (EPSG:26915),
 
     database : wells.Database
         A load-once-fast-lookup database of authorized wells in Minnesota.
@@ -322,7 +327,7 @@ def by_polygon(polygon, database, parameters=None):
             DEFAULT_REQUIRED.
 
         spacing : float, optional
-            Grid spacing for target locations across the county. spacing >= 1.
+            Grid spacing for target locations across the venue. spacing >= 1.
             The default is DEFAULT_SPACING.
 
         The parameters dictionary does not have to have all five parameters
@@ -352,19 +357,59 @@ def by_polygon(polygon, database, parameters=None):
         considered.
     """
 
-    # Get the parameters unpacked.
     if parameters is None:
         parameters = DEFAULT_PARAMETERS
 
-    aquifers = parameters['aquifers']
-    method = parameters['method']
-    radius = parameters['radius']
-    required = parameters['required']
-    spacing = parameters['spacing']
+    aquifers = parameters.get('aquifers', DEFAULT_AQUIFERS)
+    method = parameters.get('method', DEFAULT_METHOD)
+    radius = parameters.get('radius', DEFAULT_RADIUS)
+    required = parameters.get('required', DEFAULT_REQUIRED)
+    spacing = parameters.get('spacing', DEFAULT_SPACING)
 
-    # Characterize the grid of target locations. Recall, the square grid of
-    # target locations is anchored at the centroid of the polygon, and the
-    # grid lines are separated by <spacing>.
+    xgrd, ygrd = layout_the_grid(polygon, spacing)
+
+    results = []
+    for xo in xgrd:
+        for yo in ygrd:
+            if polygon.contains(arcpy.Point(xo, yo)):
+                xw, yw, zw = database.fetch(xo, yo, radius, aquifers)
+
+                # Note that we are converting the zw in [ft] to [m].
+                if len(xw) >= required:
+                    evp, varp = fit_conic(xw-xo, yw-yo, 0.3048*zw, method)
+                    results.append((xo, yo, len(xw), evp, varp))
+
+    return results
+
+
+# -----------------------------------------------------------------------------
+def layout_the_grid(polygon, spacing):
+    """
+    Determine the locations of the x and y grid lines.
+
+    The square grid of target locations is anchored at the centroid of the
+    <polygon>, axes aligned, and the grid lines are separated by <spacing>.
+    The extent of the grid captures all of the vertices of the polygon.
+
+    Parameters
+    ----------
+    polygon : arcpy.arcobjects.geometries.Polygon
+        An arcpy.Polygon with the vertex coordinates represented in
+        'NAD 83 UTM zone 15N' (EPSG:26915),
+
+    spacing : float, optional
+        Grid spacing for target locations across the venue.
+
+    Returns
+    -------
+    xgrd : list of floats
+        x-coordinates of the vertical gridlines.
+
+    ygrd : list of floats
+        y-coordinates of the horizontal gridlines.
+
+    """
+
     xgrd = [polygon.centroid.X]
     while xgrd[-1] > polygon.extent.XMin:
         xgrd.append(xgrd[-1] - spacing)
@@ -379,21 +424,7 @@ def by_polygon(polygon, database, parameters=None):
     while ygrd[-1] < polygon.extent.YMax:
         ygrd.append(ygrd[-1] + spacing)
 
-    # Process every target location.
-    results = []
-
-    for xo in xgrd:
-        for yo in ygrd:
-            if polygon.contains(arcpy.Point(xo, yo)):
-                xw, yw, zw = database.fetch([xo, yo], radius, aquifers)
-
-                # Carryout the weighted least squares regression.
-                # Note that we are converting the z in [ft] to [m].
-                if len(xw) >= required:
-                    evp, varp = fit_conic(xw-xo, yw-yo, 0.3048*zw, method)
-                    results.append((xo, yo, len(xw), evp, varp))
-
-    return results
+    return (xgrd, ygrd)
 
 
 # -----------------------------------------------------------------------------
@@ -442,10 +473,8 @@ def fit_conic(x, y, z, method='RLM'):
         are other fitting methods available.
     """
 
-    # Set up the coefficient matrix.
     X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 
-    # Apply the statsmodels tools.
     if method == 'OLS':
         ols_model = sm.OLS(z, X)
         ols_results = ols_model.fit()

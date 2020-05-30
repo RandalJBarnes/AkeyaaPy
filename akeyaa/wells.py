@@ -8,7 +8,7 @@ Database
 
 Functions
 ---------
-get_welldata_by_polygon(polygon, aquifers)
+get_welldata_by_polygon(polygon)
     Return well data from across the polygon.
 
 Author
@@ -19,7 +19,7 @@ University of Minnesota
 
 Version
 -------
-29 May 2020
+30 May 2020
 
 """
 
@@ -72,7 +72,7 @@ class Database:
 
     Attributes
     ----------
-    welldata : list of tuples
+    welldata : list
          The list contains data from authorized wells taken across the state.
          Wells that have multiple static water level measurements in the
          C5WL table will have multiple entries in this table: one entry for
@@ -80,22 +80,24 @@ class Database:
 
          There is one or more tuples for each well in the list. The tuples are
 
-            ((x, y), MEAS_ELEV, AQUIFER)
+            (x, y, z, aquifer)
 
         where
-            (x, y) : tuple (float, float)
-                well location in NAD 83 UTM zone 15N [m, m]
+            x : float
+                well x-coordinate in NAD 83 UTM zone 15N [m]
 
-            MEAS_ELEV : float
+            y : float
+                well y-coordinate in NAD 83 UTM zone 15N [m]
+
+            z : float
                 measured static water level [ft]
 
-            AQUIFER : str
-                four-character aquifer abbreviation strings, as defined in
+            aquifer : str
+                The 4-character aquifer abbreviation string, as defined in
                 Minnesota Geologic Survey's coding system.
 
         For example,
-            ((395912.43180000037, 5028164.0002999995), 1129.0, 'QWTA')
-
+            (232372.0, 5377518.0, 964.0, 'QBAA')
 
     tree : scipy.spatial.cKDTree
         A kd-tree for all of the wells in self.welldata.
@@ -109,143 +111,110 @@ class Database:
 
     __str__(self):
 
-    fetch(self, target, radius, aquifers=None)
-        Fetch all neighboring wells.
+    fetch(self, target, radius)
+        Fetch all wells within <radius> of the <target> location.
     """
 
     def __init__(self):
         """
-        Get all of the authorized wells from across the state. Create a
-        kd-tree using all of the wells.
+        Extract the well data from the ArcGIS .gdb and create a kd-tree.
         """
 
-        table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL,
-                                         'RELATEID', False)
+        table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL, 'RELATEID', False)
 
-        self.welldata = []
         with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
-            for row in cursor:
-                self.welldata.append(row)
+            self.welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
 
-        self.tree = scipy.spatial.cKDTree([row[0] for row in self.welldata])
-
+        self.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in self.welldata])
 
     def __repr__(self):
-        return 'Wells: {0}'.format(len(self.welldata))
+        return f'{self.__class__}: {len(self.welldata)}'
 
-    def __str__(self):
-        return 'Wells: {0}'.format(len(self.welldata))
-
-
-    def fetch(self, target, radius, aquifers=None):
+    def fetch(self, xtarget, ytarget, radius, aquifers=None):
         """
-        Fetch all neighboring wells.
-
-        Fetch all wells that are within radius of the target and are
-        completed in one of the aquifers.
+        Fetch authorized wells within <radius> of the <target> location that
+        are completed in within one or more of the prescribed <aquifers>.
 
         Parameters
         ----------
-        target : tuple (x, y) (float, float)
-            The (x, y) location of the target point.
+        xtarget : float
+            x-coordinate (easting) of the target location in
+            NAD 83 UTM zone 15N [m]
+
+        ytarget : float
+            y-coordinate (northing) of the target location in
+            NAD 83 UTM zone 15N [m]
 
         radius : float
-            The radius of the search neighborhood.
+            The radius of the search neighborhood [m].
 
-        aquifers: list of str
+        aquifers : list, optional
             List of four-character aquifer abbreviation strings, as defined in
             Minnesota Geologic Survey's coding system. The default is None. If
-            None, then all aquifers present will be included.
+            None, then wells from all aquifers will be included.
 
         Returns
         -------
-            x : ndarray, shape=(n, ), dtype=float
-                array of x-coordinates [m].
+        x : ndarray, shape=(n,), dtype=float
+            The well x-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
 
-            y : ndarray, shape=(n, ), dtype=float
-                array of y-coordinates [m].
+        y : ndarray, shape=(n,), dtype=float
+            The well y-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
 
-            z : ndarray, shape=(n, ), dtype=float
-                array of measured static water levels [ft].
+        z : ndarray, shape=(n,), dtype=float
+            The measured static water levels [ft].
 
         Notes
         -----
-        o   Coordinates are in 'NAD 83 UTM 15N'(EPSG:26915).
-
-        o   Beware! (x, y) are in [m], but z is in [ft].
+        o   Beware! The x and coordinates are in [m], but z is in [ft].
         """
 
-        indx = self.tree.query_ball_point(target, radius)
+        indx = self.tree.query_ball_point([xtarget, ytarget], radius)
 
-        x = []
-        y = []
-        z = []
-
+        xyz = []
         for i in indx:
-            wd = self.welldata[i]
-            if (aquifers is None) or (wd[2] in aquifers):
-                x.append(wd[0][0])
-                y.append(wd[0][1])
-                z.append(wd[1])
+            if (aquifers is None) or (self.welldata[i][3] in aquifers):
+                xyz.append(self.welldata[i][0:3])
 
+        x, y, z = zip(*xyz)
         return (np.array(x), np.array(y), np.array(z))
 
 
 # -----------------------------------------------------------------------------
-def get_welldata_by_polygon(polygon, aquifers=None):
+def get_welldata_by_polygon(polygon):
     """
-    Return well data from across the polygon.
-
-    Return the well data from all authorized wells in the polygon that are
-    completed in one of the identified aquifers.
+    Return the well data from all authorized wells in the polygon
 
     Parameters
     ----------
     polygon : arcpy.polygon
         The geographic focus of the run.
 
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
-
     Returns
     -------
-    welldata : list
-        Each element in the list is a tuple containing all of the attributes
-        included in the ATTRIBUTES constant (see above).
+    welldata : list of tuples (x, y, z, aquifer) where
+        x : float
+            The well x-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
 
-    Notes
-    -----
-    o   Coordinates are in 'NAD 83 UTM 15N'(EPSG:26915).
+        y : float
+            The well y-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
+
+        z : float
+            The measured static water level [ft]
+
+        aquifer : str
+            The 4-character aquifer abbreviation string, as defined in
+            Minnesota Geologic Survey's coding system.
     """
-
-    where = WHERE
-
-    if aquifers is not None:
-        if isinstance(aquifers, list):
-            where += " AND ("
-
-            for i, code in enumerate(aquifers):
-                if i != 0:
-                    where += " OR "
-                where += "(allwells.AQUIFER = '{}')".format(code)
-            where += ")"
-        else:
-            raise ArgumentError
-
-    table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL, 'RELATEID',
-                                     False)
+    table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL, 'RELATEID', False)
 
     located_wells = arcpy.SelectLayerByLocation_management(
-        table,
-        select_features=polygon,
-        overlap_type='WITHIN',
-        selection_type='NEW_SELECTION')
+            table,
+            select_features=polygon,
+            overlap_type='WITHIN',
+            selection_type='NEW_SELECTION')
 
-    welldata = []
-    with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, where) as cursor:
-        for row in cursor:
-            welldata.append(row)
+    with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
+        welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
 
     return welldata

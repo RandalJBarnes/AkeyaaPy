@@ -3,10 +3,7 @@ Akeyaa visualization tools.
 
 Functions
 ---------
-
------ groundwater -----
-show_results(prefix, polygon, results)
-    Plot the results.
+show_results(prefix, polygon, results    Plot the results.
 
 show_local_flow_direction(prefix, polygon, results)
     Plot the local flow directions.
@@ -17,12 +14,11 @@ show_local_number_of_wells(prefix, polygon, results)
 show_local_head_gradient_magnitude(prefix, polygon, results)
     Plot the relative magnitude of the local head gradient.
 
------ geography -----
-whereis(obj)
-    Plots the objects polygon over the state.
+aquifers_by_venue(venue, aquifers)
+    Plot the wells in the vnue coded by aquifer.
 
-show_polygon_in_state(polygon, title_str=None)
-    Plot the polygon in the state.
+whereis(venue)
+    Plots the venue's polygon over the state's ploygon.
 
 Author
 ------
@@ -32,7 +28,7 @@ University of Minnesota
 
 Version
 -------
-28 May 2020
+30 May 2020
 
 """
 
@@ -43,6 +39,7 @@ import numpy as np
 import seaborn as sns
 
 import pnorm
+import venues
 import wells
 
 
@@ -64,9 +61,14 @@ class ArgumentError(Error):
     Invalid argument.
     """
 
+class EmptySelectionError(Error):
+    """
+    There are no wells in the selection.
+    """
+
 
 # -----------------------------------------------------------------------------
-def show_results(prefix, polygon, results):
+def results_by_venue(venue, results):
     """
     Plot the results.
 
@@ -84,12 +86,7 @@ def show_results(prefix, polygon, results):
 
     Parameters
     ----------
-    prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
+    venue : a concrete subclass of venues.Venue (i.e. City)
 
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
@@ -109,15 +106,15 @@ def show_results(prefix, polygon, results):
     None
     """
 
-    show_local_flow_direction(prefix, polygon, results)
-    show_local_number_of_wells(prefix, polygon, results)
-    show_local_head_gradient_magnitude(prefix, polygon, results)
+    local_flow_direction(venue, results)
+    local_number_of_wells(venue, results)
+    local_head_gradient_magnitude(venue, results)
 
     plt.draw_all()
 
 
 # -----------------------------------------------------------------------------
-def show_local_flow_direction(prefix, polygon, results):
+def local_flow_direction(venue, results):
     """
     Plot the local flow directions.
 
@@ -127,12 +124,7 @@ def show_local_flow_direction(prefix, polygon, results):
 
     Parameters
     ----------
-    prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
+    venue : a concrete subclass of venues.Venue (i.e. City)
 
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
@@ -153,8 +145,8 @@ def show_local_flow_direction(prefix, polygon, results):
     """
 
     # Get the polygon boundary information.
-    xbdry = [pnt.X for pnt in polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in polygon.getPart(0)]
+    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
+    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
     # Extract and collate the run information.
     xgrd = np.array([row[0] for row in results])
@@ -191,12 +183,12 @@ def show_local_flow_direction(prefix, polygon, results):
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(prefix + 'Local Flow Directions', {'fontsize': 24})
+    plt.title(venue.fullname + 'Local Flow Directions', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_local_number_of_wells(prefix, polygon, results):
+def local_number_of_wells(venue, results):
     """
     Plot the local number of wells.
 
@@ -205,12 +197,7 @@ def show_local_number_of_wells(prefix, polygon, results):
 
     Parameters
     ----------
-    prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
+    venue : a concrete subclass of venues.Venue (i.e. City)
 
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
@@ -231,30 +218,30 @@ def show_local_number_of_wells(prefix, polygon, results):
     """
 
     # Get the polygon boundary information.
-    xbdry = [pnt.X for pnt in polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in polygon.getPart(0)]
+    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
+    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
     # Extract and collate the run information.
-    xgrd = np.array([row[0] for row in results])
-    ygrd = np.array([row[1] for row in results])
-    ngrd = np.array([row[2] for row in results], dtype=int)
+    xtarget = np.array([row[0] for row in results])
+    ytarget = np.array([row[1] for row in results])
+    ntarget = np.array([row[2] for row in results], dtype=int)
 
     plt.figure()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    plt.scatter(xgrd, ygrd, c=ngrd, zorder=10, cmap='GnBu')
+    plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap='GnBu')
     cbar = plt.colorbar()
     cbar.ax.set_title('Count [#]')
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(prefix + 'Number of Local Wells', {'fontsize': 24})
+    plt.title(venue.fullname + 'Number of Local Wells', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_local_head_gradient_magnitude(prefix, polygon, results):
+def local_head_gradient_magnitude(venue, results):
     """
     Plot the relative magnitude of the local head gradient.
 
@@ -264,12 +251,7 @@ def show_local_head_gradient_magnitude(prefix, polygon, results):
 
     Parameters
     ----------
-    prefix : str
-        The project-specifc (but not plot-specific) part of each plot title.
-
-    polygon : arcpy.Polygon
-        https://pro.arcgis.com/en/pro-app/arcpy/classes/polygon.htm
-        The geographic focus of the run.
+    venue : a concrete subclass of venues.Venue (i.e. City)
 
     results : list of tuples
         (xtarget, ytarget, n, evp, varp)
@@ -290,39 +272,38 @@ def show_local_head_gradient_magnitude(prefix, polygon, results):
     """
 
     # Get the polygon boundary information.
-    xbdry = [pnt.X for pnt in polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in polygon.getPart(0)]
+    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
+    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
     # Extract and collate the run information.
-    xgrd = np.array([row[0] for row in results])
-    ygrd = np.array([row[1] for row in results])
+    xtarget = np.array([row[0] for row in results])
+    ytarget = np.array([row[1] for row in results])
 
-    mag = np.empty(xgrd.shape)
-
+    magnitude = np.empty(xtarget.shape)
     for i, row in enumerate(results):
         evp = row[3]
         mu = evp[3:5]
-        mag[i] = np.hypot(mu[0], mu[1])
+        magnitude[i] = np.hypot(mu[0], mu[1])
 
-    jdx = np.argsort(np.argsort(mag))
+    jdx = np.argsort(np.argsort(magnitude))
     quantile = (jdx+0.5)/len(jdx)
 
     plt.figure()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    plt.scatter(xgrd, ygrd, c=quantile, zorder=10, cmap='OrRd')
+    plt.scatter(xtarget, ytarget, c=quantile, zorder=10, cmap='OrRd')
     cbar = plt.colorbar()
     cbar.ax.set_title('Quantile')
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(prefix + '|Head Gradient|', {'fontsize': 24})
+    plt.title(venue.fullname + '|Head Gradient|', {'fontsize': 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
-def show_aquifers(prefix, polygon, aquifers=None):
+def aquifers_by_venue(venue, aquifers=None):
     """
     Plot the wells in the vnue coded by aquifer.
 
@@ -332,7 +313,7 @@ def show_aquifers(prefix, polygon, aquifers=None):
 
     Parameters
     ----------
-    venue : Venue
+    venue : a concrete subclass of venues.Venue (i.e. City)
 
     aquifers : list, optional
         List of four-character aquifer abbreviation strings, as defined in
@@ -350,32 +331,71 @@ def show_aquifers(prefix, polygon, aquifers=None):
         The list is sorted in descending order by count.
     """
 
-    # Get the polygon boundary information.
-    xbdry = [pnt.X for pnt in polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in polygon.getPart(0)]
+    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
+    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
-    # Get the data for wells in the polygon.
-    welldata = wells.get_welldata_by_polygon(polygon, aquifers)
+    welldata = wells.get_welldata_by_polygon(venue.polygon)
 
-    xwell = [row[0][0] for row in welldata]
-    ywell = [row[0][1] for row in welldata]
-    awell = [row[2] for row in welldata]
+    if aquifers is None:
+        xsel = [row[0] for row in welldata]
+        ysel = [row[1] for row in welldata]
+        asel = [row[3] for row in welldata]
+    else:
+        xsel = [row[0] for row in welldata if row[3] in aquifers]
+        ysel = [row[1] for row in welldata if row[3] in aquifers]
+        asel = [row[3] for row in welldata if row[3] in aquifers]
 
-    # Determine a list of unique aquifers present and their associated counts.
-    uaq, naq = np.unique(awell, return_counts=True)
+    if len(xsel) == 0:
+        raise EmptySelectionError
 
-    aquifer_info = [(uaq[i], naq[i]) for i in range(len(uaq))]
-    aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
+    uaq, naq = np.unique(asel, return_counts=True)
 
     # Plot the well locations coded by aquifer.
     plt.figure()
     plt.axis('equal')
 
     plt.fill(xbdry, ybdry, '0.90')
-    sns.scatterplot(xwell, ywell, hue=awell, hue_order=uaq.tolist(), zorder=10)
+    sns.scatterplot(xsel, ysel, hue=asel, hue_order=uaq.tolist(), zorder=10)
 
     plt.xlabel('Easting [m]')
     plt.ylabel('Northing [m]')
-    plt.title(prefix + 'Wells Coded By Aquifer', {'fontsize': 24})
+    plt.title(venue.fullname + 'Wells Coded By Aquifer', {'fontsize': 24})
 
+    aquifer_info = list(zip(uaq, naq))
+    aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
     return aquifer_info
+
+# -----------------------------------------------------------------------------
+def whereis(venue):
+    """
+    Plots the venue's polygon over the state's ploygon.
+
+    Arguments
+    ---------
+    venue : a concrete subclass of venues.Venue (i.e. City)
+
+    Returns
+    -------
+    None
+    """
+
+    # Get the polygon boundary information.
+    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
+    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
+
+    # Get the state boundary information.
+    state = venues.State(0)
+    xstate = [pnt.X for pnt in state.polygon.getPart(0)]
+    ystate = [pnt.Y for pnt in state.polygon.getPart(0)]
+
+    # Plot the well locations coded by aquifer.
+    plt.figure()
+    plt.axis('equal')
+
+    plt.fill(xstate, ystate, '0.90')
+    plt.fill(xbdry, ybdry, 'b')
+
+    plt.xlabel('Easting [m]')
+    plt.ylabel('Northing [m]')
+    plt.title(venue.fullname, {'fontsize': 24})
+    plt.grid(True)
