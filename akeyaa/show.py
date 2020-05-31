@@ -1,5 +1,4 @@
-"""
-Akeyaa visualization tools.
+"""Akeyaa visualization tools.
 
 Functions
 ---------
@@ -18,7 +17,7 @@ aquifers_by_venue(venue, aquifers)
     Plot the wells in the vnue coded by aquifer.
 
 whereis(venue)
-    Plots the venue's polygon over the state's ploygon.
+    Plots the venue"s polygon over the state's ploygon.
 
 Author
 ------
@@ -28,8 +27,7 @@ University of Minnesota
 
 Version
 -------
-30 May 2020
-
+31 May 2020
 """
 
 import math
@@ -69,8 +67,7 @@ class EmptySelectionError(Error):
 
 # -----------------------------------------------------------------------------
 def results_by_venue(venue, results):
-    """
-    Plot the results.
+    """Plot the results for the venue.
 
     Make three plots that highlight the results of the run.
     -- Plot the grid of local flow directions as color-coded arrows. The
@@ -115,8 +112,7 @@ def results_by_venue(venue, results):
 
 # -----------------------------------------------------------------------------
 def local_flow_direction(venue, results):
-    """
-    Plot the local flow directions.
+    """Plot the local flow directions.
 
     Plot the grid of the estimated local flow directions as color-coded arrows.
     The arrow color depicts the probability that the flow direction is within
@@ -173,24 +169,23 @@ def local_flow_direction(venue, results):
         p10[i] = pnorm.pnormcdf(lowerbound, upperbound, mu, sigma)
 
     fig, ax1 = plt.subplots()
-    plt.axis('equal')
+    plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, '0.90')
+    plt.fill(xbdry, ybdry, "0.90")
     plt.quiver(xgrd, ygrd, xvec, yvec, p10,
-               width=0.0018, zorder=10, cmap='Greys')
+               width=0.0018, zorder=10, cmap="Greys")
     cbar = plt.colorbar()
-    cbar.ax.set_title('p10')
+    cbar.ax.set_title("p10")
 
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.title(venue.fullname + 'Local Flow Directions', {'fontsize': 24})
+    plt.xlabel("Easting [m]")
+    plt.ylabel("Northing [m]")
+    plt.title(venue.fullname + "Local Flow Directions", {"fontsize": 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
 def local_number_of_wells(venue, results):
-    """
-    Plot the local number of wells.
+    """Plot the local number of wells.
 
     Plot the grid showing the number of local wells used in the analysis as
     color-coded markers.
@@ -227,23 +222,22 @@ def local_number_of_wells(venue, results):
     ntarget = np.array([row[2] for row in results], dtype=int)
 
     plt.figure()
-    plt.axis('equal')
+    plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, '0.90')
-    plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap='GnBu')
+    plt.fill(xbdry, ybdry, "0.90")
+    plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap="GnBu")
     cbar = plt.colorbar()
-    cbar.ax.set_title('Count [#]')
+    cbar.ax.set_title("Count [#]")
 
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.title(venue.fullname + 'Number of Local Wells', {'fontsize': 24})
+    plt.xlabel("Easting [m]")
+    plt.ylabel("Northing [m]")
+    plt.title(venue.fullname + "Number of Local Wells", {"fontsize": 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
 def local_head_gradient_magnitude(venue, results):
-    """
-    Plot the relative magnitude of the local head gradient.
+    """Plot the relative magnitude of the local head gradient.
 
     Plot the grid showing the relative magnitude of the estimated local head
     gradient as color-coded markers. The colors are determined by the quantile
@@ -289,23 +283,22 @@ def local_head_gradient_magnitude(venue, results):
     quantile = (jdx+0.5)/len(jdx)
 
     plt.figure()
-    plt.axis('equal')
+    plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, '0.90')
-    plt.scatter(xtarget, ytarget, c=quantile, zorder=10, cmap='OrRd')
+    plt.fill(xbdry, ybdry, "0.90")
+    plt.scatter(xtarget, ytarget, c=quantile, zorder=10, cmap="OrRd")
     cbar = plt.colorbar()
-    cbar.ax.set_title('Quantile')
+    cbar.ax.set_title("Quantile")
 
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.title(venue.fullname + '|Head Gradient|', {'fontsize': 24})
+    plt.xlabel("Easting [m]")
+    plt.ylabel("Northing [m]")
+    plt.title(venue.fullname + "|Head Gradient|", {"fontsize": 24})
     plt.grid(True)
 
 
 # -----------------------------------------------------------------------------
 def aquifers_by_venue(venue, aquifers=None):
-    """
-    Plot the wells in the vnue coded by aquifer.
+    """Plot the wells in the venue coded by aquifer.
 
     Plot the locations of the authorized wells in the venue that are completed
     in one of the identified aquifers. The plotted marker for a well is
@@ -352,14 +345,14 @@ def aquifers_by_venue(venue, aquifers=None):
 
     # Plot the well locations coded by aquifer.
     plt.figure()
-    plt.axis('equal')
+    plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, '0.90')
+    plt.fill(xbdry, ybdry, "0.90")
     sns.scatterplot(xsel, ysel, hue=asel, hue_order=uaq.tolist(), zorder=10)
 
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.title(venue.fullname + 'Wells Coded By Aquifer', {'fontsize': 24})
+    plt.xlabel("Easting [m]")
+    plt.ylabel("Northing [m]")
+    plt.title(venue.fullname + "Wells Coded By Aquifer", {"fontsize": 24})
 
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
@@ -367,8 +360,7 @@ def aquifers_by_venue(venue, aquifers=None):
 
 # -----------------------------------------------------------------------------
 def whereis(venue):
-    """
-    Plots the venue's polygon over the state's ploygon.
+    """Plot the venue's polygon over the state's ploygon.
 
     Arguments
     ---------
@@ -390,12 +382,12 @@ def whereis(venue):
 
     # Plot the well locations coded by aquifer.
     plt.figure()
-    plt.axis('equal')
+    plt.axis("equal")
 
-    plt.fill(xstate, ystate, '0.90')
-    plt.fill(xbdry, ybdry, 'b')
+    plt.fill(xstate, ystate, "0.90")
+    plt.fill(xbdry, ybdry, "b")
 
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.title(venue.fullname, {'fontsize': 24})
+    plt.xlabel("Easting [m]")
+    plt.ylabel("Northing [m]")
+    plt.title(venue.fullname, {"fontsize": 24})
     plt.grid(True)

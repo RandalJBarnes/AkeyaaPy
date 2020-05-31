@@ -1,5 +1,4 @@
-"""
-Define and implement the Venue class and all of its subclasses, along with
+"""Define and implement the Venue class and all of its subclasses, along with
 a few helper functions.
 
 Classes
@@ -38,7 +37,7 @@ University of Minnesota
 
 Version
 -------
-29 May 2020
+31 May 2020
 
 """
 
@@ -49,36 +48,33 @@ import localpaths as loc
 
 
 # -----------------------------------------------------------------------------
-KIND = {'CITY', 'TOWNSHIP', 'COUNTY', 'WATERSHED', 'SUBREGION', 'STATE'}
+KIND = {"CITY", "TOWNSHIP", "COUNTY", "WATERSHED", "SUBREGION", "STATE"}
 
 SOURCE = {
-    'CITY':         loc.CTUGDB + r'\city_township_unorg',
-    'TOWNSHIP':     loc.CTUGDB + r'\city_township_unorg',
-    'COUNTY':       loc.CTYGDB + r'\mn_county_boundaries',
-    'WATERSHED':    loc.WBDGDB + r'\WBDHU10',
-    'SUBREGION':    loc.WBDGDB + r'\WBDHU8',
-    'STATE':        loc.STAGDB + r'\Boundaries_of_Minnesota'
+    "CITY":      loc.CTUGDB + r"\city_township_unorg",
+    "TOWNSHIP":  loc.CTUGDB + r"\city_township_unorg",
+    "COUNTY":    loc.CTYGDB + r"\mn_county_boundaries",
+    "WATERSHED": loc.WBDGDB + r"\WBDHU10",
+    "SUBREGION": loc.WBDGDB + r"\WBDHU8",
+    "STATE":     loc.STAGDB + r"\Boundaries_of_Minnesota"
     }
-
 
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """
-    The base exception for the module.
-    """
+    """The base exception for the module. """
 
 
 class VenueNotFoundError(Error):
-    """
-    The requested venue was not found in the database.
-    """
+    """The requested venue was not found in the database. """
 
 
 # -----------------------------------------------------------------------------
 class Venue:
-    """
-    The (abstract) base class for all Venues.
+    """The (abstract) base class for all Venues.
+
+    The subclass Venues include "CITY", "TOWNSHIP", "COUNTY", "WATERSHED",
+    "SUBREGION", and "STATE".
 
     Attributes
     ----------
@@ -88,37 +84,37 @@ class Venue:
         The form and format depends on the kind of venue, as defined by
         the subclass.
 
-        -- 'CITY' : str
+        -- "CITY" : str
             The unique 8-digit Geographic Names Information System (GNIS)
             identification number encoded as a string.
 
-            For example, City of Hugo GNIS = '2394440'.
+            For example, City of Hugo GNIS = "2394440".
 
-        -- 'TOWNSHIP' : str
+        -- "TOWNSHIP" : str
             The unique 8-digit Geographic Names Information System (GNIS)
             identification number encoded as a string.
 
-            For example, White Bear Township GNIS = '665981'.
+            For example, White Bear Township GNIS = "665981".
 
-        -- 'COUNTY': int
+        -- "COUNTY": int
             The unique 5-digit Federal Information Processing Standards code
             (FIPS), without the initial 2 digits state code.
 
             For example, Washington County FIPS = 163
 
-        -- 'WATERSHED' : str
+        -- "WATERSHED" : str
             The unique 10-digit hydrologic unit code (HUC10) encoded as a
             string.
 
-            For example, Sunrise River Watershed HUC10 = '0703000504'.
+            For example, Sunrise River Watershed HUC10 = "0703000504".
 
-        -- 'SUBREGION' : str
+        -- "SUBREGION" : str
             The unique 8-digit hydrologic unit code (HUC8) encoded as a
             string.
 
-            For example, Twin Cities subregion HUC8 = '07010206'.
+            For example, Twin Cities subregion HUC8 = "07010206".
 
-        -- 'STATE' : None
+        -- "STATE" : None
 
     name : str
         The name of the venue as recorded in the associated .gdb file. For
@@ -130,9 +126,9 @@ class Venue:
 
     polygon : arcpy.arcobjects.geometries.Polygon
         An arcpy.Polygon with the vertex coordinates represented in
-        'NAD 83 UTM zone 15N' (EPSG:26915),
+        "NAD 83 UTM zone 15N" (EPSG:26915),
 
-    Sub-class Constants
+    Subclass Constants
     -------------------
     WHO : str
         The format string for converting a name into a full name.
@@ -150,8 +146,12 @@ class Venue:
 
     # -----------------------
     def __init__(self, code):
-        """
-        The initializer for all Venue subclasses.
+        """The initializer for all Venue subclasses.
+
+        The subclasses do not have their own __init__. To eliminate code
+        duplication, the initialization is all done here in the base class
+        __init__. The subclass specialization is done via the small set of
+        subclass constants.
 
         Parameters
         ----------
@@ -161,7 +161,7 @@ class Venue:
             This initializer allows chaining the output from venues.lookup
             as input directly into the Venue subclass constructor: e.g.
 
-                my_venue = City(lookup('CITY', 'Hugo'))
+                my_venue = City(lookup("CITY", "Hugo"))
 
             To allow this, if a list of code strings is pass in then the
             first code string in the list is used.
@@ -190,13 +190,13 @@ class Venue:
         self.name = name
         self.fullname = self.WHO.format(name)
 
-        if polygon.spatialReference.type == 'Geographic':
+        if polygon.spatialReference.type == "Geographic":
             self.polygon = convert_polygon(polygon)
         else:
             self.polygon = polygon
 
     def __repr__(self):
-        return f'{self.__class__}: {self.code}, {self.name}'
+        return f"{self.__class__}: {self.code}, {self.name}"
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -207,9 +207,9 @@ class City(Venue):
     """City subclass of Venue."""
 
     WHO = "City of {}"
-    WHAT = ['NAME', 'SHAPE@']
+    WHAT = ["NAME", "SHAPE@"]
     WHEN = "GNIS_ID = '{}' AND CTU_Type = 'CITY'"
-    WHERE = SOURCE['CITY']
+    WHERE = SOURCE["CITY"]
 
 
 # -----------------------------------------------------------------------------
@@ -217,9 +217,9 @@ class Township(Venue):
     """Township subclass of Venue."""
 
     WHO = "{} Township"
-    WHAT = ['NAME', 'SHAPE@']
+    WHAT = ["NAME", "SHAPE@"]
     WHEN = "GNIS_ID = '{}' AND CTU_Type = 'TOWNSHIP'"
-    WHERE = SOURCE['TOWNSHIP']
+    WHERE = SOURCE["TOWNSHIP"]
 
 
 # -----------------------------------------------------------------------------
@@ -227,9 +227,9 @@ class County(Venue):
     """County subclass of Venue."""
 
     WHO = "{} County"
-    WHAT = ['NAME', 'SHAPE@']
+    WHAT = ["NAME", "SHAPE@"]
     WHEN = "CTY_FIPS = {}"
-    WHERE = SOURCE['COUNTY']
+    WHERE = SOURCE["COUNTY"]
 
 
 # -----------------------------------------------------------------------------
@@ -237,18 +237,18 @@ class Watershed(Venue):
     """Watershed subclass of Venue."""
 
     WHO = "{} Watershed"
-    WHAT = ['NAME', 'SHAPE@']
+    WHAT = ["NAME", "SHAPE@"]
     WHEN = "HUC10 = '{}'"
-    WHERE = SOURCE['WATERSHED']
+    WHERE = SOURCE["WATERSHED"]
 
 
 # -----------------------------------------------------------------------------
 class Subregion(Venue):
     """Subregion subclass of Venue."""
     WHO = "{} Subregion"
-    WHAT = ['NAME', 'SHAPE@']
+    WHAT = ["NAME", "SHAPE@"]
     WHEN = "HUC8 = '{}'"
-    WHERE = SOURCE['SUBREGION']
+    WHERE = SOURCE["SUBREGION"]
 
 
 # -----------------------------------------------------------------------------
@@ -256,22 +256,21 @@ class State(Venue):
     """State subclass of Venue."""
 
     WHO = "State of {}"
-    WHAT = ['STATE_NAME', 'SHAPE@']
+    WHAT = ["STATE_NAME", "SHAPE@"]
     WHEN = "STATE_NAME = 'Minnesota'"
-    WHERE = SOURCE['STATE']
+    WHERE = SOURCE["STATE"]
 
 
 # -----------------------------------------------------------------------------
 def convert_polygon(polygon):
-    """
-    Convert a polygon's coordinates from lat/lon to UTM.
+    """Convert a polygon's coordinates from lat/lon to UTM.
 
-    Takes in an arcpy.Polygon that uses 'GCS North America 1983' (EPSG:4269)
+    Takes in an arcpy.Polygon that uses "GCS North America 1983" (EPSG:4269)
     lat/lon coordinates. Creates and returns a new arcpy.Polygon that has
-    the same vertices re-expressed in 'NAD 83 UTM zone 15N' (EPSG:26915)
+    the same vertices re-expressed in "NAD 83 UTM zone 15N" (EPSG:26915)
     coordinates.
 
-    This conversion is actually from 'WGS 1984' not 'GCS 1983', but these two
+    This conversion is actually from "WGS 1984" not "GCS 1983", but these two
     are close enough for our purposes.
 
     Arguments
@@ -289,18 +288,17 @@ def convert_polygon(polygon):
     lat = [pnt.Y for pnt in polygon.getPart(0)]
 
     sr_out = arcpy.SpatialReference(26915)
-    projector = pyproj.Proj('epsg:26915', preserve_units=False)
+    projector = pyproj.Proj("epsg:26915", preserve_units=False)
 
     x, y = projector(lon, lat)
     array = arcpy.Array([arcpy.Point(xy[0], xy[1]) for xy in zip(x, y)])
 
-    return arcpy.Geometry('polygon', array, sr_out)
+    return arcpy.Geometry("polygon", array, sr_out)
 
 
 # -----------------------------------------------------------------------------
 def lookup(name, kind):
-    """
-    Attempt to find the unique venue code from the kind and name.
+    """Attempt to find the unique venue code from the kind and name.
 
     Get the unique township 8-digit Geographic Names Information System (GNIS)
     identification number from the township name. If the township name is NOT
@@ -317,7 +315,7 @@ def lookup(name, kind):
 
     kind : str
         The case-insensitve kind of Venue: one of the members of the set:
-        {'CITY', 'TOWNSHIP', 'COUNTY', 'WATERSHED', 'SUBREGION', 'STATE'}
+        {"CITY", "TOWNSHIP", "COUNTY", "WATERSHED", "SUBREGION", "STATE"}
 
     Returns
     -------
@@ -326,37 +324,37 @@ def lookup(name, kind):
         below. If a unique code can not be discerned, then a list of codes is
         returned. If no code are found, an empty list is returned.
 
-        -- 'CITY' : str
+        -- "CITY" : str
             The unique 8-digit Geographic Names Information System (GNIS)
             identification number encoded as a string.
 
-            For example, City of Hugo GNIS = '2394440'.
+            For example, City of Hugo GNIS = "2394440".
 
-        -- 'TOWNSHIP' : str
+        -- "TOWNSHIP" : str
             The unique 8-digit Geographic Names Information System (GNIS)
             identification number encoded as a string.
 
-            For example, White Bear Township GNIS = '665981'.
+            For example, White Bear Township GNIS = "665981".
 
-        -- 'COUNTY': int
+        -- "COUNTY": int
             The unique 5-digit Federal Information Processing Standards code
             (FIPS), without the initial 2 digits state code.
 
             For example, Washington County FIPS = 163
 
-        -- 'WATERSHED' : str
+        -- "WATERSHED" : str
             The unique 10-digit hydrologic unit code (HUC10) encoded as a
             string.
 
-            For example, Sunrise River Watershed HUC10 = '0703000504'.
+            For example, Sunrise River Watershed HUC10 = "0703000504".
 
-        -- 'SUBREGION' : str
+        -- "SUBREGION" : str
             The unique 8-digit hydrologic unit code (HUC8) encoded as a
             string.
 
-            For example, Twin Cities subregion HUC8 = '07010206'.
+            For example, Twin Cities subregion HUC8 = "07010206".
 
-        -- 'STATE' : None
+        -- "STATE" : None
 
     Notes
     -----
@@ -385,19 +383,19 @@ def lookup(name, kind):
     """
 
     LOOKUP_ATTRIBUTES = {
-        'CITY':         ['GNIS_ID'],
-        'TOWNSHIP':     ['GNIS_ID'],
-        'COUNTY':       ['CTY_FIPS'],
-        'WATERSHED':    ['HUC10'],
-        'SUBREGION':    ['HUC8'],
-        'STATE':        ['STATE_GNIS_FEATURE_ID']
+        "CITY":         ["GNIS_ID"],
+        "TOWNSHIP":     ["GNIS_ID"],
+        "COUNTY":       ["CTY_FIPS"],
+        "WATERSHED":    ["HUC10"],
+        "SUBREGION":    ["HUC8"],
+        "STATE":        ["STATE_GNIS_FEATURE_ID"]
         }
 
     LOOKUP_REQUIREMENTS = {
-        'CITY':         "NAME = '{}' AND CTU_Type = 'CITY'",
-        'TOWNSHIP':     "NAME = '{0}' AND CTU_Type = 'TOWNSHIP'",
-        'COUNTY':       "CTY_NAME = {}",
-        'WATERSHED':    "(NAME = '{}') AND ("
+        "CITY":         "NAME = '{}' AND CTU_Type = 'CITY'",
+        "TOWNSHIP":     "NAME = '{0}' AND CTU_Type = 'TOWNSHIP'",
+        "COUNTY":       "CTY_NAME = {}",
+        "WATERSHED":    "(NAME = '{}') AND ("
             "(STATES = 'CN,MI,MN,WI') OR "
             "(STATES = 'CN,MN') OR "
             "(STATES = 'CN,MN,ND') OR "
@@ -410,7 +408,7 @@ def lookup(name, kind):
             "(STATES = 'MN,ND,SD') OR "
             "(STATES = 'MN,SD') OR "
             "(STATES = 'MN,WI'))",
-        'SUBREGION':    "(NAME = '{}') AND ("
+        "SUBREGION":    "(NAME = '{}') AND ("
             "(STATES = 'CN,MI,MN,WI') OR "
             "(STATES = 'CN,MN') OR "
             "(STATES = 'CN,MN,ND') OR "
@@ -423,7 +421,7 @@ def lookup(name, kind):
             "(STATES = 'MN,ND,SD') OR "
             "(STATES = 'MN,SD') OR "
             "(STATES = 'MN,WI'))",
-        'STATE':    "(STATE_NAME = 'Minnesota')"
+        "STATE":    "(STATE_NAME = 'Minnesota')"
         }
 
     kind = kind.upper()

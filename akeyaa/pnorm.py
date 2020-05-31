@@ -1,5 +1,4 @@
-"""
-Support for the general projected normal distribution.
+"""Support for the general projected normal distribution.
 
 Functions
 ---------
@@ -44,8 +43,7 @@ University of Minnesota
 
 Version
 -------
-26 May 2020
-
+31 May 2020
 """
 
 from math import cos, sin, exp, sqrt, pi
@@ -56,8 +54,7 @@ from scipy.integrate import quad
 
 # -----------------------------------------------------------------------------
 def pnormpdf(angles, mu, sigma):
-    """
-    Evaluate the probability density function for the general projected
+    """Evaluate the probability density function for the general projected
     normal distribution.
 
     Parameters
@@ -119,8 +116,7 @@ def pnormpdf(angles, mu, sigma):
 
 # -----------------------------------------------------------------------------
 def pnormcdf(lowerbound, upperbound, mu, sigma):
-    """
-    Evaluate the Pr(lb < theta < ub) for a general projected normal
+    """Evaluate the Pr(lb < theta < ub) for a general projected normal
     distribution.
 
     Parameters

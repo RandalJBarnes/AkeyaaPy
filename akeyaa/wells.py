@@ -1,5 +1,4 @@
-"""
-Define and implement the wells Database class.
+"""Define and implement the wells Database class.
 
 Classes
 -------
@@ -19,7 +18,7 @@ University of Minnesota
 
 Version
 -------
-30 May 2020
+31 May 2020
 
 """
 
@@ -32,14 +31,24 @@ import localpaths as loc
 
 
 # -----------------------------------------------------------------------------
-# Feature classes of interest.
-ALLWELLS = loc.CWIGDB + r'\allwells'                # MN county well index
-C5WL     = loc.CWIGDB + r'\C5WL'                    # MN static water levels
+# ArcGIS Pro/ArcPy feature classes of interest.
+ALLWELLS = loc.CWIGDB + r"\allwells"                # MN county well index
+C5WL     = loc.CWIGDB + r"\C5WL"                    # MN static water levels
 
-# The attributes to be include in "well data".
-ATTRIBUTES = ['allwells.SHAPE',
-              'C5WL.MEAS_ELEV',
-              'allwells.AQUIFER']
+# The attributes to be include in the arcpy.da.SearchCursor when retrieving
+# <welldata> from the ArcGIS Pro/ArcPy .gdb.  By design, this is the one
+# place where this is defined.
+#
+# As used multiple places in this module, the code for setting up <welldata>
+# includes:
+#
+#   [(x, y, z, aq) for (x, y), z, aq in cursor]
+#
+# If the required attributes to be included in <welldata> change, then these
+# few lines of code will need to be updated to reflect the change.
+ATTRIBUTES = ["allwells.SHAPE",
+              "C5WL.MEAS_ELEV",
+              "allwells.AQUIFER"]
 
 # Wells that satisfy all of these criteria are called "authorized wells".
 # These include: must have at least one recorded static water level (SWL),
@@ -70,8 +79,8 @@ class Database:
     """
     A load-once-fast-lookup database of authorized wells in Minnesota.
 
-    Attributes
-    ----------
+    Class Attributes
+    ----------------
     welldata : list
          The list contains data from authorized wells taken across the state.
          Wells that have multiple static water level measurements in the
@@ -97,7 +106,7 @@ class Database:
                 Minnesota Geologic Survey's coding system.
 
         For example,
-            (232372.0, 5377518.0, 964.0, 'QBAA')
+            (232372.0, 5377518.0, 964.0, "QBAA")
 
     tree : scipy.spatial.cKDTree
         A kd-tree for all of the wells in self.welldata.
@@ -116,11 +125,11 @@ class Database:
     """
 
     def __init__(self):
-        """
-        Extract the well data from the ArcGIS .gdb and create a kd-tree.
+        """Extract the well data from the ArcGIS Pro/ArcPy .gdb and create
+        a kd-tree to allow for fast neighborhood searchs.
         """
 
-        table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL, 'RELATEID', False)
+        table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
 
         with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
             self.welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
@@ -128,12 +137,14 @@ class Database:
         self.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in self.welldata])
 
     def __repr__(self):
-        return f'{self.__class__}: {len(self.welldata)}'
+        return f"{self.__class__}: {len(self.welldata)}"
 
     def fetch(self, xtarget, ytarget, radius, aquifers=None):
-        """
-        Fetch authorized wells within <radius> of the <target> location that
-        are completed in within one or more of the prescribed <aquifers>.
+        """Fetch the (x, y, z) for selected wells.
+
+        Fetch the (x, y, z) data for all authorized wells within <radius>
+        of the <target> location that are completed in within one or more
+        of the identified <aquifers>.
 
         Parameters
         ----------
@@ -156,10 +167,10 @@ class Database:
         Returns
         -------
         x : ndarray, shape=(n,), dtype=float
-            The well x-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
+            The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
         y : ndarray, shape=(n,), dtype=float
-            The well y-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
+            The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
         z : ndarray, shape=(n,), dtype=float
             The measured static water levels [ft].
@@ -182,8 +193,7 @@ class Database:
 
 # -----------------------------------------------------------------------------
 def get_welldata_by_polygon(polygon):
-    """
-    Return the well data from all authorized wells in the polygon
+    """Return the well data from all authorized wells in the polygon
 
     Parameters
     ----------
@@ -194,10 +204,10 @@ def get_welldata_by_polygon(polygon):
     -------
     welldata : list of tuples (x, y, z, aquifer) where
         x : float
-            The well x-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
+            The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
         y : float
-            The well y-coordinates in 'NAD 83 UTM zone 15N' (EPSG:26915) [m].
+            The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
         z : float
             The measured static water level [ft]
@@ -206,13 +216,13 @@ def get_welldata_by_polygon(polygon):
             The 4-character aquifer abbreviation string, as defined in
             Minnesota Geologic Survey's coding system.
     """
-    table = arcpy.AddJoin_management(ALLWELLS, 'RELATEID', C5WL, 'RELATEID', False)
+    table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
 
     located_wells = arcpy.SelectLayerByLocation_management(
             table,
             select_features=polygon,
-            overlap_type='WITHIN',
-            selection_type='NEW_SELECTION')
+            overlap_type="WITHIN",
+            selection_type="NEW_SELECTION")
 
     with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
         welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]

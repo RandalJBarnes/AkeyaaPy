@@ -1,5 +1,4 @@
-"""
-Local explicit paths to the necessary gdb files.
+"""Local explicit paths to the necessary ArcGIS Pro/ArcPy gdb files.
 
 Author
 ------
@@ -9,8 +8,7 @@ University of Minnesota
 
 Version
 -------
-29 May 2020
-
+31 May 2020
 """
 
 # Minnesota County Well Index (CWI). Obtained from the Minnesota Department

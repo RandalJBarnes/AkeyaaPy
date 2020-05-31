@@ -1,15 +1,14 @@
-"""
-The functions to carry out the actual Akeyaa analysis.
+"""The functions to carry out the actual Akeyaa analysis.
 
 Functions
 ---------
-settings(*, aquifers, method, radius, required, spacing)
-    Create a dictionary with a complete set of valid parameters.
+akeyaa_settings(aquifers, method, radius, required, spacing)
+    Create a dictionary with a complete set of valid settings.
 
-by_venue(venue, database, parameters)
+by_venue(venue, database, settings)
     Compute the Akeyaa analysis across the specified venue.
 
-by_polygon(polygon, database, parameters)
+by_polygon(polygon, database, settings)
     Compute the Akeyaa analysis across the specified polygon.
 
 layout_the_grid(polygon, spacing)
@@ -26,8 +25,7 @@ University of Minnesota
 
 Version
 -------
-30 May 2020
-
+31 May 2020
 """
 
 import numpy as np
@@ -56,74 +54,73 @@ class UnknownMethodError(Error):
 
 
 # -----------------------------------------------------------------------------
-# These are the default parameters for the Akeyaa analysis.
+# These are the default settings for the Akeyaa analysis.
 DEFAULT_AQUIFERS = None
-DEFAULT_METHOD = 'RLM'
+DEFAULT_METHOD = "RLM"
 DEFAULT_RADIUS = 3000
 DEFAULT_REQUIRED = 25
 DEFAULT_SPACING = 1000
 
 DEFAULT_PARAMETERS = {
-        'aquifers': DEFAULT_AQUIFERS,
-        'radius': DEFAULT_RADIUS,
-        'required': DEFAULT_REQUIRED,
-        'spacing': DEFAULT_SPACING,
-        'method': DEFAULT_METHOD
+        "aquifers": DEFAULT_AQUIFERS,
+        "radius": DEFAULT_RADIUS,
+        "required": DEFAULT_REQUIRED,
+        "spacing": DEFAULT_SPACING,
+        "method": DEFAULT_METHOD
         }
 
 # -----------------------------------------------------------------------------
 # The following is a complete list of all 4-character aquifer codes used in
 # the Minnesota County Well index as of 1 January 2020.
 AQUIFERS = {
-    'CAMB', 'CECR', 'CEMS', 'CJDN', 'CJDW', 'CJMS', 'CJSL', 'CJTC', 'CLBK',
-    'CMFL', 'CMRC', 'CMSH', 'CMTS', 'CSLT', 'CSLW', 'CSTL', 'CTCE', 'CTCG',
-    'CTCM', 'CTCW', 'CTLR', 'CTMZ', 'CWEC', 'CWMS', 'CWOC',
-    'DCLP', 'DCLS', 'DCOG', 'DCOM', 'DCVA', 'DCVL', 'DCVU', 'DEVO', 'DPOG',
-    'DPOM', 'DSOG', 'DSOM', 'DSPL', 'DWAP', 'DWPR',
-    'INDT', 'KDNB', 'KREG', 'KRET', 'MTPL',
-    'ODCR', 'ODGL', 'ODPL', 'ODUB', 'OGCD', 'OGCM', 'OGDP', 'OGPC', 'OGPD',
-    'OGPR', 'OGSC', 'OGSD', 'OGSV', 'OGVP', 'OGWD', 'OMAQ', 'OMQD', 'OMQG',
-    'OPCJ', 'OPCM', 'OPCT', 'OPCW', 'OPDC', 'OPGW', 'OPNR', 'OPOD', 'OPSH',
-    'OPSP', 'OPVJ', 'OPVL', 'OPWR', 'ORDO', 'ORRV', 'OSCJ', 'OSCM', 'OSCS',
-    'OSCT', 'OSPC', 'OSTP', 'OWIN',
-    'PAAI', 'PAAM', 'PABD', 'PABG', 'PABK', 'PACG', 'PAEF', 'PAES', 'PAEY',
-    'PAFL', 'PAFR', 'PAFV', 'PAGR', 'PAGU', 'PAJL', 'PAKG', 'PALC', 'PALG',
-    'PALL', 'PALP', 'PALS', 'PALT', 'PALV', 'PAMB', 'PAMC', 'PAMD', 'PAMG',
-    'PAML', 'PAMR', 'PAMS', 'PAMT', 'PAMU', 'PAMV', 'PANB', 'PANL', 'PANS',
-    'PANU', 'PAOG', 'PAQF', 'PASG', 'PASH', 'PASL', 'PASM', 'PASN', 'PASR',
-    'PAST', 'PASZ', 'PATL', 'PAUD', 'PAVC', 'PAWB', 'PCCR', 'PCRG', 'PCUU',
-    'PEAG', 'PEAL', 'PEBC', 'PEBI', 'PEDN', 'PEDQ', 'PEFG', 'PEFH', 'PEFM',
-    'PEGT', 'PEGU', 'PEHL', 'PEIL', 'PELF', 'PELR', 'PEMG', 'PEML', 'PEMN',
-    'PEMU', 'PEPG', 'PEPK', 'PEPP', 'PEPZ', 'PERB', 'PERF', 'PERV', 'PESC',
-    'PEST', 'PESX', 'PETR', 'PEUD', 'PEVT', 'PEWR', 'PEWT', 'PEWV', 'PMBB',
-    'PMBE', 'PMBI', 'PMBL', 'PMBM', 'PMBO', 'PMBR', 'PMCV', 'PMDA', 'PMDC',
-    'PMDE', 'PMDF', 'PMDL', 'PMEP', 'PMES', 'PMFL', 'PMGI', 'PMGL', 'PMHF',
-    'PMHN', 'PMHR', 'PMLD', 'PMMU', 'PMNF', 'PMNI', 'PMNL', 'PMNM', 'PMNS',
-    'PMPA', 'PMRC', 'PMSU', 'PMTH', 'PMUD', 'PMUS', 'PMVU', 'PMWL', 'PUDF',
-    'QBAA', 'QBUA', 'QUUU', 'QWTA', 'RUUU', 'UREG'
+    "CAMB", "CECR", "CEMS", "CJDN", "CJDW", "CJMS", "CJSL", "CJTC", "CLBK",
+    "CMFL", "CMRC", "CMSH", "CMTS", "CSLT", "CSLW", "CSTL", "CTCE", "CTCG",
+    "CTCM", "CTCW", "CTLR", "CTMZ", "CWEC", "CWMS", "CWOC",
+    "DCLP", "DCLS", "DCOG", "DCOM", "DCVA", "DCVL", "DCVU", "DEVO", "DPOG",
+    "DPOM", "DSOG", "DSOM", "DSPL", "DWAP", "DWPR",
+    "INDT", "KDNB", "KREG", "KRET", "MTPL",
+    "ODCR", "ODGL", "ODPL", "ODUB", "OGCD", "OGCM", "OGDP", "OGPC", "OGPD",
+    "OGPR", "OGSC", "OGSD", "OGSV", "OGVP", "OGWD", "OMAQ", "OMQD", "OMQG",
+    "OPCJ", "OPCM", "OPCT", "OPCW", "OPDC", "OPGW", "OPNR", "OPOD", "OPSH",
+    "OPSP", "OPVJ", "OPVL", "OPWR", "ORDO", "ORRV", "OSCJ", "OSCM", "OSCS",
+    "OSCT", "OSPC", "OSTP", "OWIN",
+    "PAAI", "PAAM", "PABD", "PABG", "PABK", "PACG", "PAEF", "PAES", "PAEY",
+    "PAFL", "PAFR", "PAFV", "PAGR", "PAGU", "PAJL", "PAKG", "PALC", "PALG",
+    "PALL", "PALP", "PALS", "PALT", "PALV", "PAMB", "PAMC", "PAMD", "PAMG",
+    "PAML", "PAMR", "PAMS", "PAMT", "PAMU", "PAMV", "PANB", "PANL", "PANS",
+    "PANU", "PAOG", "PAQF", "PASG", "PASH", "PASL", "PASM", "PASN", "PASR",
+    "PAST", "PASZ", "PATL", "PAUD", "PAVC", "PAWB", "PCCR", "PCRG", "PCUU",
+    "PEAG", "PEAL", "PEBC", "PEBI", "PEDN", "PEDQ", "PEFG", "PEFH", "PEFM",
+    "PEGT", "PEGU", "PEHL", "PEIL", "PELF", "PELR", "PEMG", "PEML", "PEMN",
+    "PEMU", "PEPG", "PEPK", "PEPP", "PEPZ", "PERB", "PERF", "PERV", "PESC",
+    "PEST", "PESX", "PETR", "PEUD", "PEVT", "PEWR", "PEWT", "PEWV", "PMBB",
+    "PMBE", "PMBI", "PMBL", "PMBM", "PMBO", "PMBR", "PMCV", "PMDA", "PMDC",
+    "PMDE", "PMDF", "PMDL", "PMEP", "PMES", "PMFL", "PMGI", "PMGL", "PMHF",
+    "PMHN", "PMHR", "PMLD", "PMMU", "PMNF", "PMNI", "PMNL", "PMNM", "PMNS",
+    "PMPA", "PMRC", "PMSU", "PMTH", "PMUD", "PMUS", "PMVU", "PMWL", "PUDF",
+    "QBAA", "QBUA", "QUUU", "QWTA", "RUUU", "UREG"
     }
 
 # -----------------------------------------------------------------------------
-def settings(*,
+def akeyaa_settings(
          aquifers=DEFAULT_AQUIFERS,
          method=DEFAULT_METHOD,
          radius=DEFAULT_RADIUS,
          required=DEFAULT_REQUIRED,
          spacing=DEFAULT_SPACING):
-    """
-    Create a dictionary with a complete set of valid parameters.
+    """Create a dictionary with a complete set of valid settings.
 
     Parameters
     ----------
     aquifers : list, optional
         List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. If None, then all
+        Minnesota Geologic Survey"s coding system. If None, then all
         aquifers present will be included. The default is DEFAULT_AQUIFERS.
 
     method : str, optional
-        The fitting method. This must be one of {'OLS', 'RLM'}, where
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
+        The fitting method. This must be one of {"OLS", "RLM"}, where
+            -- "OLS" ordinary least squares regression.
+            -- "RLM" robust linear model regression with Tukey biweights.
         The default is DEFAULT_METHOD.
 
     radius : float, optional
@@ -141,11 +138,11 @@ def settings(*,
 
     Returns
     -------
-    dictionary : {'aquifers': aquifers,
-                  'method': method,
-                  'radius': radius,
-                  'required': required,
-                  'spacing': spacing}
+    dictionary : {"aquifers": aquifers,
+                  "method": method,
+                  "radius": radius,
+                  "required": required,
+                  "spacing": spacing}
 
     Raises
     ------
@@ -159,46 +156,45 @@ def settings(*,
 
     # Validate the aquifers
     if (aquifers is not None) and (not set.issubset(set(aquifers), AQUIFERS)):
-        raise ArgumentError('Unknown aquifer code(s)')
+        raise ArgumentError("Unknown aquifer code(s)")
 
     # Validate the method
-    if method not in ['OLS', 'RLM']:
+    if method not in ["OLS", "RLM"]:
         raise ArgumentError("method must be one of {'OLS', 'RLM'}")
 
     # Validate the radius
     if radius < 1.0:
-        raise ArgumentError('radius must be >= 1')
+        raise ArgumentError("radius must be >= 1")
 
     # Validate the required
     if required < 6:
-        raise ArgumentError('required must be >= 6')
+        raise ArgumentError("required must be >= 6")
 
     # Validate the spacing
     if spacing < 1.0:
-        raise ArgumentError('spacing must be >= 1')
+        raise ArgumentError("spacing must be >= 1")
 
     return {
-        'aquifers': aquifers,
-        'method': method,
-        'radius': radius,
-        'required': required,
-        'spacing': spacing
+        "aquifers": aquifers,
+        "method": method,
+        "radius": radius,
+        "required": required,
+        "spacing": spacing
 
         }
 
 
 # -----------------------------------------------------------------------------
-def by_venue(venue, database, parameters=None):
-    """
-    Compute the Akeyaa analysis across the specified venue.
+def by_venue(venue, database, settings=None):
+    """Compute the Akeyaa analysis across the specified venue.
 
     The Akeyaa analysis is carried out at target locations within the
-    <venue>'s polygon. The target locations are selected as the nodes of a
-    square grid covering the venue's polygon.
+    <venue>"s polygon. The target locations are selected as the nodes of a
+    square grid covering the venue"s polygon.
 
     The square grid of target locations is anchored at the centroid of the
-    <venue>'s polygon, and the grid lines are separated by <spacing>.
-    If a target location is not inside of the venue's polygon it is discarded.
+    <venue>"s polygon, and the grid lines are separated by <spacing>.
+    If a target location is not inside of the venue"s polygon it is discarded.
 
     For each remaining target location all wells in the <database> that
     satisfy the following two conditions are identified:
@@ -218,16 +214,18 @@ def by_venue(venue, database, parameters=None):
     database : wells.Database
         A load-once-fast-lookup database of authorized wells in Minnesota.
 
-    parameters : dict, optional
+    settings : dict, optional
+        A complete or partial set of akeyaa_settings.
+
         aquifers : list, optional
             List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. If None, then all
+            Minnesota Geologic Survey"s coding system. If None, then all
             aquifers present will be included. The default is DEFAULT_AQUIFERS.
 
         method : str, optional
-            The fitting method. This must be one of {'OLS', 'RLM'}, where
-                -- 'OLS' ordinary least squares regression.
-                -- 'RLM' robust linear model regression with Tukey biweights.
+            The fitting method. This must be one of {"OLS", "RLM"}, where
+                -- "OLS" ordinary least squares regression.
+                -- "RLM" robust linear model regression with Tukey biweights.
             The default is DEFAULT_METHOD.
 
         radius : float, optional
@@ -243,10 +241,10 @@ def by_venue(venue, database, parameters=None):
             Grid spacing for target locations across the county. spacing >= 1.
             The default is DEFAULT_SPACING.
 
-        The parameters dictionary does not have to have all five parameters
-        included. The default values for any missing parameters will be used.
-        If the parameters dictionary itself is missing (i.e. None), then the
-        default values will be used for all five parameters.
+        The settings dictionary does not have to have all five settings
+        included. The default values for any missing settings will be used.
+        If the settings dictionary itself is missing (i.e. None), then the
+        default values will be used for all five settings.
 
     Returns
     -------
@@ -261,7 +259,7 @@ def by_venue(venue, database, parameters=None):
         -- evp : ndarray, shape=(6,1)
                expected value vector of the prarameters.
         -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the parameters.
+               variance/covariance matrix of the settings.
 
     Notes
     -----
@@ -269,13 +267,12 @@ def by_venue(venue, database, parameters=None):
         computations. However, only data from the Minnesota CWI are
         considered.
     """
-    return by_polygon(venue.polygon, database, parameters)
+    return by_polygon(venue.polygon, database, settings)
 
 
 # -----------------------------------------------------------------------------
-def by_polygon(polygon, database, parameters=None):
-    """
-    Compute the Akeyaa analysis across the specified polygon.
+def by_polygon(polygon, database, settings=None):
+    """Compute the Akeyaa analysis across the specified polygon.
 
     The Akeyaa analysis is carried out at discrete target locations within
     the <polygon>. The target locations are selected as the nodes of a square
@@ -300,21 +297,21 @@ def by_polygon(polygon, database, parameters=None):
     ----------
     polygon : arcpy.arcobjects.geometries.Polygon
         An arcpy.Polygon with the vertex coordinates represented in
-        'NAD 83 UTM zone 15N' (EPSG:26915),
+        "NAD 83 UTM zone 15N" (EPSG:26915),
 
     database : wells.Database
         A load-once-fast-lookup database of authorized wells in Minnesota.
 
-    parameters : dict, optional
+    settings : dict, optional
         aquifers : list, optional
             List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. If None, then all
+            Minnesota Geologic Survey"s coding system. If None, then all
             aquifers present will be included. The default is DEFAULT_AQUIFERS.
 
         method : str, optional
-            The fitting method. This must be one of {'OLS', 'RLM'}, where
-                -- 'OLS' ordinary least squares regression.
-                -- 'RLM' robust linear model regression with Tukey biweights.
+            The fitting method. This must be one of {"OLS", "RLM"}, where
+                -- "OLS" ordinary least squares regression.
+                -- "RLM" robust linear model regression with Tukey biweights.
             The default is DEFAULT_METHOD.
 
         radius : float, optional
@@ -330,10 +327,10 @@ def by_polygon(polygon, database, parameters=None):
             Grid spacing for target locations across the venue. spacing >= 1.
             The default is DEFAULT_SPACING.
 
-        The parameters dictionary does not have to have all five parameters
-        included. The default values for any missing parameters will be used.
-        If the parameters dictionary itself is missing (i.e. None), then the
-        default values will be used for all five parameters.
+        The settings dictionary does not have to have all five settings
+        included. The default values for any missing settings will be used.
+        If the settings dictionary itself is missing (i.e. None), then the
+        default values will be used for all five settings.
 
     Returns
     -------
@@ -348,7 +345,7 @@ def by_polygon(polygon, database, parameters=None):
         -- evp : ndarray, shape=(6,1)
                expected value vector of the prarameters.
         -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the parameters.
+               variance/covariance matrix of the settings.
 
     Notes
     -----
@@ -357,14 +354,14 @@ def by_polygon(polygon, database, parameters=None):
         considered.
     """
 
-    if parameters is None:
-        parameters = DEFAULT_PARAMETERS
+    if settings is None:
+        settings = DEFAULT_PARAMETERS
 
-    aquifers = parameters.get('aquifers', DEFAULT_AQUIFERS)
-    method = parameters.get('method', DEFAULT_METHOD)
-    radius = parameters.get('radius', DEFAULT_RADIUS)
-    required = parameters.get('required', DEFAULT_REQUIRED)
-    spacing = parameters.get('spacing', DEFAULT_SPACING)
+    aquifers = settings.get("aquifers", DEFAULT_AQUIFERS)
+    method = settings.get("method", DEFAULT_METHOD)
+    radius = settings.get("radius", DEFAULT_RADIUS)
+    required = settings.get("required", DEFAULT_REQUIRED)
+    spacing = settings.get("spacing", DEFAULT_SPACING)
 
     xgrd, ygrd = layout_the_grid(polygon, spacing)
 
@@ -384,8 +381,7 @@ def by_polygon(polygon, database, parameters=None):
 
 # -----------------------------------------------------------------------------
 def layout_the_grid(polygon, spacing):
-    """
-    Determine the locations of the x and y grid lines.
+    """Determine the locations of the x and y grid lines.
 
     The square grid of target locations is anchored at the centroid of the
     <polygon>, axes aligned, and the grid lines are separated by <spacing>.
@@ -395,7 +391,7 @@ def layout_the_grid(polygon, spacing):
     ----------
     polygon : arcpy.arcobjects.geometries.Polygon
         An arcpy.Polygon with the vertex coordinates represented in
-        'NAD 83 UTM zone 15N' (EPSG:26915),
+        "NAD 83 UTM zone 15N" (EPSG:26915),
 
     spacing : float, optional
         Grid spacing for target locations across the venue.
@@ -428,9 +424,8 @@ def layout_the_grid(polygon, spacing):
 
 
 # -----------------------------------------------------------------------------
-def fit_conic(x, y, z, method='RLM'):
-    """
-    Fit the local conic potential model to the selected heads.
+def fit_conic(x, y, z, method="RLM"):
+    """Fit the local conic potential model to the selected heads.
 
     Parameters
     ----------
@@ -445,17 +440,17 @@ def fit_conic(x, y, z, method='RLM'):
 
     method : str (optional)
         The fitting method. The currently supported methods are:
-            -- 'OLS' ordinary least squares regression.
-            -- 'RLM' robust linear model regression with Tukey biweights.
-            Default = 'RLM'.
+            -- "OLS" ordinary least squares regression.
+            -- "RLM" robust linear model regression with Tukey biweights.
+            Default = "RLM".
 
     Returns
     -------
     evp : ndarray, shape=(6,)
-        The expected value vector for the model parameters.
+        The expected value vector for the model settings.
 
     varp : ndarray, shape=(6, 6)
-        The variance matrix for the model parameters.
+        The variance matrix for the model settings.
 
     Raises
     ------
@@ -467,7 +462,7 @@ def fit_conic(x, y, z, method='RLM'):
 
             z = A*x**2 + B*y**2 + C*x*y + D*x + E*y + F + noise
 
-        where the parameters map as: [A, B, C, D, E, F] = p[0:5].
+        where the settings map as: [A, B, C, D, E, F] = p[0:5].
 
     o   Note that most of the work is done by the statsmodels library. There
         are other fitting methods available.
@@ -475,14 +470,14 @@ def fit_conic(x, y, z, method='RLM'):
 
     X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 
-    if method == 'OLS':
+    if method == "OLS":
         ols_model = sm.OLS(z, X)
         ols_results = ols_model.fit()
 
         evp = ols_results.params
         varp = ols_results.cov_params()
 
-    elif method == 'RLM':
+    elif method == "RLM":
         rlm_model = sm.RLM(z, X, M=sm.robust.norms.TukeyBiweight())
         rlm_results = rlm_model.fit()
 
