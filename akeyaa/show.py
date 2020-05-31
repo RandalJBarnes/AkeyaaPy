@@ -2,15 +2,15 @@
 
 Functions
 ---------
-show_results(prefix, polygon, results    Plot the results.
+results_by_venue(prefix, polygon, results    Plot the results.
 
-show_local_flow_direction(prefix, polygon, results)
+local_flow_direction(prefix, polygon, results)
     Plot the local flow directions.
 
-show_local_number_of_wells(prefix, polygon, results)
+local_number_of_wells(prefix, polygon, results)
     Plot the local number of wells.
 
-show_local_head_gradient_magnitude(prefix, polygon, results)
+local_head_gradient_magnitude(prefix, polygon, results)
     Plot the relative magnitude of the local head gradient.
 
 aquifers_by_venue(venue, aquifers)
@@ -140,11 +140,9 @@ def local_flow_direction(venue, results):
     None
     """
 
-    # Get the polygon boundary information.
     xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
     ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
-    # Extract and collate the run information.
     xgrd = np.array([row[0] for row in results])
     ygrd = np.array([row[1] for row in results])
 
@@ -212,11 +210,9 @@ def local_number_of_wells(venue, results):
     None
     """
 
-    # Get the polygon boundary information.
     xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
     ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
-    # Extract and collate the run information.
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
     ntarget = np.array([row[2] for row in results], dtype=int)
@@ -265,11 +261,9 @@ def local_head_gradient_magnitude(venue, results):
     None
     """
 
-    # Get the polygon boundary information.
     xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
     ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
-    # Extract and collate the run information.
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
 
@@ -343,7 +337,6 @@ def aquifers_by_venue(venue, aquifers=None):
 
     uaq, naq = np.unique(asel, return_counts=True)
 
-    # Plot the well locations coded by aquifer.
     plt.figure()
     plt.axis("equal")
 
@@ -371,16 +364,13 @@ def whereis(venue):
     None
     """
 
-    # Get the polygon boundary information.
     xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
     ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
 
-    # Get the state boundary information.
     state = venues.State(0)
     xstate = [pnt.X for pnt in state.polygon.getPart(0)]
     ystate = [pnt.Y for pnt in state.polygon.getPart(0)]
 
-    # Plot the well locations coded by aquifer.
     plt.figure()
     plt.axis("equal")
 

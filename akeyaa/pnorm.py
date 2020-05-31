@@ -59,7 +59,7 @@ def pnormpdf(angles, mu, sigma):
 
     Parameters
     ----------
-    angles : ndarray, shape(M, ); or list; or scalar.
+    angles : ndarray, shape(M, ), or a list, or scalar.
         The angles at which to evaluate the pdf. The angles are given in
         radians, not degrees.
 
@@ -67,7 +67,7 @@ def pnormpdf(angles, mu, sigma):
         The mean vector.
 
     sigma : ndarray, shape=(2, 2)
-        The variance matrix.
+        The variance matrix. This matrix positive definite.
 
     Returns
     -------
@@ -81,12 +81,11 @@ def pnormpdf(angles, mu, sigma):
     Notes
     -----
     o   This implementation is based on (1) in Hernandez et al. [2017].
-        However, the representation given by Hernandez et al. is prone to
-        numerical overflow. The ameliorate the problem we have refactored
-        the equation.
+        However, the exact representation given by Hernandez et al. is
+        prone to numerical overflow. To ameliorate the problem we have
+        refactored the exponential components of the equation.
     """
 
-    # Preallocate space.
     if isinstance(angles, np.ndarray):
         pdf = np.empty(angles.shape[0])
     elif isinstance(angles, list):
@@ -95,7 +94,7 @@ def pnormpdf(angles, mu, sigma):
         angles = [angles]
         pdf = np.empty([1, ])
 
-    # Precompute what can be precomputed.
+    # Manually compute the det and inv of the 2x2 matrix.
     detS = sigma[0, 0]*sigma[1, 1] - sigma[0, 1]*sigma[1, 0]
     Sinv = np.array([[sigma[1, 1], -sigma[0, 1]],
                      [-sigma[1, 0], sigma[0, 0]]]) / detS
@@ -103,10 +102,9 @@ def pnormpdf(angles, mu, sigma):
     C = mu.T @ Sinv @ mu
     D = 2*pi*sqrt(detS)
 
-    # Fill the pdf for all angles.
     for j, theta in enumerate(angles):
         r = np.array([[cos(theta)], [sin(theta)]])
-        A = r.T @ Sinv @ r                  # A is always a positive number.
+        A = r.T @ Sinv @ r              # A is a strictly positive number.
         B = r.T @ Sinv @ mu
         E = B/sqrt(A)
         pdf[j] = (exp(-C/2) + E*norm.cdf(E)*sqrt(2*pi*exp(E*E - C)))/(A*D)

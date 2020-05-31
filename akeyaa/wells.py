@@ -124,21 +124,36 @@ class Database:
         Fetch all wells within <radius> of the <target> location.
     """
 
+    # These are class attributes holding a relatively large amount of
+    # welldata and the associated spatial kd tree. These class attributes
+    # are initialized only once, on the creation of the first Database
+    # instance.
+    __welldata = None
+    __tree = None
+
+    #------------------------
     def __init__(self):
-        """Extract the well data from the ArcGIS Pro/ArcPy .gdb and create
-        a kd-tree to allow for fast neighborhood searchs.
+        """On first call, initialize the class attributes.
+
+        Extract the well data from the ArcGIS Pro/ArcPy .gdb, initialize
+        the Database.__welldata list, and the Database.__tree spatial
+        kd-tree to allow for fast neighborhood searchs. These initializations
+        only happen on the first call.
         """
 
-        table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
+        if Database.__welldata is None:
+            table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
 
-        with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
-            self.welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
+            with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
+                Database.__welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
 
-        self.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in self.welldata])
+            Database.__tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in Database.__welldata])
 
+    #------------------------
     def __repr__(self):
         return f"{self.__class__}: {len(self.welldata)}"
 
+    #------------------------
     def fetch(self, xtarget, ytarget, radius, aquifers=None):
         """Fetch the (x, y, z) for selected wells.
 
@@ -180,12 +195,12 @@ class Database:
         o   Beware! The x and coordinates are in [m], but z is in [ft].
         """
 
-        indx = self.tree.query_ball_point([xtarget, ytarget], radius)
+        indx = Database.__tree.query_ball_point([xtarget, ytarget], radius)
 
         xyz = []
         for i in indx:
-            if (aquifers is None) or (self.welldata[i][3] in aquifers):
-                xyz.append(self.welldata[i][0:3])
+            if (aquifers is None) or (Database.__welldata[i][3] in aquifers):
+                xyz.append(Database.__welldata[i][0:3])
 
         x, y, z = zip(*xyz)
         return (np.array(x), np.array(y), np.array(z))
@@ -193,12 +208,17 @@ class Database:
 
 # -----------------------------------------------------------------------------
 def get_welldata_by_polygon(polygon):
-    """Return the well data from all authorized wells in the polygon
+    """Return the welldata from all authorized wells in the polygon
+
+    Extract the welldata from the ArcGIS Pro/ArcPy .gdb using an
+    arcpy.SelectLayerByLocation query. This call returns the welldata
+    for all authorized wells located in the interior of <polygon> regardless
+    of the aquifer in which the wells are completed,.
 
     Parameters
     ----------
     polygon : arcpy.polygon
-        The geographic focus of the run.
+        The geographic focus of the query.
 
     Returns
     -------

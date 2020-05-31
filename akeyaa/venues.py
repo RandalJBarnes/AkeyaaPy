@@ -26,8 +26,8 @@ Functions
 convert_polygon(polygon)
     Convert a polygon's coordinates from lat/lon to UTM.
 
-lookup(kind, name)
-    Attempt to find the unique venue code from the kind and name.
+lookup_code(kind, name)
+    Attempt to find the unique venue code from the name and kind.
 
 Author
 ------
@@ -195,9 +195,11 @@ class Venue:
         else:
             self.polygon = polygon
 
+    # -----------------------
     def __repr__(self):
         return f"{self.__class__}: {self.code}, {self.name}"
 
+    # -----------------------
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
 
@@ -297,7 +299,7 @@ def convert_polygon(polygon):
 
 
 # -----------------------------------------------------------------------------
-def lookup(name, kind):
+def lookup_code(name, kind):
     """Attempt to find the unique venue code from the kind and name.
 
     Get the unique township 8-digit Geographic Names Information System (GNIS)

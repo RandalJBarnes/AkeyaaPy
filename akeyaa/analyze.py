@@ -33,6 +33,8 @@ import statsmodels.api as sm
 
 import arcpy
 
+from akeyaa.wells import wells
+
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
@@ -54,7 +56,8 @@ class UnknownMethodError(Error):
 
 
 # -----------------------------------------------------------------------------
-# These are the default settings for the Akeyaa analysis.
+# These are the default settings for the Akeyaa analysis. TODO: revist these
+# default values after we have more exprience.
 DEFAULT_AQUIFERS = None
 DEFAULT_METHOD = "RLM"
 DEFAULT_RADIUS = 3000
@@ -154,25 +157,20 @@ def akeyaa_settings(
 
     """
 
-    # Validate the aquifers
     if (aquifers is not None) and (not set.issubset(set(aquifers), AQUIFERS)):
         raise ArgumentError("Unknown aquifer code(s)")
 
-    # Validate the method
     if method not in ["OLS", "RLM"]:
-        raise ArgumentError("method must be one of {'OLS', 'RLM'}")
+        raise ArgumentError("'method' must be one of {'OLS', 'RLM'}")
 
-    # Validate the radius
     if radius < 1.0:
-        raise ArgumentError("radius must be >= 1")
+        raise ArgumentError("'radius' must be >= 1")
 
-    # Validate the required
     if required < 6:
-        raise ArgumentError("required must be >= 6")
+        raise ArgumentError("'required' must be >= 6")
 
-    # Validate the spacing
     if spacing < 1.0:
-        raise ArgumentError("spacing must be >= 1")
+        raise ArgumentError("'spacing' must be >= 1")
 
     return {
         "aquifers": aquifers,
@@ -180,12 +178,11 @@ def akeyaa_settings(
         "radius": radius,
         "required": required,
         "spacing": spacing
-
         }
 
 
 # -----------------------------------------------------------------------------
-def by_venue(venue, database, settings=None):
+def by_venue(venue, settings=None):
     """Compute the Akeyaa analysis across the specified venue.
 
     The Akeyaa analysis is carried out at target locations within the
@@ -210,9 +207,6 @@ def by_venue(venue, database, settings=None):
     ----------
     venue: venues.Venue (concrete subclass)
         An instance of a concrete subclass of venues.Venue, e.g. City.
-
-    database : wells.Database
-        A load-once-fast-lookup database of authorized wells in Minnesota.
 
     settings : dict, optional
         A complete or partial set of akeyaa_settings.
@@ -267,11 +261,11 @@ def by_venue(venue, database, settings=None):
         computations. However, only data from the Minnesota CWI are
         considered.
     """
-    return by_polygon(venue.polygon, database, settings)
+    return by_polygon(venue.polygon, settings)
 
 
 # -----------------------------------------------------------------------------
-def by_polygon(polygon, database, settings=None):
+def by_polygon(polygon, settings=None):
     """Compute the Akeyaa analysis across the specified polygon.
 
     The Akeyaa analysis is carried out at discrete target locations within
@@ -298,9 +292,6 @@ def by_polygon(polygon, database, settings=None):
     polygon : arcpy.arcobjects.geometries.Polygon
         An arcpy.Polygon with the vertex coordinates represented in
         "NAD 83 UTM zone 15N" (EPSG:26915),
-
-    database : wells.Database
-        A load-once-fast-lookup database of authorized wells in Minnesota.
 
     settings : dict, optional
         aquifers : list, optional
@@ -363,6 +354,7 @@ def by_polygon(polygon, database, settings=None):
     required = settings.get("required", DEFAULT_REQUIRED)
     spacing = settings.get("spacing", DEFAULT_SPACING)
 
+    database = wells.Database()
     xgrd, ygrd = layout_the_grid(polygon, spacing)
 
     results = []
@@ -373,7 +365,7 @@ def by_polygon(polygon, database, settings=None):
 
                 # Note that we are converting the zw in [ft] to [m].
                 if len(xw) >= required:
-                    evp, varp = fit_conic(xw-xo, yw-yo, 0.3048*zw, method)
+                    evp, varp = fit_conic_potential(xw-xo, yw-yo, 0.3048*zw, method)
                     results.append((xo, yo, len(xw), evp, varp))
 
     return results
@@ -424,7 +416,7 @@ def layout_the_grid(polygon, spacing):
 
 
 # -----------------------------------------------------------------------------
-def fit_conic(x, y, z, method="RLM"):
+def fit_conic_potential(x, y, z, method="RLM"):
     """Fit the local conic potential model to the selected heads.
 
     Parameters
