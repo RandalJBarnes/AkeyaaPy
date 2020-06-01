@@ -101,11 +101,11 @@ class Settings:
     """
 
     def __init__(self,
-                 aquifers: list = DEFAULT_AQUIFERS,
-                 method: list = DEFAULT_METHOD,
-                 radius: float = DEFAULT_RADIUS,
-                 required: int = DEFAULT_REQUIRED,
-                 spacing: float = DEFAULT_SPACING):
+                 aquifers = DEFAULT_AQUIFERS,
+                 method = DEFAULT_METHOD,
+                 radius = DEFAULT_RADIUS,
+                 required = DEFAULT_REQUIRED,
+                 spacing = DEFAULT_SPACING):
         self.aquifers = aquifers
         self.method = method
         self.radius = radius
@@ -129,55 +129,55 @@ class Settings:
                 (self.spacing == other.spacing))
 
     @property
-    def aquifers(self) -> list:
+    def aquifers(self):
         return self._aquifers
 
     @aquifers.setter
-    def aquifers(self, aquifers: list):
+    def aquifers(self, aquifers):
         if (aquifers is not None) and (not set.issubset(set(aquifers), ALL_AQUIFERS)):
             raise ValueError("Unknown aquifer code(s)")
         else:
             self._aquifers = aquifers
 
     @property
-    def method(self) -> str:
+    def method(self):
         return self._method
 
     @method.setter
-    def method(self, method: str):
+    def method(self, method):
         if method not in ["OLS", "RLM"]:
             raise ValueError("'method' must be one of {'OLS', 'RLM'}")
         else:
             self._method = method
 
     @property
-    def radius(self) -> float:
+    def radius(self):
         return self._radius
 
     @radius.setter
-    def radius(self, radius: float):
+    def radius(self, radius):
         if radius < 1.0:
             raise ValueError("'radius' must be >= 1")
         else:
             self._radius = radius
 
     @property
-    def required(self) -> int:
+    def required(self):
         return self._required
 
     @required.setter
-    def required(self, required: int):
+    def required(self, required):
         if required < 6:
             raise ValueError("'required' must be >= 6")
         else:
             self._required = required
 
     @property
-    def spacing(self) -> float:
+    def spacing(self)
         return self._spacing
 
     @spacing.setter
-    def spacing(self, spacing: float):
+    def spacing(self, spacing):
         if spacing < 1.0:
             raise ValueError("'spacing' must be >= 1")
         else:
