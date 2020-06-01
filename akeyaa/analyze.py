@@ -25,7 +25,7 @@ University of Minnesota
 
 Version
 -------
-31 May 2020
+01 June 2020
 """
 
 import numpy as np
@@ -56,134 +56,7 @@ class UnknownMethodError(Error):
 
 
 # -----------------------------------------------------------------------------
-# These are the default settings for the Akeyaa analysis. TODO: revist these
-# default values after we have more exprience.
-DEFAULT_AQUIFERS = None
-DEFAULT_METHOD = "RLM"
-DEFAULT_RADIUS = 3000
-DEFAULT_REQUIRED = 25
-DEFAULT_SPACING = 1000
-
-DEFAULT_PARAMETERS = {
-        "aquifers": DEFAULT_AQUIFERS,
-        "radius": DEFAULT_RADIUS,
-        "required": DEFAULT_REQUIRED,
-        "spacing": DEFAULT_SPACING,
-        "method": DEFAULT_METHOD
-        }
-
-# -----------------------------------------------------------------------------
-# The following is a complete list of all 4-character aquifer codes used in
-# the Minnesota County Well index as of 1 January 2020.
-AQUIFERS = {
-    "CAMB", "CECR", "CEMS", "CJDN", "CJDW", "CJMS", "CJSL", "CJTC", "CLBK",
-    "CMFL", "CMRC", "CMSH", "CMTS", "CSLT", "CSLW", "CSTL", "CTCE", "CTCG",
-    "CTCM", "CTCW", "CTLR", "CTMZ", "CWEC", "CWMS", "CWOC",
-    "DCLP", "DCLS", "DCOG", "DCOM", "DCVA", "DCVL", "DCVU", "DEVO", "DPOG",
-    "DPOM", "DSOG", "DSOM", "DSPL", "DWAP", "DWPR",
-    "INDT", "KDNB", "KREG", "KRET", "MTPL",
-    "ODCR", "ODGL", "ODPL", "ODUB", "OGCD", "OGCM", "OGDP", "OGPC", "OGPD",
-    "OGPR", "OGSC", "OGSD", "OGSV", "OGVP", "OGWD", "OMAQ", "OMQD", "OMQG",
-    "OPCJ", "OPCM", "OPCT", "OPCW", "OPDC", "OPGW", "OPNR", "OPOD", "OPSH",
-    "OPSP", "OPVJ", "OPVL", "OPWR", "ORDO", "ORRV", "OSCJ", "OSCM", "OSCS",
-    "OSCT", "OSPC", "OSTP", "OWIN",
-    "PAAI", "PAAM", "PABD", "PABG", "PABK", "PACG", "PAEF", "PAES", "PAEY",
-    "PAFL", "PAFR", "PAFV", "PAGR", "PAGU", "PAJL", "PAKG", "PALC", "PALG",
-    "PALL", "PALP", "PALS", "PALT", "PALV", "PAMB", "PAMC", "PAMD", "PAMG",
-    "PAML", "PAMR", "PAMS", "PAMT", "PAMU", "PAMV", "PANB", "PANL", "PANS",
-    "PANU", "PAOG", "PAQF", "PASG", "PASH", "PASL", "PASM", "PASN", "PASR",
-    "PAST", "PASZ", "PATL", "PAUD", "PAVC", "PAWB", "PCCR", "PCRG", "PCUU",
-    "PEAG", "PEAL", "PEBC", "PEBI", "PEDN", "PEDQ", "PEFG", "PEFH", "PEFM",
-    "PEGT", "PEGU", "PEHL", "PEIL", "PELF", "PELR", "PEMG", "PEML", "PEMN",
-    "PEMU", "PEPG", "PEPK", "PEPP", "PEPZ", "PERB", "PERF", "PERV", "PESC",
-    "PEST", "PESX", "PETR", "PEUD", "PEVT", "PEWR", "PEWT", "PEWV", "PMBB",
-    "PMBE", "PMBI", "PMBL", "PMBM", "PMBO", "PMBR", "PMCV", "PMDA", "PMDC",
-    "PMDE", "PMDF", "PMDL", "PMEP", "PMES", "PMFL", "PMGI", "PMGL", "PMHF",
-    "PMHN", "PMHR", "PMLD", "PMMU", "PMNF", "PMNI", "PMNL", "PMNM", "PMNS",
-    "PMPA", "PMRC", "PMSU", "PMTH", "PMUD", "PMUS", "PMVU", "PMWL", "PUDF",
-    "QBAA", "QBUA", "QUUU", "QWTA", "RUUU", "UREG"
-    }
-
-
-# -----------------------------------------------------------------------------
-def akeyaa_settings(
-         aquifers=DEFAULT_AQUIFERS,
-         method=DEFAULT_METHOD,
-         radius=DEFAULT_RADIUS,
-         required=DEFAULT_REQUIRED,
-         spacing=DEFAULT_SPACING):
-    """Create a dictionary with a complete set of valid settings.
-
-    Parameters
-    ----------
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey"s coding system. If None, then all
-        aquifers present will be included. The default is DEFAULT_AQUIFERS.
-
-    method : str, optional
-        The fitting method. This must be one of {"OLS", "RLM"}, where
-            -- "OLS" ordinary least squares regression.
-            -- "RLM" robust linear model regression with Tukey biweights.
-        The default is DEFAULT_METHOD.
-
-    radius : float, optional
-        Search radius for neighboring wells. radius >= 1. The default is
-        DEFAULT_RADIUS.
-
-    required : int, optional
-        Required number of neighboring wells. If fewer are found, the
-        target location is skipped. required >= 6. The default is
-        DEFAULT_REQUIRED.
-
-    spacing : float, optional
-        Grid spacing for target locations across the county. spacing >= 1.
-        The default is DEFAULT_SPACING.
-
-    Returns
-    -------
-    dictionary : {"aquifers": aquifers,
-                  "method": method,
-                  "radius": radius,
-                  "required": required,
-                  "spacing": spacing}
-
-    Raises
-    ------
-    ArgumentError
-
-    Notes
-    -----
-    o   This function requires all "name only argments".
-
-    """
-
-    if (aquifers is not None) and (not set.issubset(set(aquifers), AQUIFERS)):
-        raise ArgumentError("Unknown aquifer code(s)")
-
-    if method not in ["OLS", "RLM"]:
-        raise ArgumentError("'method' must be one of {'OLS', 'RLM'}")
-
-    if radius < 1.0:
-        raise ArgumentError("'radius' must be >= 1")
-
-    if required < 6:
-        raise ArgumentError("'required' must be >= 6")
-
-    if spacing < 1.0:
-        raise ArgumentError("'spacing' must be >= 1")
-
-    return {
-        "aquifers": aquifers,
-        "method": method,
-        "radius": radius,
-        "required": required,
-        "spacing": spacing
-        }
-
-
-# -----------------------------------------------------------------------------
-def by_venue(venue, settings=None):
+def by_venue(venue, settings):
     """Compute the Akeyaa analysis across the specified venue.
 
     The Akeyaa analysis is carried out at target locations within the
@@ -209,8 +82,8 @@ def by_venue(venue, settings=None):
     venue: venues.Venue (concrete subclass)
         An instance of a concrete subclass of venues.Venue, e.g. City.
 
-    settings : dict, optional
-        A complete or partial set of akeyaa_settings.
+    settings : settings.Settings
+        A complete set of akeyaa settings.
 
         aquifers : list, optional
             List of four-character aquifer abbreviation strings, as defined in
@@ -235,11 +108,6 @@ def by_venue(venue, settings=None):
         spacing : float, optional
             Grid spacing for target locations across the county. spacing >= 1.
             The default is DEFAULT_SPACING.
-
-        The settings dictionary does not have to have all five settings
-        included. The default values for any missing settings will be used.
-        If the settings dictionary itself is missing (i.e. None), then the
-        default values will be used for all five settings.
 
     Returns
     -------
@@ -266,7 +134,7 @@ def by_venue(venue, settings=None):
 
 
 # -----------------------------------------------------------------------------
-def by_polygon(polygon, settings=None):
+def by_polygon(polygon, settings):
     """Compute the Akeyaa analysis across the specified polygon.
 
     The Akeyaa analysis is carried out at discrete target locations within
@@ -294,7 +162,7 @@ def by_polygon(polygon, settings=None):
         An arcpy.Polygon with the vertex coordinates represented in
         "NAD 83 UTM zone 15N" (EPSG:26915),
 
-    settings : dict, optional
+    settings : settings.Settings
         aquifers : list, optional
             List of four-character aquifer abbreviation strings, as defined in
             Minnesota Geologic Survey"s coding system. If None, then all
@@ -319,11 +187,6 @@ def by_polygon(polygon, settings=None):
             Grid spacing for target locations across the venue. spacing >= 1.
             The default is DEFAULT_SPACING.
 
-        The settings dictionary does not have to have all five settings
-        included. The default values for any missing settings will be used.
-        If the settings dictionary itself is missing (i.e. None), then the
-        default values will be used for all five settings.
-
     Returns
     -------
     results : list of tuples
@@ -346,27 +209,18 @@ def by_polygon(polygon, settings=None):
         considered.
     """
 
-    if settings is None:
-        settings = DEFAULT_PARAMETERS
-
-    aquifers = settings.get("aquifers", DEFAULT_AQUIFERS)
-    method = settings.get("method", DEFAULT_METHOD)
-    radius = settings.get("radius", DEFAULT_RADIUS)
-    required = settings.get("required", DEFAULT_REQUIRED)
-    spacing = settings.get("spacing", DEFAULT_SPACING)
-
     database = wells.Database()
-    xgrd, ygrd = layout_the_grid(polygon, spacing)
+    xgrd, ygrd = layout_the_grid(polygon, settings.spacing)
 
     results = []
     for xo in xgrd:
         for yo in ygrd:
             if polygon.contains(arcpy.Point(xo, yo)):
-                xw, yw, zw = database.fetch(xo, yo, radius, aquifers)
+                xw, yw, zw = database.fetch(xo, yo, settings.radius, settings.aquifers)
 
-                # Note that we are converting the zw in [ft] to [m].
-                if len(xw) >= required:
-                    evp, varp = fit_conic_potential(xw-xo, yw-yo, 0.3048*zw, method)
+                # Note that we are converting the zw from [ft] to [m].
+                if len(xw) >= settings.required:
+                    evp, varp = fit_conic_potential(xw-xo, yw-yo, 0.3048*zw, settings.method)
                     results.append((xo, yo, len(xw), evp, varp))
 
     return results
@@ -417,7 +271,7 @@ def layout_the_grid(polygon, spacing):
 
 
 # -----------------------------------------------------------------------------
-def fit_conic_potential(x, y, z, method="RLM"):
+def fit_conic_potential(x, y, z, method):
     """Fit the local conic potential model to the selected heads.
 
     Parameters
@@ -431,11 +285,10 @@ def fit_conic_potential(x, y, z, method="RLM"):
     z : ndarray, shape=(N,)
         observed head values [m].
 
-    method : str (optional)
-        The fitting method. The currently supported methods are:
-            -- "OLS" ordinary least squares regression.
-            -- "RLM" robust linear model regression with Tukey biweights.
-            Default = "RLM".
+    method : str
+        The fitting method; one of {"OLS", "RLM"}, where
+        -- "OLS" ordinary least squares regression.
+        -- "RLM" robust linear model regression with Tukey biweights.
 
     Returns
     -------
