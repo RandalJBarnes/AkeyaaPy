@@ -8,6 +8,7 @@ hold/
 *.pickle
 *.pklz
 *.bak
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

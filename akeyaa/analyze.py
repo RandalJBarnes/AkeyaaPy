@@ -33,7 +33,7 @@ import statsmodels.api as sm
 
 import arcpy
 
-from akeyaa.wells import wells
+import wells
 
 
 # -----------------------------------------------------------------------------

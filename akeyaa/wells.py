@@ -197,12 +197,17 @@ class Database:
 
         indx = Database.__tree.query_ball_point([xtarget, ytarget], radius)
 
-        xyz = []
-        for i in indx:
-            if (aquifers is None) or (Database.__welldata[i][3] in aquifers):
-                xyz.append(Database.__welldata[i][0:3])
+        if not indx:
+            x = []
+            y = []
+            z = []
+        else:
+            xyz = []
+            for i in indx:
+                if (aquifers is None) or (Database.__welldata[i][3] in aquifers):
+                    xyz.append(Database.__welldata[i][0:3])
+            x, y, z = zip(*xyz)
 
-        x, y, z = zip(*xyz)
         return (np.array(x), np.array(y), np.array(z))
 
 

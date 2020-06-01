@@ -484,14 +484,14 @@ The divergence of the discharge is given by
 %==============================================================================
 \section{General Project Normal Distribution}\label{8.1}
 %==============================================================================
-As given by \citet[(1)]{Hernandez2017}, the probability density function for the general projected normal distribution is given by
+\citet[(1)]{Hernandez2017} gives the probability density function for the general projected normal distribution as
 %
 \begin{equation}\label{8.1}
     f\left( \theta | \mat{u}, \mat{V} \right)
     = \left( \frac{1}{AD} \right) \exp{(-C/2)} \left[ 1 + E \frac{\Phi(E)}{\phi(E)} \right]
 \end{equation}
 %
-where $\Phi()$ is the standard normal distribution function, $\phi()$ is the standard normal density function given by
+for $0 \le \theta \le 2\pi$, where $\Phi()$ is the standard normal distribution function, $\phi()$ is the standard normal density function given by
 %
 \begin{equation}\label{8.2}
     \phi(E) = \frac{1}{\sqrt{2 \pi}} \exp{\left(-E^2/2\right)}
@@ -504,16 +504,57 @@ and
     A &= \mat{r}^T \mat{V}^{-1} \mat{r} \\
     B &= \mat{r}^T \mat{V}^{-1} \mat{u} \\
     C &= \mat{u}^T \mat{V}^{-1} \mat{u} \\
-    D &= 2 \pi \sqrt{\abs{\mat{V}}} \\
+    D &= 2 \pi \sqrt{\|\mat{V}\|} \\
     E &= \frac{B}{\sqrt{A}}
 \end{align}
+
+We consider the right-most term in \eqref{8.1}, which takes the form
 %
-The term $\phi(E)$ goes to $0$ for even moderate values of $\abs{E}$, which causes serious computational problems. To ameliorate this problem, we refactor \eqref{8.1} as follows.
-%
-\begin{equation}\label{8.1}
-    f\left( \theta | \mat{u}, \mat{V} \right)
-    = \left( \frac{1}{AD} \right) \left[ \exp{(-C/2)} + E \Phi(E) \sqrt{2\pi \exp{(E^2 - C)}} \right]
+\begin{equation}\label{8.4}
+    Q(x) = 1 + x \frac{\Phi(x)}{\phi(x)}
 \end{equation}
+%
+\citet[(26.2.12)]{Abramowitz65} gives an asymptotic expansion for $\Phi(x)$ as
+%
+\begin{equation}\label{8.5}
+    1 - \Phi(x) = \frac{\phi(x)}{x} \left[ 1 - \frac{1}{x^2} + \frac{3}{x^4} - \frac{15}{x^6} + \ldots \right]
+\end{equation}
+%
+for $x > 0$. Rearranging \eqref{8.5} we find
+%
+\begin{equation}\label{8.6}
+     \frac{x}{\phi(x)} - x \frac{\Phi(x)}{\phi(x)} = \left[ 1 - \frac{1}{x^2} + \frac{3}{x^4} - \frac{15}{x^6} + \ldots \right]
+\end{equation}
+%
+Substituting \eqref{8.6} into \eqref{8.5} yields
+%
+\begin{equation}\label{8.7}
+     Q(x) = 1 + x \frac{\Phi(x)}{\phi(x)} = \frac{x}{\phi(x)} + \frac{1}{x^2} - \frac{3}{x^4} + \frac{15}{x^6} - \ldots
+\end{equation}
+%
+Substituting \eqref{8.2} into \eqref{8.7} yields
+%
+\begin{equation}\label{8.8}
+     Q(x) = x \cdot \sqrt{2\pi} \cdot \exp{(x^2/2)} + \frac{1}{x^2} - \frac{3}{x^4} + \frac{15}{x^6} - \ldots
+\end{equation}
+%
+Truncating \eqref{8.8} yields the following approximation
+%
+\begin{equation}\label{8.9}
+     Q(x) \approx x \cdot \sqrt{2\pi} \cdot \exp{(x^2/2)}
+\end{equation}
+%
+For $x > 7$ the absolute error is less than $0.02$ and the relative error is less than $2.6 \times 10^{-14}$.
+
+Substituting \eqref{8.9} into \eqref{8.1} yields
+%
+\begin{equation}\label{8.10}
+    f\left( \theta | \mat{u}, \mat{V} \right)
+    \approx \left( \frac{1}{AD} \right) \cdot \sqrt{2\pi} \cdot E \cdot \exp{\left(\frac{E^2 - C}{2}\right)}
+\end{equation}
+%
+for $E > 7$ this is a pretty good approximation.
+
 
 
 %==============================================================================

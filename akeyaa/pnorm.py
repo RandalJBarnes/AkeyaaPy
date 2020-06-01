@@ -104,10 +104,15 @@ def pnormpdf(angles, mu, sigma):
 
     for j, theta in enumerate(angles):
         r = np.array([[cos(theta)], [sin(theta)]])
-        A = r.T @ Sinv @ r              # A is a strictly positive number.
+        A = r.T @ Sinv @ r
         B = r.T @ Sinv @ mu
         E = B/sqrt(A)
-        pdf[j] = (exp(-C/2) + E*norm.cdf(E)*sqrt(2*pi*exp(E*E - C)))/(A*D)
+
+        # Note: this will still overflow for |E| > 40 or so.
+        if E < 7:
+            pdf[j] = exp(-C/2) * (1 + E * norm.cdf(E)/norm.pdf(E)) / (A*D)
+        else:
+            pdf[j] = sqrt(2*pi) * E * exp((E*E - C)/2) / (A*D)
 
     return pdf
 
@@ -141,6 +146,12 @@ def pnormcdf(lowerbound, upperbound, mu, sigma):
     None
     """
 
-    cdf = quad(lambda theta: pnormpdf(theta, mu, sigma),
-               lowerbound, upperbound)[0]
+    try:
+        cdf = quad(lambda theta: pnormpdf(theta, mu, sigma),
+                   lowerbound, upperbound)[0]
+    except OverflowError:
+        cdf = 1.0
+    except:
+        raise
+
     return cdf

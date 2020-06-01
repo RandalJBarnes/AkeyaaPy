@@ -164,7 +164,13 @@ def local_flow_direction(venue, results):
         theta = math.atan2(mu[1], mu[0])
         lowerbound = theta - np.pi/18.0
         upperbound = theta + np.pi/18.0
-        p10[i] = pnorm.pnormcdf(lowerbound, upperbound, mu, sigma)
+
+        try:
+            p10[i] = pnorm.pnormcdf(lowerbound, upperbound, mu, sigma)
+        except OverflowError:
+            p10[i] = 1.0
+        except:
+            raise
 
     fig, ax1 = plt.subplots()
     plt.axis("equal")
@@ -177,7 +183,7 @@ def local_flow_direction(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + "Local Flow Directions", {"fontsize": 24})
+    plt.title(venue.fullname + " Local Flow Directions", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -227,7 +233,7 @@ def local_number_of_wells(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + "Number of Local Wells", {"fontsize": 24})
+    plt.title(venue.fullname + " Number of Local Wells", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -286,7 +292,7 @@ def local_head_gradient_magnitude(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + "|Head Gradient|", {"fontsize": 24})
+    plt.title(venue.fullname + " |Head Gradient|", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -345,7 +351,7 @@ def aquifers_by_venue(venue, aquifers=None):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + "Wells Coded By Aquifer", {"fontsize": 24})
+    plt.title(venue.fullname + " Wells Coded By Aquifer", {"fontsize": 24})
 
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)

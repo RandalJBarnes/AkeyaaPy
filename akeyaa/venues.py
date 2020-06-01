@@ -69,6 +69,10 @@ class VenueNotFoundError(Error):
     """The requested venue was not found in the database. """
 
 
+class UnknownKindError(Error):
+    """The specified kind is not supported."""
+
+
 # -----------------------------------------------------------------------------
 class Venue:
     """The (abstract) base class for all Venues.
@@ -229,7 +233,7 @@ class County(Venue):
     """County subclass of Venue."""
 
     WHO = "{} County"
-    WHAT = ["NAME", "SHAPE@"]
+    WHAT = ["CTY_NAME", "SHAPE@"]
     WHEN = "CTY_FIPS = {}"
     WHERE = SOURCE["COUNTY"]
 
@@ -395,8 +399,8 @@ def lookup_code(name, kind):
 
     LOOKUP_REQUIREMENTS = {
         "CITY":         "NAME = '{}' AND CTU_Type = 'CITY'",
-        "TOWNSHIP":     "NAME = '{0}' AND CTU_Type = 'TOWNSHIP'",
-        "COUNTY":       "CTY_NAME = {}",
+        "TOWNSHIP":     "NAME = '{}' AND CTU_Type = 'TOWNSHIP'",
+        "COUNTY":       "CTY_NAME = '{}'",
         "WATERSHED":    "(NAME = '{}') AND ("
             "(STATES = 'CN,MI,MN,WI') OR "
             "(STATES = 'CN,MN') OR "
@@ -426,11 +430,13 @@ def lookup_code(name, kind):
         "STATE":    "(STATE_NAME = 'Minnesota')"
         }
 
-    kind = kind.upper()
-
-    source = SOURCE[kind]
-    attributes = LOOKUP_ATTRIBUTES[kind]
-    where = LOOKUP_REQUIREMENTS[kind].format(name)
+    try:
+        kind = kind.upper()
+        source = SOURCE[kind]
+        attributes = LOOKUP_ATTRIBUTES[kind]
+        where = LOOKUP_REQUIREMENTS[kind].format(name)
+    except KeyError:
+        raise UnknownKindError(f'{kind} is not a recognized kind.')
 
     code = []
     with arcpy.da.SearchCursor(source, attributes, where) as cursor:
