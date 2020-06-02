@@ -488,7 +488,7 @@ The divergence of the discharge is given by
 %
 \begin{equation}\label{8.1}
     f\left( \theta | \mat{u}, \mat{V} \right)
-    = \left( \frac{1}{AD} \right) \exp{(-C/2)} \left[ 1 + E \frac{\Phi(E)}{\phi(E)} \right]
+    = \frac{\exp{(-C/2)}}{AD} \left[ 1 + E \frac{\Phi(E)}{\phi(E)} \right]
 \end{equation}
 %
 for $0 \le \theta \le 2\pi$, where $\Phi()$ is the standard normal distribution function, $\phi()$ is the standard normal density function given by
@@ -504,9 +504,11 @@ and
     A &= \mat{r}^T \mat{V}^{-1} \mat{r} \\
     B &= \mat{r}^T \mat{V}^{-1} \mat{u} \\
     C &= \mat{u}^T \mat{V}^{-1} \mat{u} \\
-    D &= 2 \pi \sqrt{\|\mat{V}\|} \\
+    D &= 2 \pi \sqrt{\text{det}(\mat{V})} \\
     E &= \frac{B}{\sqrt{A}}
 \end{align}
+%
+We note that $A$, $B$, and $E$ are functions of $\theta$, while $C$ and $D$ are not. Also, $C$, $AD$, and $E$ are dimensionless quantities.
 
 We consider the right-most term in \eqref{8.1}, which takes the form
 %
@@ -544,16 +546,16 @@ Truncating \eqref{8.8} yields the following approximation
      Q(x) \approx x \cdot \sqrt{2\pi} \cdot \exp{(x^2/2)}
 \end{equation}
 %
-For $x > 7$ the absolute error is less than $0.02$ and the relative error is less than $2.6 \times 10^{-14}$.
+For $x > 5$ the absolute error is less than $0.036$ and the relative error is less than $1.07 \times 10^{-8}$.
 
 Substituting \eqref{8.9} into \eqref{8.1} yields
 %
 \begin{equation}\label{8.10}
     f\left( \theta | \mat{u}, \mat{V} \right)
-    \approx \left( \frac{1}{AD} \right) \cdot \sqrt{2\pi} \cdot E \cdot \exp{\left(\frac{E^2 - C}{2}\right)}
+    \approx \frac{E\sqrt{2\pi}}{AD} ~ \exp{\left(\frac{E^2 - C}{2}\right)}
 \end{equation}
 %
-for $E > 7$ this is a pretty good approximation.
+For $E > 5$ this is a pretty good approximation.
 
 
 

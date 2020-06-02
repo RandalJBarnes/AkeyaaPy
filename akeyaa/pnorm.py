@@ -108,11 +108,11 @@ def pnormpdf(angles, mu, sigma):
         B = r.T @ Sinv @ mu
         E = B/sqrt(A)
 
-        # Note: this will still overflow for |E| > 40 or so.
-        if E < 7:
+        # Note: this will still overflow for (E*E - C) > 700, or so.
+        if E < 5:
             pdf[j] = exp(-C/2) * (1 + E * norm.cdf(E)/norm.pdf(E)) / (A*D)
         else:
-            pdf[j] = sqrt(2*pi) * E * exp((E*E - C)/2) / (A*D)
+            pdf[j] = E * sqrt(2*pi) * exp((E*E - C)/2) / (A*D)
 
     return pdf
 
