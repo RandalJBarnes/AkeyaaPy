@@ -7,22 +7,22 @@ import arcpy
 
 
 #-----------------------------------------------------------------------------------------
-class Point(arcpy.arcobjects.arcobjects.Point):
+class Point(arcpy.Point):
     pass
 
 #-----------------------------------------------------------------------------------------
-class Array(arcpy.arcobjects.arcobjects.Point):
+class Array(arcpy.Array):
     pass
 
 #-----------------------------------------------------------------------------------------
-class Polygon(arcpy.arcobjects.arcobjects.Polygon):
+class Polygon(arcpy.Polygon):
     pass
 
 #-----------------------------------------------------------------------------------------
-class SpatialReference(arcpy.arcobjects.arcobjects.SpatialReference):
+class SpatialReference(arcpy.SpatialReference):
     pass
 
-
+"""
 
 arcpy.da.SearchCursor(source, attributes, where)
 
@@ -34,3 +34,17 @@ arcpy.SelectLayerByLocation_management(
             select_features=polygon,
             overlap_type="WITHIN",
             selection_type="NEW_SELECTION")
+
+<venues.py>
+from arcpy.da import SearchCursor
+from arcpy import SpatialReference, Array, Point, Geometry
+
+<wells.py>
+arcpy.AddJoin_management
+arcpy.da.SearchCursor
+arcpy.SelectLayerByLocation_management
+
+<analyze.py>
+polygon.contains(arcpy.Point(xo, yo)):
+
+"""

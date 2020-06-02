@@ -18,7 +18,7 @@ University of Minnesota
 
 Version
 -------
-31 May 2020
+02 June 2020
 
 """
 
@@ -31,10 +31,6 @@ from localpaths import SOURCE
 
 
 # -----------------------------------------------------------------------------
-# ArcGIS Pro/ArcPy feature classes of interest.
-ALLWELLS = SOURCE['ALLWELLS']
-C5WL     = SOURCE['C5WL']
-
 # The attributes to be include in the arcpy.da.SearchCursor when retrieving
 # <welldata> from the ArcGIS Pro/ArcPy .gdb.  By design, this is the one
 # place where this is defined.
@@ -141,6 +137,9 @@ class Database:
         only happen on the first call.
         """
 
+        ALLWELLS = SOURCE['ALLWELLS']
+        C5WL = SOURCE['C5WL']
+
         if Database.__welldata is None:
             table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
 
@@ -241,6 +240,10 @@ def get_welldata_by_polygon(polygon):
             The 4-character aquifer abbreviation string, as defined in
             Minnesota Geologic Survey's coding system.
     """
+
+    ALLWELLS = SOURCE['ALLWELLS']
+    C5WL = SOURCE['C5WL']
+
     table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
 
     located_wells = arcpy.SelectLayerByLocation_management(

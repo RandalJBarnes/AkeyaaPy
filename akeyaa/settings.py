@@ -17,7 +17,7 @@ University of Minnesota
 
 Version
 -------
-01 June 2020
+02 June 2020
 """
 
 # -----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ class Settings:
             self._required = required
 
     @property
-    def spacing(self)
+    def spacing(self):
         return self._spacing
 
     @spacing.setter
