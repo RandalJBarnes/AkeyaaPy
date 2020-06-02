@@ -27,13 +27,13 @@ import scipy
 
 import arcpy
 
-import localpaths as loc
+from localpaths import SOURCE
 
 
 # -----------------------------------------------------------------------------
 # ArcGIS Pro/ArcPy feature classes of interest.
-ALLWELLS = loc.CWIGDB + r"\allwells"                # MN county well index
-C5WL     = loc.CWIGDB + r"\C5WL"                    # MN static water levels
+ALLWELLS = SOURCE['ALLWELLS']
+C5WL     = SOURCE['C5WL']
 
 # The attributes to be include in the arcpy.da.SearchCursor when retrieving
 # <welldata> from the ArcGIS Pro/ArcPy .gdb.  By design, this is the one

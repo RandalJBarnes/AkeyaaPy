@@ -37,27 +37,14 @@ University of Minnesota
 
 Version
 -------
-31 May 2020
+01 June 2020
 
 """
 
 import arcpy
 import pyproj
 
-import localpaths as loc
-
-
-# -----------------------------------------------------------------------------
-KIND = {"CITY", "TOWNSHIP", "COUNTY", "WATERSHED", "SUBREGION", "STATE"}
-
-SOURCE = {
-    "CITY":      loc.CTUGDB + r"\city_township_unorg",
-    "TOWNSHIP":  loc.CTUGDB + r"\city_township_unorg",
-    "COUNTY":    loc.CTYGDB + r"\mn_county_boundaries",
-    "WATERSHED": loc.WBDGDB + r"\WBDHU10",
-    "SUBREGION": loc.WBDGDB + r"\WBDHU8",
-    "STATE":     loc.STAGDB + r"\Boundaries_of_Minnesota"
-    }
+from localpaths import SOURCE
 
 
 # -----------------------------------------------------------------------------
@@ -70,7 +57,7 @@ class VenueNotFoundError(Error):
 
 
 class UnknownKindError(Error):
-    """The specified kind is not supported."""
+    """The specified venue kind is not supported."""
 
 
 # -----------------------------------------------------------------------------
