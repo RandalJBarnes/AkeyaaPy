@@ -23,21 +23,12 @@ class SpatialReference(arcpy.SpatialReference):
     pass
 
 """
-
-arcpy.da.SearchCursor(source, attributes, where)
-
-table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
-
-
-arcpy.SelectLayerByLocation_management(
-            table,
-            select_features=polygon,
-            overlap_type="WITHIN",
-            selection_type="NEW_SELECTION")
-
 <venues.py>
-from arcpy.da import SearchCursor
-from arcpy import SpatialReference, Array, Point, Geometry
+arcpy.da.SearchCursor
+arcpy.SpatialReference
+arcpy.Array
+arcpy.Point
+arcpy.Geometry
 
 <wells.py>
 arcpy.AddJoin_management
@@ -46,5 +37,8 @@ arcpy.SelectLayerByLocation_management
 
 <analyze.py>
 polygon.contains(arcpy.Point(xo, yo)):
+
+<show.py>
+xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
 
 """
