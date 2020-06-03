@@ -27,34 +27,7 @@ import scipy
 
 import arcpy
 
-from localpaths import SOURCE
-
-
-# -----------------------------------------------------------------------------
-# The attributes to be include in the arcpy.da.SearchCursor when retrieving
-# <welldata> from the ArcGIS Pro/ArcPy .gdb.  By design, this is the one
-# place where this is defined.
-#
-# As used multiple places in this module, the code for setting up <welldata>
-# includes:
-#
-#   [(x, y, z, aq) for (x, y), z, aq in cursor]
-#
-# If the required attributes to be included in <welldata> change, then these
-# few lines of code will need to be updated to reflect the change.
-ATTRIBUTES = ["allwells.SHAPE",
-              "C5WL.MEAS_ELEV",
-              "allwells.AQUIFER"]
-
-# Wells that satisfy all of these criteria are called "authorized wells".
-# These include: must have at least one recorded static water level (SWL),
-# must have an identified aquifer, and must be located.
-WHERE = (
-        "(C5WL.MEAS_ELEV is not NULL) AND "
-        "(allwells.AQUIFER is not NULL) AND "
-        "(allwells.UTME is not NULL) AND "
-        "(allwells.UTMN is not NULL)"
-        )
+import gis
 
 
 # -----------------------------------------------------------------------------
@@ -131,21 +104,14 @@ class Database:
     def __init__(self):
         """On first call, initialize the class attributes.
 
-        Extract the well data from the ArcGIS Pro/ArcPy .gdb, initialize
-        the Database.__welldata list, and the Database.__tree spatial
-        kd-tree to allow for fast neighborhood searchs. These initializations
-        only happen on the first call.
+        Extract the well data from the .gdb. On first call, initialize the
+        -- Database.__welldata list, and the
+        -- Database.__tree spatial kd-tree
+        to allow for fast neighborhood searchs.
         """
 
-        ALLWELLS = SOURCE['ALLWELLS']
-        C5WL = SOURCE['C5WL']
-
         if Database.__welldata is None:
-            table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
-
-            with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
-                Database.__welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
-
+            Database.__welldata = gis.get_all_well_data()
             Database.__tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in Database.__welldata])
 
     #------------------------
@@ -209,50 +175,3 @@ class Database:
 
         return (np.array(x), np.array(y), np.array(z))
 
-
-# -----------------------------------------------------------------------------
-def get_welldata_by_polygon(polygon):
-    """Return the welldata from all authorized wells in the polygon
-
-    Extract the welldata from the ArcGIS Pro/ArcPy .gdb using an
-    arcpy.SelectLayerByLocation query. This call returns the welldata
-    for all authorized wells located in the interior of <polygon> regardless
-    of the aquifer in which the wells are completed,.
-
-    Parameters
-    ----------
-    polygon : arcpy.polygon
-        The geographic focus of the query.
-
-    Returns
-    -------
-    welldata : list of tuples (x, y, z, aquifer) where
-        x : float
-            The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
-
-        y : float
-            The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
-
-        z : float
-            The measured static water level [ft]
-
-        aquifer : str
-            The 4-character aquifer abbreviation string, as defined in
-            Minnesota Geologic Survey's coding system.
-    """
-
-    ALLWELLS = SOURCE['ALLWELLS']
-    C5WL = SOURCE['C5WL']
-
-    table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
-
-    located_wells = arcpy.SelectLayerByLocation_management(
-            table,
-            select_features=polygon,
-            overlap_type="WITHIN",
-            selection_type="NEW_SELECTION")
-
-    with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
-        welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
-
-    return welldata

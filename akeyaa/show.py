@@ -27,7 +27,7 @@ University of Minnesota
 
 Version
 -------
-31 May 2020
+03 June 2020
 """
 
 import math
@@ -140,9 +140,7 @@ def local_flow_direction(venue, results):
     None
     """
 
-    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
-
+    bdry = venue.polygon.boundary()
     xgrd = np.array([row[0] for row in results])
     ygrd = np.array([row[1] for row in results])
 
@@ -175,7 +173,7 @@ def local_flow_direction(venue, results):
     fig, ax1 = plt.subplots()
     plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, "0.90")
+    plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
     plt.quiver(xgrd, ygrd, xvec, yvec, p10,
                width=0.0018, zorder=10, cmap="Greys")
     cbar = plt.colorbar()
@@ -183,7 +181,7 @@ def local_flow_direction(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + " Local Flow Directions", {"fontsize": 24})
+    plt.title(venue.fullname() + " Local Flow Directions", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -216,8 +214,7 @@ def local_number_of_wells(venue, results):
     None
     """
 
-    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
+    bdry = venue.polygon.boundary()
 
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
@@ -226,14 +223,14 @@ def local_number_of_wells(venue, results):
     plt.figure()
     plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, "0.90")
+    plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
     plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap="GnBu")
     cbar = plt.colorbar()
     cbar.ax.set_title("Count [#]")
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + " Number of Local Wells", {"fontsize": 24})
+    plt.title(venue.fullname() + " Number of Local Wells", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -267,9 +264,7 @@ def local_head_gradient_magnitude(venue, results):
     None
     """
 
-    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
-
+    bdry = venue.polygon.boundary()
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
 
@@ -285,14 +280,14 @@ def local_head_gradient_magnitude(venue, results):
     plt.figure()
     plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, "0.90")
+    plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
     plt.scatter(xtarget, ytarget, c=quantile, zorder=10, cmap="OrRd")
     cbar = plt.colorbar()
     cbar.ax.set_title("Quantile")
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + " |Head Gradient|", {"fontsize": 24})
+    plt.title(venue.fullname() + " |Head Gradient|", {"fontsize": 24})
     plt.grid(True)
 
 
@@ -324,9 +319,7 @@ def aquifers_by_venue(venue, aquifers=None):
         The list is sorted in descending order by count.
     """
 
-    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
-
+    bdry = venue.polygon.boundary()
     welldata = wells.get_welldata_by_polygon(venue.polygon)
 
     if aquifers is None:
@@ -346,12 +339,12 @@ def aquifers_by_venue(venue, aquifers=None):
     plt.figure()
     plt.axis("equal")
 
-    plt.fill(xbdry, ybdry, "0.90")
+    plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
     sns.scatterplot(xsel, ysel, hue=asel, hue_order=uaq.tolist(), zorder=10)
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname + " Wells Coded By Aquifer", {"fontsize": 24})
+    plt.title(venue.fullname() + " Wells Coded By Aquifer", {"fontsize": 24})
 
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
@@ -370,20 +363,17 @@ def whereis(venue):
     None
     """
 
-    xbdry = [pnt.X for pnt in venue.polygon.getPart(0)]
-    ybdry = [pnt.Y for pnt in venue.polygon.getPart(0)]
-
-    state = venues.State(0)
-    xstate = [pnt.X for pnt in state.polygon.getPart(0)]
-    ystate = [pnt.Y for pnt in state.polygon.getPart(0)]
+    state = venues.State()
+    state_bdry = state.polygon.boundary()
+    venue_bdry = venue.polygon.boundary()
 
     plt.figure()
     plt.axis("equal")
 
-    plt.fill(xstate, ystate, "0.90")
-    plt.fill(xbdry, ybdry, "b")
+    plt.fill(state_bdry[:, 0], state_bdry[:, 1], "0.90")
+    plt.fill(venue_bdry[:, 0], venue_bdry[:, 1], "b")
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname, {"fontsize": 24})
+    plt.title(venue.fullname(), {"fontsize": 24})
     plt.grid(True)
