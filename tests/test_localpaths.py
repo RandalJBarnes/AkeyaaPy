@@ -9,13 +9,13 @@ University of Minnesota
 
 Version
 -------
-27 May 2020
+04 June 2020
 
 """
 
 import os
 
-import localization as loc
+import localpaths as loc
 
 
 # -----------------------------------------------------------------------------

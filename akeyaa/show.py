@@ -175,7 +175,7 @@ def local_flow_direction(venue, results):
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
     plt.quiver(xgrd, ygrd, xvec, yvec, p10,
-               width=0.0018, zorder=10, cmap="Greys")
+               width=0.0018, zorder=10, cmap='Greens')
     cbar = plt.colorbar()
     cbar.ax.set_title("p10")
 
@@ -335,12 +335,15 @@ def aquifers_by_venue(venue, aquifers=None):
         raise EmptySelectionError
 
     uaq, naq = np.unique(asel, return_counts=True)
+    geo_hue, geo_hue_order, geo_palette = geologic_color_map(asel)
 
     plt.figure()
     plt.axis("equal")
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
-    sns.scatterplot(xsel, ysel, hue=asel, hue_order=uaq.tolist(), zorder=10)
+    sns.scatterplot(xsel, ysel,
+                    hue=geo_hue, hue_order=geo_hue_order, palette=geo_palette,
+                    zorder=10)
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
@@ -377,3 +380,29 @@ def whereis(venue):
     plt.ylabel("Northing [m]")
     plt.title(venue.fullname(), {"fontsize": 24})
     plt.grid(True)
+
+
+# -----------------------------------------------------------------------------
+def geologic_color_map(aquifers):
+
+    # C D I K M O P Q R U
+
+    geo_hue_order = ["Qxxx", "Kxxx", "Dxxx", "Oxxx", "Cxxx", "Pxxx", "Mxxx", "other"]
+    geo_palette = {
+            "Qxxx": "gold",
+            "Kxxx": "goldenrod",
+            "Dxxx": "sienna",
+            "Oxxx": "teal",
+            "Cxxx": "limegreen",
+            "Pxxx": "crimson",
+            "Mxxx": "cornflowerblue",
+            "other": "darkblue"}
+
+    geo_hue = []
+    for aq in aquifers:
+        if aq[0] in {"Q", "K", "D", "O", "C", "P", "M"}:
+            geo_hue.append(aq[0] + 'xxx')
+        else:
+            geo_hue.append('other')
+
+    return (geo_hue, geo_hue_order, geo_palette)

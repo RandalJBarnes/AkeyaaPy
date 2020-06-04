@@ -9,7 +9,7 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+04 June 2020
 """
 
 import numpy as np

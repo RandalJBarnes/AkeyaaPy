@@ -9,10 +9,12 @@ University of Minnesota
 
 Version
 -------
-25 May 2020
+04 June 2020
 """
 
 
 # -----------------------------------------------------------------------------
-def test_visualize():
+def test_venues():
     assert True
+
+
