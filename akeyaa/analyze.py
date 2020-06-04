@@ -13,10 +13,10 @@ akeyaa_settings(aquifers, method, radius, required, spacing)
 by_venue(venue, database, settings)
     Compute the Akeyaa analysis across the specified venue.
 
-by_polygon(polygon, database, settings)
-    Compute the Akeyaa analysis across the specified polygon.
+by_domain(domain, database, settings)
+    Compute the Akeyaa analysis across the specified domain.
 
-layout_the_grid(polygon, spacing)
+layout_the_grid(domain, spacing)
     Determine the locations of the x and y grid lines.
 
 fit_conic(x, y, z, method)
@@ -34,7 +34,7 @@ University of Minnesota
 
 Version
 -------
-01 June 2020
+04 June 2020
 """
 
 import numpy as np
@@ -229,12 +229,12 @@ def by_venue(venue, settings):
     """Compute the Akeyaa analysis across the specified venue.
 
     The Akeyaa analysis is carried out at target locations within the
-    <venue>"s polygon. The target locations are selected as the nodes of a
-    square grid covering the venue"s polygon.
+    <venue>"s domain. The target locations are selected as the nodes of a
+    square grid covering the venue"s domain.
 
     The square grid of target locations is anchored at the centroid of the
-    <venue>"s polygon, and the grid lines are separated by <spacing>.
-    If a target location is not inside of the venue"s polygon it is discarded.
+    <venue>"s domain, and the grid lines are separated by <spacing>.
+    If a target location is not inside of the venue"s domain it is discarded.
 
     For each remaining target location all wells in the <database> that
     satisfy the following two conditions are identified:
@@ -299,21 +299,21 @@ def by_venue(venue, settings):
         computations. However, only data from the Minnesota CWI are
         considered.
     """
-    return by_polygon(venue.polygon, settings)
+    return by_domain(venue.domain, settings)
 
 
 # -----------------------------------------------------------------------------
-def by_polygon(polygon, settings):
-    """Compute the Akeyaa analysis across the specified polygon.
+def by_domain(domain, settings):
+    """Compute the Akeyaa analysis across the specified domain.
 
     The Akeyaa analysis is carried out at discrete target locations within
-    the <polygon>. The target locations are selected as the nodes of a square
-    grid covering the <polygon>.
+    the <domain>. The target locations are selected as the nodes of a square
+    grid covering the <domain>.
 
     The square grid of target locations is anchored at the centroid of the
-    <polygon>, axes aligned, and the grid lines are separated by <spacing>.
-    The extent of the grid captures all of the vertices of the polygon.
-    If a target location is not inside of the <polygon> it is discarded.
+    <domain>, axes aligned, and the grid lines are separated by <spacing>.
+    The extent of the grid captures all of the vertices of the domain.
+    If a target location is not inside of the <domain> it is discarded.
 
     For each remaining target location all wells in the <database> that
     satisfy the following two conditions are identified:
@@ -327,7 +327,7 @@ def by_polygon(polygon, settings):
 
     Parameters
     ----------
-    polygon : geometry.Polygon
+    domain : geometry.Domain
 
     settings : settings.Settings
         aquifers : list, optional
@@ -371,18 +371,18 @@ def by_polygon(polygon, settings):
 
     Notes
     -----
-    o   Note, data from outside of the <polygon> may also used in the
+    o   Note, data from outside of the <domain> may also used in the
         computations. However, only data from the Minnesota CWI are
         considered.
     """
 
     database = wells.Database()
-    xgrd, ygrd = layout_the_grid(polygon, settings.spacing)
+    xgrd, ygrd = layout_the_grid(domain, settings.spacing)
 
     results = []
     for xo in xgrd:
         for yo in ygrd:
-            if polygon.contains((xo, yo)):
+            if domain.contains((xo, yo)):
                 xw, yw, zw = database.fetch(xo, yo, settings.radius, settings.aquifers)
 
                 # Note that we are converting the zw from [ft] to [m].
@@ -394,16 +394,16 @@ def by_polygon(polygon, settings):
 
 
 # -----------------------------------------------------------------------------
-def layout_the_grid(polygon, spacing):
+def layout_the_grid(domain, spacing):
     """Determine the locations of the x and y grid lines.
 
     The square grid of target locations is anchored at the centroid of the
-    <polygon>, axes aligned, and the grid lines are separated by <spacing>.
-    The extent of the grid captures all of the vertices of the polygon.
+    <domain>, axes aligned, and the grid lines are separated by <spacing>.
+    The extent of the grid captures all of the vertices of the domain.
 
     Parameters
     ----------
-    polygon : geometry.Polygon
+    domain : geometry.Domain
 
     spacing : float, optional
         Grid spacing for target locations across the venue.
@@ -418,18 +418,18 @@ def layout_the_grid(polygon, spacing):
 
     """
 
-    xgrd = [polygon.centroid()[0]]
-    while xgrd[-1] > polygon.extent()[0]:
+    xgrd = [domain.centroid()[0]]
+    while xgrd[-1] > domain.extent()[0]:
         xgrd.append(xgrd[-1] - spacing)
     xgrd.reverse()
-    while xgrd[-1] < polygon.extent()[1]:
+    while xgrd[-1] < domain.extent()[1]:
         xgrd.append(xgrd[-1] + spacing)
 
-    ygrd = [polygon.centroid()[1]]
-    while ygrd[-1] > polygon.extent()[2]:
+    ygrd = [domain.centroid()[1]]
+    while ygrd[-1] > domain.extent()[2]:
         ygrd.append(ygrd[-1] - spacing)
     ygrd.reverse()
-    while ygrd[-1] < polygon.extent()[3]:
+    while ygrd[-1] < domain.extent()[3]:
         ygrd.append(ygrd[-1] + spacing)
 
     return (xgrd, ygrd)

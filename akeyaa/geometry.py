@@ -16,14 +16,55 @@ University of Minnesota
 
 Version
 -------
-03 June 2020
-
+04 June 2020
 """
+
+from abc import ABC, abstractmethod
 import numpy as np
 
 
 #-----------------------------------------------------------------------------------------
-class Circle():
+class Domain(ABC):
+    """The abstract base class for all domains.
+
+    For the purposes of a Domain:
+    -- a <point> is a numpy.array([x, y], dtype=float),
+    -- <vertices> is a numpy.array of points (i.e. a 2D array).
+    """
+
+    @abstractmethod
+    def boundary(self):
+        """Return the boundary vertices (inside to the left)."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def extent(self):
+        """Return [xmin, xmax, ymin, ymax]."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def centroid(self):
+        """Return the centroid as a point."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def area(self):
+        """Return the area."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def perimeter(self):
+        """Return the perimeter."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def contains(self, point):
+        """Return True if venue contains the point and False otherwise."""
+        raise NotImplementedError
+
+
+#-----------------------------------------------------------------------------------------
+class Circle(Domain):
     """A circle."""
 
     NUMBER_OF_VERTICES = 100
@@ -72,7 +113,7 @@ class Circle():
 
 
 #-----------------------------------------------------------------------------------------
-class Rectangle():
+class Rectangle(Domain):
     """An axis-aligned rectangle."""
 
     def __init__(self, xmin, xmax, ymin, ymax, name):
@@ -122,7 +163,7 @@ class Rectangle():
 
 
 #-----------------------------------------------------------------------------------------
-class Polygon:
+class Polygon(Domain):
     """A single, non-overlapping, but not necessarily convex, polygon."""
 
     def __init__(self, vertices):

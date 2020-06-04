@@ -2,22 +2,22 @@
 
 Functions
 ---------
-results_by_venue(prefix, polygon, results    Plot the results.
+results_by_venue(prefix, domain, results    Plot the results.
 
-local_flow_direction(prefix, polygon, results)
+local_flow_direction(prefix, domain, results)
     Plot the local flow directions.
 
-local_number_of_wells(prefix, polygon, results)
+local_number_of_wells(prefix, domain, results)
     Plot the local number of wells.
 
-local_head_gradient_magnitude(prefix, polygon, results)
+local_head_gradient_magnitude(prefix, domain, results)
     Plot the relative magnitude of the local head gradient.
 
 aquifers_by_venue(venue, aquifers)
     Plot the wells in the vnue coded by aquifer.
 
 whereis(venue)
-    Plots the venue"s polygon over the state's ploygon.
+    Plots the venue"s domain over the state's ploygon.
 
 Author
 ------
@@ -27,7 +27,7 @@ University of Minnesota
 
 Version
 -------
-03 June 2020
+04 June 2020
 """
 
 import math
@@ -140,7 +140,7 @@ def local_flow_direction(venue, results):
     None
     """
 
-    bdry = venue.polygon.boundary()
+    bdry = venue.domain.boundary()
     xgrd = np.array([row[0] for row in results])
     ygrd = np.array([row[1] for row in results])
 
@@ -214,7 +214,7 @@ def local_number_of_wells(venue, results):
     None
     """
 
-    bdry = venue.polygon.boundary()
+    bdry = venue.domain.boundary()
 
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
@@ -264,7 +264,7 @@ def local_head_gradient_magnitude(venue, results):
     None
     """
 
-    bdry = venue.polygon.boundary()
+    bdry = venue.domain.boundary()
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
 
@@ -319,8 +319,8 @@ def aquifers_by_venue(venue, aquifers=None):
         The list is sorted in descending order by count.
     """
 
-    bdry = venue.polygon.boundary()
-    welldata = wells.get_welldata_by_polygon(venue.polygon)
+    bdry = venue.domain.boundary()
+    welldata = wells.get_welldata_by_domain(venue.domain)
 
     if aquifers is None:
         xsel = [row[0] for row in welldata]
@@ -352,7 +352,7 @@ def aquifers_by_venue(venue, aquifers=None):
 
 # -----------------------------------------------------------------------------
 def whereis(venue):
-    """Plot the venue's polygon over the state's ploygon.
+    """Plot the venue's domain over the state's ploygon.
 
     Arguments
     ---------
@@ -364,8 +364,8 @@ def whereis(venue):
     """
 
     state = venues.State()
-    state_bdry = state.polygon.boundary()
-    venue_bdry = venue.polygon.boundary()
+    state_bdry = state.domain.boundary()
+    venue_bdry = venue.domain.boundary()
 
     plt.figure()
     plt.axis("equal")

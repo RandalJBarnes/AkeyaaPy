@@ -5,11 +5,6 @@ Classes
 Database
     A load-once-fast-lookup database of authorized wells in Minnesota
 
-Functions
----------
-get_welldata_by_polygon(polygon)
-    Return well data from across the polygon.
-
 Author
 ------
 Dr. Randal J. Barnes
@@ -18,14 +13,12 @@ University of Minnesota
 
 Version
 -------
-02 June 2020
+04 June 2020
 
 """
 
 import numpy as np
 import scipy
-
-import arcpy
 
 import gis
 
@@ -174,4 +167,3 @@ class Database:
             x, y, z = zip(*xyz)
 
         return (np.array(x), np.array(y), np.array(z))
-

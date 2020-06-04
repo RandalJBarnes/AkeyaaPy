@@ -19,7 +19,7 @@ University of Minnesota
 
 Version
 -------
-31 May 2020
+04 June 2020
 """
 
 import bz2
@@ -130,4 +130,4 @@ def load_and_show_results(pklzfile):
     """
 
     venue, settings, results = loadme(pklzfile)
-    show.by_venue(venue, results)
+    show.results_by_venue(venue, results)

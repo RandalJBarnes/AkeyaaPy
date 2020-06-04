@@ -8,7 +8,7 @@ University of Minnesota
 
 Version
 -------
-01 June 2020
+04 June 2020
 """
 
 # Minnesota County Well Index (CWI). Obtained from the Minnesota Department
@@ -39,7 +39,7 @@ CTYGDB = r'D:\Google Drive\GIS\fgdb_bdry_counties_in_minnesota\bdry_counties_in_
 # This gdb uses 'GCS North America 1983' (EPSG:4269).
 WBDGDB = r'D:\Google Drive\GIS\WBD_National_GDB\WBD_National_GDB.gdb'
 
-
+ # The location details of specific feature classes.
 SOURCE = {
     "CITY":      CTUGDB + r"\city_township_unorg",      # City boundaries
     "TOWNSHIP":  CTUGDB + r"\city_township_unorg",      # Township boundaries
