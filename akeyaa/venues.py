@@ -31,10 +31,9 @@ University of Minnesota
 Version
 -------
 04 June 2020
-
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import gis
 import geometry
@@ -52,9 +51,13 @@ class MissingArgumentError(Error):
 class Venue(ABC):
     """The abstract base class for all venues."""
 
-    # -----------------------
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
+
+    @abstractmethod
+    def fullname(self):
+        raise NotImplementedError
+
 
 
 # -----------------------------------------------------------------------------
@@ -77,7 +80,7 @@ class City(Venue):
 
     def __init__(self, *, name=None, gnis_id=None):
         self.name, self.code, vertices = gis.get_city_data(
-                name=name, gnis_id=gnis_id)
+            name=name, gnis_id=gnis_id)
         self.domain = geometry.Polygon(vertices)
 
     def __repr__(self):
@@ -108,7 +111,7 @@ class Township(Venue):
 
     def __init__(self, *, name=None, gnis_id=None):
         self.name, self.code, vertices = gis.get_township_data(
-                name=name, gnis_id=gnis_id)
+            name=name, gnis_id=gnis_id)
         self.domain = geometry.Polygon(vertices)
 
     def __repr__(self):
@@ -139,7 +142,7 @@ class County(Venue):
 
     def __init__(self, *, name=None, abbr=None, cty_fips=None):
         self.name, self.code, vertices = gis.get_county_data(
-                name=name, abbr=abbr, cty_fips=cty_fips)
+            name=name, abbr=abbr, cty_fips=cty_fips)
         self.domain = geometry.Polygon(vertices)
 
     def __repr__(self):
@@ -170,7 +173,7 @@ class Watershed(Venue):
 
     def __init__(self, *, name=None, huc10=None):
         self.name, self.code, vertices = gis.get_watershed_data(
-                name=name, huc10=huc10)
+            name=name, huc10=huc10)
         self.domain = geometry.Polygon(vertices)
 
     def __repr__(self):
@@ -201,7 +204,7 @@ class Subregion(Venue):
 
     def __init__(self, *, name=None, huc8=None):
         self.name, self.code, vertices = gis.get_subregion_data(
-                name=name, huc8=huc8)
+            name=name, huc8=huc8)
         self.domain = geometry.Polygon(vertices)
 
     def __repr__(self):
@@ -263,13 +266,13 @@ class Neighborhood(Venue):
     def __init__(self, radius, *, relateid=None, point=None):
         if relateid is not None:
             well_location = gis.get_well_location(relateid)
-            self.name = f"Well"
+            self.name = "Well"
             self.point = well_location[0]
             self.code = relateid
             self.fname = f"Well '{relateid}'"
 
         elif point is not None:
-            self.name = f"Point"
+            self.name = "Point"
             self.point = point
             self.code = hash(point)
             self.fname = f"Point {self.point}"

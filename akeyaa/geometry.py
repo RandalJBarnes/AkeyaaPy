@@ -2,10 +2,21 @@
 
 Classes
 -------
+Domain(ABC)
+    The abstract base class for all domains.
+
+Circle(Domain)
+    A circle.
+
+Rectangle(Domain)
+    An axis-aligned rectangle.
+
+Polygon(Domain)
+    A single, non-overlapping, but not necessarily convex, polygon.
 
 
-Functions
----------
+Raises
+------
 
 
 Author

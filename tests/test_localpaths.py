@@ -20,8 +20,8 @@ import localpaths as loc
 
 # -----------------------------------------------------------------------------
 def test_localization():
-    assert(os.path.isdir(loc.CWILOC))
-    assert(os.path.isdir(loc.CTYLOC))
-    assert(os.path.isdir(loc.STALOC))
-    assert(os.path.isdir(loc.TRSLOC))
-    assert(os.path.isdir(loc.WBDLOC))
+    assert(os.path.isdir(loc.CWIGDB))
+    assert(os.path.isdir(loc.CTYGDB))
+    assert(os.path.isdir(loc.STAGDB))
+    assert(os.path.isdir(loc.CTUGDB))
+    assert(os.path.isdir(loc.WBDGDB))

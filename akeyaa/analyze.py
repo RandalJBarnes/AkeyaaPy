@@ -141,11 +141,11 @@ class Settings:
     """
 
     def __init__(self,
-                 aquifers = DEFAULT_AQUIFERS,
-                 method = DEFAULT_METHOD,
-                 radius = DEFAULT_RADIUS,
-                 required = DEFAULT_REQUIRED,
-                 spacing = DEFAULT_SPACING):
+                 aquifers=DEFAULT_AQUIFERS,
+                 method=DEFAULT_METHOD,
+                 radius=DEFAULT_RADIUS,
+                 required=DEFAULT_REQUIRED,
+                 spacing=DEFAULT_SPACING):
         self.aquifers = aquifers
         self.method = method
         self.radius = radius
@@ -154,11 +154,11 @@ class Settings:
 
     def __repr__(self):
         return ("Settings("
-            "aquifers={0.aquifers!r}, "
-            "method={0.method!r}, "
-            "radius={0.radius!r}, "
-            "required={0.required!r}, "
-            "spacing={0.spacing!r})".format(self))
+                "aquifers={0.aquifers!r}, "
+                "method={0.method!r}, "
+                "radius={0.radius!r}, "
+                "required={0.required!r}, "
+                "spacing={0.spacing!r})".format(self))
 
     def __eq__(self, other):
         return ((self.__class__ == other.__class__) and
@@ -176,8 +176,7 @@ class Settings:
     def aquifers(self, aquifers):
         if (aquifers is not None) and (not set.issubset(set(aquifers), ALL_AQUIFERS)):
             raise ValueError("Unknown aquifer code(s)")
-        else:
-            self._aquifers = aquifers
+        self._aquifers = aquifers
 
     @property
     def method(self):
@@ -187,8 +186,7 @@ class Settings:
     def method(self, method):
         if method not in ["OLS", "RLM"]:
             raise ValueError("'method' must be one of {'OLS', 'RLM'}")
-        else:
-            self._method = method
+        self._method = method
 
     @property
     def radius(self):
@@ -198,8 +196,7 @@ class Settings:
     def radius(self, radius):
         if radius < 1.0:
             raise ValueError("'radius' must be >= 1")
-        else:
-            self._radius = radius
+        self._radius = radius
 
     @property
     def required(self):
@@ -209,8 +206,7 @@ class Settings:
     def required(self, required):
         if required < 6:
             raise ValueError("'required' must be >= 6")
-        else:
-            self._required = required
+        self._required = required
 
     @property
     def spacing(self):
@@ -220,8 +216,7 @@ class Settings:
     def spacing(self, spacing):
         if spacing < 1.0:
             raise ValueError("'spacing' must be >= 1")
-        else:
-            self._spacing = spacing
+        self._spacing = spacing
 
 
 # -----------------------------------------------------------------------------

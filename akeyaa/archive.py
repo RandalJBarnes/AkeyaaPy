@@ -60,12 +60,12 @@ def saveme(venue, settings, results, pklzfile=None):
         The compressed pickle filename used.
     """
 
-    if pklzfile == None:
-        pklzfile ='Akeyaa' + datetime.now().strftime('%Y%m%dT%H%M%S') + '.pklz'
+    if pklzfile is None:
+        pklzfile = 'Akeyaa' + datetime.now().strftime('%Y%m%dT%H%M%S') + '.pklz'
 
     archive = {
-        'venue' : venue,
-        'settings' : settings,
+        'venue': venue,
+        'settings': settings,
         'results': results
         }
     with bz2.open(pklzfile, 'wb') as fileobject:
@@ -129,5 +129,5 @@ def load_and_show_results(pklzfile):
     None
     """
 
-    venue, settings, results = loadme(pklzfile)
+    venue, _, results = loadme(pklzfile)
     show.results_by_venue(venue, results)

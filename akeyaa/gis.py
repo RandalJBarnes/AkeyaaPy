@@ -94,7 +94,8 @@ WHERE = (
 # -----------------------------------------------------------------------------
 # This is a list of all state combinations in the USGS hydrologic databases
 # that include 'MN'. This is a klude to cover for arcpy's weak SQL tools.
-ALL_STATES = ("("
+ALL_STATES = (
+        "("
         "(STATES = 'CN,MI,MN,WI') OR "
         "(STATES = 'CN,MN') OR "
         "(STATES = 'CN,MN,ND') OR "
@@ -106,7 +107,8 @@ ALL_STATES = ("("
         "(STATES = 'MN,ND') OR "
         "(STATES = 'MN,ND,SD') OR "
         "(STATES = 'MN,SD') OR "
-        "(STATES = 'MN,WI'))")
+        "(STATES = 'MN,WI'))"
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -268,7 +270,7 @@ def get_venue_data(source, what, where):
 # --------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-def get_city_data(*, name=None, gnis_id=None ):
+def get_city_data(*, name=None, gnis_id=None):
     """Return the City venue data."""
 
     source = SOURCE["CITY"]
