@@ -38,7 +38,7 @@ import seaborn as sns
 
 import pnorm
 import venues
-import wells
+import gis
 
 
 # -----------------------------------------------------------------------------
@@ -320,7 +320,7 @@ def aquifers_by_venue(venue, aquifers=None):
     """
 
     bdry = venue.domain.boundary()
-    welldata = wells.get_welldata_by_domain(venue.domain)
+    welldata = gis.get_well_data_by_domain(venue.domain)
 
     if aquifers is None:
         xsel = [row[0] for row in welldata]

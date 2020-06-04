@@ -15,7 +15,7 @@ get_well_data_by_domain(domain)
 get_well_location(relateid)
     Locate a single well by relateid.
 
-get_civil_venue_data(source, what, where)
+get_venue_data(source, what, where)
     Query acrpy for venue data.
 
 ----- Functions that interact indirectly with ArcGIS Pro/ArcPy -----
@@ -186,9 +186,10 @@ def get_well_data_by_domain(domain):
             Minnesota Geologic Survey's coding system.
     """
 
-    raise NotImplementedError
-
-    polygon = domain.boundary()
+    vertices = domain.boundary()
+    sr_out = arcpy.SpatialReference(26915)
+    array = arcpy.Array([arcpy.Point(row[0], row[1]) for row in vertices])
+    arcpy_polygon = arcpy.Geometry("polygon", array, sr_out)
 
     ALLWELLS = SOURCE['ALLWELLS']
     C5WL = SOURCE['C5WL']
@@ -196,7 +197,7 @@ def get_well_data_by_domain(domain):
     table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
     located_wells = arcpy.SelectLayerByLocation_management(
             table,
-            select_features=polygon,
+            select_features=arcpy_polygon,
             overlap_type="WITHIN",
             selection_type="NEW_SELECTION")
     with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
@@ -229,7 +230,7 @@ def get_well_location(relateid):
 
 
 # -----------------------------------------------------------------------------
-def get_civil_venue_data(source, what, where):
+def get_venue_data(source, what, where):
     """Query acrpy for civil venue data."""
 
     results = []
@@ -280,7 +281,7 @@ def get_city_data(*, name=None, gnis_id=None ):
     if gnis_id is not None:
         where += f" AND (GNIS_ID = '{gnis_id}')"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
 
 
 # -----------------------------------------------------------------------------
@@ -297,7 +298,7 @@ def get_township_data(*, name=None, gnis_id=None):
     if gnis_id is not None:
         where += f" AND (GNIS_ID = '{gnis_id}')"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
 
 
 # -----------------------------------------------------------------------------
@@ -323,7 +324,7 @@ def get_county_data(*, name=None, abbr=None, cty_fips=None):
         else:
             where = f"(CTY_FIPS = '{cty_fips}')"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
 
 
 # -----------------------------------------------------------------------------
@@ -340,7 +341,7 @@ def get_watershed_data(*, name=None, huc10=None):
     if huc10 is not None:
         where += f" AND (HUC10 = '{huc10}')"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
 
 
 # -----------------------------------------------------------------------------
@@ -357,7 +358,7 @@ def get_subregion_data(*, name=None, huc8=None):
     if huc8 is not None:
         where += f"AND (HUC8 = '{huc8}')"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
 
 
 # -----------------------------------------------------------------------------
@@ -368,4 +369,4 @@ def get_state_data():
     what = ["STATE_NAME", "STATE_FIPS_CODE", "SHAPE@"]
     where = "STATE_NAME = 'Minnesota'"
 
-    return get_civil_venue_data(source, what, where)
+    return get_venue_data(source, what, where)
