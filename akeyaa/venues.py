@@ -21,6 +21,35 @@ class Watershed
 class Subregion
     Subregion subclass of Venue.
 
+Notes
+-----
+o   All of the classes in this module are of the informal type Venue.
+    Although it is not enforced by subclassing, any venue must have
+    the following methods:
+
+    boundary(self): -> ndarray, shape=(n, 2), dtype= float
+        Return the boundary vertices (domain to the left).
+
+    extent(self) -> [float, float, float, float]
+        Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle.
+
+    centroid(self) -> ndarray, shape=(2,), dtype=float
+        Return the centroid as a point.
+
+    area(self) -> float
+        Return the area [m^2].
+
+    perimeter(self) -> float
+        Return the perimeter [m].
+
+    contains(self, point) -> bool
+        Return True if the Shape contains the point and False otherwise.
+
+    fullname(self) -> str
+        Return a form of the venue's name appropriate for a plot title.
+
+    __eq__(self, other) -> bool
+        Return True is the two venues are the same.
 
 Author
 ------
@@ -33,10 +62,8 @@ Version
 05 June 2020
 """
 
-from abc import ABC, abstractmethod
-
 import gis
-from geometry import Circle, Polygon
+from geometry import Circle, Polygon, Rectangle
 
 
 # -----------------------------------------------------------------------------
@@ -46,22 +73,9 @@ class Error(Exception):
 class MissingArgumentError(Error):
     """The call is missing one or more arguments. """
 
-
 # -----------------------------------------------------------------------------
-class Venue(ABC):
-    """The abstract base class for all venues."""
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
-
-    @abstractmethod
-    def fullname(self):
-        raise NotImplementedError
-
-
-# -----------------------------------------------------------------------------
-class City(Venue, Polygon):
-    """City subclass of Venue.
+class City(Polygon):
+    """City subclass of the Venue.
 
     Attributes
     ----------
@@ -91,12 +105,15 @@ class City(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"gnis_id = '{self.code}')")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"City of {self.name}"
 
 
 # -----------------------------------------------------------------------------
-class Township(Venue, Polygon):
+class Township(Polygon):
     """Township subclass of Venue.
 
     Attributes
@@ -127,12 +144,15 @@ class Township(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"gnis_id = '{self.code}')")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"{self.name} Township"
 
 
 # -----------------------------------------------------------------------------
-class County(Venue, Polygon):
+class County(Polygon):
     """County subclass of Venue.
 
     Attributes
@@ -163,12 +183,15 @@ class County(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"cty_fips = {self.code})")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"{self.name} County"
 
 
 # -----------------------------------------------------------------------------
-class Watershed(Venue, Polygon):
+class Watershed(Polygon):
     """Watershed subclass of Venue.
 
     Attributes
@@ -199,12 +222,15 @@ class Watershed(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"huc10 = '{self.code}')")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"{self.name} Watershed"
 
 
 # -----------------------------------------------------------------------------
-class Subregion(Venue, Polygon):
+class Subregion(Polygon):
     """Subregion subclass of Venue.
 
     Attributes
@@ -235,12 +261,15 @@ class Subregion(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"huc8 = '{self.code}')")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"{self.name} Subregion"
 
 
 # -----------------------------------------------------------------------------
-class State(Venue, Polygon):
+class State(Polygon):
     """State subclass of Venue.
 
     Attributes
@@ -271,12 +300,15 @@ class State(Venue, Polygon):
                 f"name = '{self.name}', "
                 f"fips = {self.code})")
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__) and (self.code == other.code)
+
     def fullname(self):
         return f"State of {self.name}"
 
 
 # -----------------------------------------------------------------------------
-class Neighborhood(Venue, Circle):
+class Neighborhood(Circle):
     """Neighborhood subclass of Venue.
 
     Attributes
@@ -284,16 +316,14 @@ class Neighborhood(Venue, Circle):
     name : str
         The neighborhood name.
 
-    code : str
+    code : str, int
         If the Neighborhood is centered on a well, the unique RELATEID as
         defined in the CWI. This includes the initial zeros.
 
         For example, RELATEID = "0000457883".
 
         If the Neighborhood is centered on a user-defined point, the hash
-        of the stringified center point: str(hash(str(center))).
-
-        For example, code = '8794749961149465368'.
+        of the Circle's attributes: hash((point[0], point[1], radius)).
 
     center : ndarray, shape=(2,), dtype=float
         The [x, y] coordinates of the center point [m].
@@ -302,30 +332,85 @@ class Neighborhood(Venue, Circle):
         The radius of the circle [m].
     """
 
-    def __init__(self, radius, *, relateid=None, point=None):
+    def __init__(self, *, relateid=None, point=None, radius=None, name=None):
+        if radius is None:
+            raise MissingArgumentError("A radius is required.")
+
         if relateid is not None:
             well_location = gis.get_well_location(relateid)
             point = well_location[0]
-            self.name = "Well"
-            self.code = relateid
-            self.fullname = f"Well '{relateid}'"
 
-        elif point is not None:
-            self.name = "Point"
-            self.code = str(hash(str(self.center)))
-            self.fullname = f"center {self.center}"
-
-        else:
-            raise MissingArgumentError("A relateid or center is required.")
+        elif point is None:
+            raise MissingArgumentError("A relateid or point is required.")
 
         Circle.__init__(point, radius)
+
+        if name is not None:
+            self.name = name
+        else:
+            self.name = "Neighborhood"
 
     def __repr__(self):
         return (f"{self.__class__.__name__}("
                 f"name = '{self.name}', "
-                f"code = '{self.code}', "
                 f"center = {self.center}, "
                 f"radius = {self.radius})")
 
+    def __eq__(self, other):
+        return (
+                (self.__class__ == other.__class__) and
+                (self.center == other.center) and
+                (self.radius == other.radius))
+
     def fullname(self):
-        return self.fullname
+        return f"User Defined: {self.name}"
+
+
+# -----------------------------------------------------------------------------
+class Frame(Rectangle):
+    """Neighborhood subclass of Venue.
+
+    Attributes
+    ----------
+    name : str
+        The neighborhood name.
+
+    xmin : float
+        The x coordinate of the left [m].
+
+    xmax : float
+        The x coordinate of the right [m].
+
+    ymin : float
+        The y coordinate of the bottom [m].
+
+    ymax : float
+        The y coordinate of the top [m].
+    """
+
+    def __init__(self, *, xmin=None, xmax=None, ymin=None, ymax=None, name=None):
+        Rectangle.__init__(self, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+
+        if name is not None:
+            self.name = name
+        else:
+            self.name = "Frame"
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"name = '{self.name}', "
+                f"xmin = {self.xmin!r}, "
+                f"xmax = {self.xmax!r}, "
+                f"ymin = {self.ymin!r}, "
+                f"ymax = {self.ymax!r})")
+
+    def __eq__(self, other):
+        return (
+                (self.__class__ == other.__class__) and
+                (self.xmin == other.xmin) and
+                (self.xmax == other.xmax) and
+                (self.ymin == other.ymin) and
+                (self.ymax == other.ymax))
+
+    def fullname(self):
+        return f"User Defined: {self.name}"

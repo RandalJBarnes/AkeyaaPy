@@ -152,7 +152,7 @@ class Rectangle(Shape):
         The y coordinate of the top [m].
     """
 
-    def __init__(self, xmin, xmax, ymin, ymax, name):
+    def __init__(self, xmin, xmax, ymin, ymax):
         self.xmin = float(xmin)
         self.xmax = float(xmax)
         self.ymin = float(ymin)
