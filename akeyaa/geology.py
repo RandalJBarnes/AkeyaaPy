@@ -122,9 +122,9 @@ def geologic_color_map(aquifers):
     }
 
     geo_hue = []
-    for aq in aquifers:
-        if aq[0] in {"Q", "K", "D", "O", "C", "P", "M"}:
-            geo_hue.append(aq[0] + 'xxx')
+    for aqui in aquifers:
+        if aqui[0] in {"Q", "K", "D", "O", "C", "P", "M"}:
+            geo_hue.append(aqui[0] + 'xxx')
         else:
             geo_hue.append('other')
 

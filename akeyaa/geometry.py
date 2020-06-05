@@ -241,7 +241,7 @@ class Polygon(Shape):
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
-        cx = 0.0;
+        cx = 0.0
         cy = 0.0
 
         for i in range(len(self.vertices)-1):
