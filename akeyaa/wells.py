@@ -1,9 +1,4 @@
-"""Define and implement the wells Database class.
-
-Classes
--------
-Database
-    A load-once-fast-lookup database of authorized wells in Minnesota
+"""Define and implement the wells database and associated kd tree.
 
 Author
 ------
@@ -13,7 +8,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+05 June 2020
 
 """
 
@@ -24,25 +19,47 @@ import gis
 
 
 # -----------------------------------------------------------------------------
-class Error(Exception):
-    """
-    Local base exception.
-    """
+def fetch(xtarget, ytarget, radius, aquifers=None):
+    """Fetch the nearby wells.
 
+    Fetch the (x, y, z) data for all authorized wells within <radius> of the
+    target coordinates that are completed in within one or more of the
+    identified <aquifers>.
 
-class ArgumentError(Error):
-    """
-    The invalid argument.
-    """
+    If there are no wells that satisfy the search conditions, then empty
+    ndarrys are returned.
 
+    Parameters
+    ----------
+    xtarget : float
+        x-coordinate (easting) of the target location in
+        NAD 83 UTM zone 15N [m]
 
-# -----------------------------------------------------------------------------
-class Database:
-    """
-    A load-once-fast-lookup database of authorized wells in Minnesota.
+    ytarget : float
+        y-coordinate (northing) of the target location in
+        NAD 83 UTM zone 15N [m]
 
-    Class Attributes
-    ----------------
+    radius : float
+        The radius of the search neighborhood [m].
+
+    aquifers : list, optional
+        List of four-character aquifer abbreviation strings, as defined in
+        Minnesota Geologic Survey's coding system. The default is None. If
+        None, then wells from all aquifers will be included.
+
+    Returns
+    -------
+    x : ndarray, shape=(n,), dtype=float
+        The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
+
+    y : ndarray, shape=(n,), dtype=float
+        The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
+
+    z : ndarray, shape=(n,), dtype=float
+        The measured static water levels [ft].
+
+    Function Attributes
+    -------------------
     welldata : list
          The list contains data from authorized wells taken across the state.
          Wells that have multiple static water level measurements in the
@@ -73,97 +90,30 @@ class Database:
     tree : scipy.spatial.cKDTree
         A kd-tree for all of the wells in self.welldata.
 
-    Methods
-    -------
-    __init__(self)
+    Notes
+    -----
+    o   Beware! The x and coordinates are in [m], but z is in [ft].
 
+    o   This function uses function attributes to serve as function static
+        variables, in the C++ sense. The first call is slow because it
+        has to extract the data from a .gdb and setup the kd tree.
 
-    __repr__(self)
-
-    __str__(self):
-
-    fetch(self, target, radius)
-        Fetch all wells within <radius> of the <target> location.
+    o   Every call after the first is very fast.
     """
 
-    # These are class attributes holding a relatively large amount of
-    # welldata and the associated spatial kd tree. These class attributes
-    # are initialized only once, on the creation of the first Database
-    # instance.
-    __welldata = None
-    __tree = None
+    if 'welldata' not in fetch.__dict__:
+        fetch.welldata = gis.get_all_well_data()
+        fetch.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in fetch.welldata])
 
-    #------------------------
-    def __init__(self):
-        """On first call, initialize the class attributes.
+    indx = fetch.tree.query_ball_point([xtarget, ytarget], radius)
 
-        Extract the well data from the .gdb. On first call, initialize the
-        -- Database.__welldata list, and the
-        -- Database.__tree spatial kd-tree
-        to allow for fast neighborhood searchs.
-        """
+    if indx:
+        xyz = []
+        for i in indx:
+            if (aquifers is None) or (fetch.welldata[i][3] in aquifers):
+                xyz.append(fetch.welldata[i][0:3])
+        x, y, z = zip(*xyz)
+    else:
+        x = y = z = []
 
-        if Database.__welldata is None:
-            Database.__welldata = gis.get_all_well_data()
-            Database.__tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in Database.__welldata])
-
-    #------------------------
-    def __repr__(self):
-        return f"{self.__class__}: {len(self.__welldata)}"
-
-    #------------------------
-    def fetch(self, xtarget, ytarget, radius, aquifers=None):
-        """Fetch the (x, y, z) for selected wells.
-
-        Fetch the (x, y, z) data for all authorized wells within <radius>
-        of the <target> location that are completed in within one or more
-        of the identified <aquifers>.
-
-        Parameters
-        ----------
-        xtarget : float
-            x-coordinate (easting) of the target location in
-            NAD 83 UTM zone 15N [m]
-
-        ytarget : float
-            y-coordinate (northing) of the target location in
-            NAD 83 UTM zone 15N [m]
-
-        radius : float
-            The radius of the search neighborhood [m].
-
-        aquifers : list, optional
-            List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. The default is None. If
-            None, then wells from all aquifers will be included.
-
-        Returns
-        -------
-        x : ndarray, shape=(n,), dtype=float
-            The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
-
-        y : ndarray, shape=(n,), dtype=float
-            The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
-
-        z : ndarray, shape=(n,), dtype=float
-            The measured static water levels [ft].
-
-        Notes
-        -----
-        o   Beware! The x and coordinates are in [m], but z is in [ft].
-        """
-
-        indx = Database.__tree.query_ball_point([xtarget, ytarget], radius)
-
-        if not indx:
-            x = []
-            y = []
-            z = []
-        else:
-            xyz = []
-            for i in indx:
-                if (aquifers is None) or (Database.__welldata[i][3] in aquifers):
-                    xyz.append(Database.__welldata[i][0:3])
-            x, y, z = zip(*xyz)
-
-        return (np.array(x), np.array(y), np.array(z))
+    return (np.array(x), np.array(y), np.array(z))

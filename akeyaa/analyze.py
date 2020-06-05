@@ -228,8 +228,8 @@ def by_venue(venue, settings):
     <venue>'s domain, and the grid lines are separated by <spacing>.
     If a target location is not inside of the venue"s domain it is discarded.
 
-    For each remaining target location all wells in the <database> that
-    satisfy the following two conditions are identified:
+    For each remaining target location all wells that satisfy the following
+    two conditions are identified:
         (1) completed in one or more of the <aquifers>, and
         (2) within a horizontal distance of <radius> of the target location.
     If a target location has fewer than <required> identified (neighboring)
@@ -293,14 +293,13 @@ def by_venue(venue, settings):
         considered.
     """
 
-    database = wells.Database()
     xgrd, ygrd = layout_the_grid(venue, settings.spacing)
 
     results = []
     for xo in xgrd:
         for yo in ygrd:
             if venue.contains((xo, yo)):
-                xw, yw, zw = database.fetch(xo, yo, settings.radius, settings.aquifers)
+                xw, yw, zw = wells.fetch(xo, yo, settings.radius, settings.aquifers)
 
                 # Note that we are converting the zw from [ft] to [m].
                 if len(xw) >= settings.required:
