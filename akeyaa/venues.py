@@ -59,7 +59,6 @@ class Venue(ABC):
         raise NotImplementedError
 
 
-
 # -----------------------------------------------------------------------------
 class City(Venue):
     """City subclass of Venue.

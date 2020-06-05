@@ -105,7 +105,7 @@ class Database:
 
         if Database.__welldata is None:
             Database.__welldata = gis.get_all_well_data()
-            Database.__tree = scipy.spatial.cKDTree((x, y) for x, y, *_ in Database.__welldata)
+            Database.__tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in Database.__welldata])
 
     #------------------------
     def __repr__(self):
