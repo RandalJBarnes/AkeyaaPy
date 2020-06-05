@@ -9,7 +9,7 @@ geologic_color_map(aquifers)
     Map the aquifer code to colors.
 
 whereis(venue):
-    Plot the venue's domain over the state's ploygon.
+    Plot the venue's shape over the state's ploygon.
 
 Author
 ------
@@ -19,7 +19,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+05 June 2020
 """
 
 import matplotlib.pyplot as plt
@@ -70,8 +70,8 @@ def aquifers_by_venue(venue, aquifers=None):
         The list is sorted in descending order by count.
     """
 
-    bdry = venue.domain.boundary()
-    welldata = gis.get_well_data_by_domain(venue.domain)
+    bdry = venue.boundary()
+    welldata = gis.get_well_data_by_venue(venue)
 
     if aquifers is None:
         xsel = [row[0] for row in welldata]
@@ -134,7 +134,7 @@ def geologic_color_map(aquifers):
 
 # -----------------------------------------------------------------------------
 def whereis(venue):
-    """Plot the venue's domain over the state's ploygon.
+    """Plot the venue's shape over the state's ploygon.
 
     Arguments
     ---------
@@ -146,8 +146,8 @@ def whereis(venue):
     """
 
     state = venues.State()
-    state_bdry = state.domain.boundary()
-    venue_bdry = venue.domain.boundary()
+    state_bdry = state.boundary()
+    venue_bdry = venue.boundary()
 
     plt.figure()
     plt.axis("equal")

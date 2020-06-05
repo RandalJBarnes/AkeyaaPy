@@ -9,8 +9,8 @@ Functions
 get_all_well_data()
     Query arcpy for the welldata from all authorized wells in the state.
 
-get_well_data_by_domain(domain)
-    Query arcpy for the welldata from all authorized wells in the domain.
+get_well_data_by_venue(venue)
+    Query arcpy for the welldata from all authorized wells in the venue.
 
 get_well_location(relateid)
     Locate a single well by relateid.
@@ -35,9 +35,6 @@ get_county_data(*, name=None, abbr=None, cty_fips=None)
 get_state_data()
     Return the State venue data.
 
-get_neighborhood_data(*, relateid=None)
-    Return the neighborhood venue data.
-
 Raises
 ------
 VenueNotFoundError
@@ -53,7 +50,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+05 June 2020
 """
 
 import numpy as np
@@ -163,13 +160,14 @@ def get_all_well_data():
 
 
 # -----------------------------------------------------------------------------
-def get_well_data_by_domain(domain):
-    """Query arcpy for the welldata from all authorized wells in the domain.
+def get_well_data_by_venue(venue):
+    """Query arcpy for the welldata from all authorized wells in the venue.
 
     Parameters
     ----------
-    domain : geometry.Domain
-        The geographic focus of the query.
+    venue: venues.Venue & geometry.Shape
+        An instance of a concrete subclass of the marriage of venues.Venue
+        and geometry.Shape, e.g. City.
 
     Returns
     -------
@@ -188,7 +186,7 @@ def get_well_data_by_domain(domain):
             Minnesota Geologic Survey's coding system.
     """
 
-    vertices = domain.boundary()
+    vertices = venue.boundary()
     sr_out = arcpy.SpatialReference(26915)
     array = arcpy.Array([arcpy.Point(row[0], row[1]) for row in vertices])
     arcpy_polygon = arcpy.Geometry("polygon", array, sr_out)

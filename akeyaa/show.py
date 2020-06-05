@@ -2,15 +2,16 @@
 
 Functions
 ---------
-results_by_venue(prefix, domain, results    Plot the results.
+results_by_venue(venue, results)
+    Plot the results.
 
-local_flow_direction(prefix, domain, results)
+local_flow_direction(venue, results)
     Plot the local flow directions.
 
-local_number_of_wells(prefix, domain, results)
+local_number_of_wells(venue, results)
     Plot the local number of wells.
 
-local_head_gradient_magnitude(prefix, domain, results)
+local_head_gradient_magnitude(venue, results)
     Plot the relative magnitude of the local head gradient.
 
 Author
@@ -21,7 +22,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+05 June 2020
 """
 
 import math
@@ -131,7 +132,7 @@ def local_flow_direction(venue, results):
     None
     """
 
-    bdry = venue.domain.boundary()
+    bdry = venue.boundary()
     xgrd = np.array([row[0] for row in results])
     ygrd = np.array([row[1] for row in results])
 
@@ -205,7 +206,7 @@ def local_number_of_wells(venue, results):
     None
     """
 
-    bdry = venue.domain.boundary()
+    bdry = venue.boundary()
 
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
@@ -215,7 +216,7 @@ def local_number_of_wells(venue, results):
     plt.axis("equal")
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
-    plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap="GnBu")
+    plt.scatter(xtarget, ytarget, c=ntarget, zorder=10, cmap="PuBu")
     cbar = plt.colorbar()
     cbar.ax.set_title("Count [#]")
 
@@ -255,7 +256,7 @@ def local_head_gradient_magnitude(venue, results):
     None
     """
 
-    bdry = venue.domain.boundary()
+    bdry = venue.boundary()
     xtarget = np.array([row[0] for row in results])
     ytarget = np.array([row[1] for row in results])
 

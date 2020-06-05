@@ -2,22 +2,17 @@
 
 Classes
 -------
-Domain(ABC)
-    The abstract base class for all domains.
+Shape(ABC)
+    The abstract base class for all Shapes.
 
-Circle(Domain)
+Circle(Shape)
     A circle.
 
-Rectangle(Domain)
+Rectangle(Shape)
     An axis-aligned rectangle.
 
-Polygon(Domain)
+Polygon(Shape)
     A single, non-overlapping, but not necessarily convex, polygon.
-
-
-Raises
-------
-
 
 Author
 ------
@@ -27,7 +22,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+05 June 2020
 """
 
 from abc import ABC, abstractmethod
@@ -35,22 +30,22 @@ import numpy as np
 
 
 #-----------------------------------------------------------------------------------------
-class Domain(ABC):
-    """The abstract base class for all domains.
+class Shape(ABC):
+    """The abstract base class for all shapes.
 
-    For the purposes of a Domain:
+    For the purposes of a Shape:
     -- a <point> is a numpy.array([x, y], dtype=float),
     -- <vertices> is a numpy.array of points (i.e. a 2D array).
     """
 
     @abstractmethod
     def boundary(self):
-        """Return the boundary vertices (inside to the left)."""
+        """Return the boundary vertices (domain to the left)."""
         raise NotImplementedError
 
     @abstractmethod
     def extent(self):
-        """Return [xmin, xmax, ymin, ymax]."""
+        """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
         raise NotImplementedError
 
     @abstractmethod
@@ -60,72 +55,102 @@ class Domain(ABC):
 
     @abstractmethod
     def area(self):
-        """Return the area."""
+        """Return the area [m^2]."""
         raise NotImplementedError
 
     @abstractmethod
     def perimeter(self):
-        """Return the perimeter."""
+        """Return the perimeter [m]."""
         raise NotImplementedError
 
     @abstractmethod
     def contains(self, point):
-        """Return True if venue contains the point and False otherwise."""
+        """Return True if the Shape contains the point and False otherwise."""
         raise NotImplementedError
 
 
 #-----------------------------------------------------------------------------------------
-class Circle(Domain):
-    """A circle."""
+class Circle(Shape):
+    """A circle.
+
+    Attributes
+    ----------
+    center : ndarray, shape=(2,), dtype=float
+        The [x, y] coordinates of the center point [m].
+
+    radius : float
+        The radius of the circle [m].
+    """
 
     NUMBER_OF_VERTICES = 100
     UNIT_VERTICES = np.array([(np.cos(theta), np.sin(theta))
         for theta in np.linspace(0, 2*np.pi, NUMBER_OF_VERTICES)], dtype=float)
 
-    def __init__(self, origin, radius):
-        self.origin = np.array([origin[0], origin[1]], dtype=float)
+    def __init__(self, center, radius):
+        self.center = np.array([center[0], center[1]], dtype=float)
         self.radius = float(radius)
 
     def __repr__(self):
         return (
                 f"{self.__class__.__name__}("
-                f"origin = {self.origin!r}, "
+                f"center = {self.center!r}, "
                 f"radius = {self.radius!r})"
         )
 
     def __str__(self):
         return (
                 f"Circle: "
-                f"[{self.origin[0]}, "
-                f"{self.origin[1]}], "
+                f"[{self.center[0]}, "
+                f"{self.center[1]}], "
                 f"{self.radius}"
        )
 
     def boundary(self):
-        return Circle.UNIT_VERTICES*self.radius + self.origin
+        """Return the boundary vertices (domain to the left)."""
+        return Circle.UNIT_VERTICES*self.radius + self.center
 
     def extent(self):
-        return [self.origin[0]-self.radius,
-                self.origin[0]+self.radius,
-                self.origin[1]-self.radius,
-                self.origin[1]+self.radius]
+        """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
+        return [self.center[0]-self.radius,
+                self.center[0]+self.radius,
+                self.center[1]-self.radius,
+                self.center[1]+self.radius]
 
     def centroid(self):
-        return self.origin
+        """Return the centroid as a point."""
+        return self.center
 
     def area(self):
+        """Return the area [m^2]."""
         return np.pi * self.radius**2
 
     def perimeter(self):
+        """Return the perimeter [m]."""
         return 2*np.pi * self.radius
 
     def contains(self, point):
-        return np.hypot(point[0]-self.origin[0], point[1]-self.origin[1]) < self.radius
+        """Return True if the Circle contains the point and False otherwise."""
+        return np.hypot(point[0]-self.center[0], point[1]-self.center[1]) < self.radius
 
 
 #-----------------------------------------------------------------------------------------
-class Rectangle(Domain):
-    """An axis-aligned rectangle."""
+class Rectangle(Shape):
+    """An axis-aligned rectangle.
+
+    Attributes
+    ----------
+    xmin : float
+        The x coordinate of the left [m].
+
+    xmax : float
+        The x coordinate of the right [m].
+
+    ymin : float
+        The y coordinate of the bottom [m].
+
+    ymax : float
+        The y coordinate of the top [m].
+    """
 
     def __init__(self, xmin, xmax, ymin, ymax, name):
         self.xmin = float(xmin)
@@ -139,16 +164,15 @@ class Rectangle(Domain):
                 f"xmin = {self.xmin!r}, "
                 f"xmax = {self.xmax!r}, "
                 f"ymin = {self.ymin!r}, "
-                f"ymax = {self.ymax!r})"
-        )
+                f"ymax = {self.ymax!r})")
 
     def __str__(self):
         return (
                 f"Rectangle: "
-                f"[{self.xmin}, {self.xmax}, {self.ymin}, {self.ymax}] "
-        )
+                f"[{self.xmin}, {self.xmax}, {self.ymin}, {self.ymax}]")
 
     def boundary(self):
+        """Return the boundary vertices (domain to the left)."""
         return np.array([
                 [self.xmin, self.ymin],
                 [self.xmax, self.ymin],
@@ -158,24 +182,37 @@ class Rectangle(Domain):
                 ], dtype=float)
 
     def extent(self):
+        """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
         return [self.xmin, self.xmax, self.ymin, self.ymax]
 
     def centroid(self):
+        """Return the centroid as a point."""
         return np.array([(self.xmax+self.xmin)/2, (self.ymax+self.ymin)/2], dtype=float)
 
     def area(self):
+        """Return the area [m^2]."""
         return (self.xmax - self.xmin) * (self.ymax - self.ymin)
 
     def perimeter(self):
+        """Return the perimeter [m]."""
         return 2*(self.xmax - self.xmin) + 2*(self.ymax - self.ymin)
 
     def contains(self, point):
+        """Return True if the Rectangle contains the point and False otherwise."""
         return (self.xmin < point[0] < self.xmax) and (self.ymin < point[1] < self.ymax)
 
 
 #-----------------------------------------------------------------------------------------
-class Polygon(Domain):
-    """A single, non-overlapping, but not necessarily convex, polygon."""
+class Polygon(Shape):
+    """A single, non-overlapping, but not necessarily convex, polygon.
+
+    Attributes
+    ----------
+    vertices : ndarray, shape=(n, 2), dtype=float
+        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
+        The vertices are stored so that the domain is on the left, and the
+        first vertex is repeated as the last vertex.
+    """
 
     def __init__(self, vertices):
         self.vertices = vertices
@@ -190,14 +227,17 @@ class Polygon(Domain):
         return "Polygon: [...]"
 
     def boundary(self):
+        """Return the boundary vertices (domain to the left)."""
         return self.vertices
 
     def extent(self):
+        """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
         xmin, ymin = np.min(self.vertices, axis=0)
         xmax, ymax = np.max(self.vertices, axis=0)
         return [xmin, xmax, ymin, ymax]
 
     def centroid(self):
+        """Return the centroid as a point."""
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
@@ -214,6 +254,7 @@ class Polygon(Domain):
         return np.array([cx, cy], dtype=float)
 
     def area(self):
+        """Return the area [m^2]."""
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
@@ -224,6 +265,7 @@ class Polygon(Domain):
         return area
 
     def perimeter(self):
+        """Return the perimeter [m]."""
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
@@ -233,6 +275,7 @@ class Polygon(Domain):
         return length
 
     def contains(self, point):
+        """Return True if the Polygon contains the point and False otherwise."""
         inside = False
         xa, ya = self.vertices[0]
 
