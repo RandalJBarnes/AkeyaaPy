@@ -22,7 +22,7 @@ University of Minnesota
 
 Version
 -------
-05 June 2020
+06 June 2020
 """
 
 from abc import ABC, abstractmethod
@@ -37,6 +37,11 @@ class Shape(ABC):
     -- a <point> is a numpy.array([x, y], dtype=float),
     -- <vertices> is a numpy.array of points (i.e. a 2D array).
     """
+
+    @abstractmethod
+    def __eq__(self, other):
+        """Return True if the two Shapes are equal."""
+        raise NotImplementedError
 
     @abstractmethod
     def boundary(self):
@@ -105,6 +110,12 @@ class Circle(Shape):
                 f"{self.radius}"
        )
 
+    def __eq__(self, other):
+        """Return True if the two Circle are equal."""
+        return ((self.__class__ == other.__class__) and
+                (self.center == other.center) and
+                (self.radius == other.radius))
+
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
         return Circle.UNIT_VERTICES*self.radius + self.center
@@ -171,6 +182,14 @@ class Rectangle(Shape):
                 f"Rectangle: "
                 f"[{self.xmin}, {self.xmax}, {self.ymin}, {self.ymax}]")
 
+    def __eq__(self, other):
+        """Return True if the two Rectangles are equal."""
+        return ((self.__class__ == other.__class__) and
+                (self.xmin == other.xmin) and
+                (self.xmax == other.xmax) and
+                (self.ymin == other.ymin) and
+                (self.ymax == other.ymax))
+
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
         return np.array([
@@ -225,6 +244,11 @@ class Polygon(Shape):
 
     def __str__(self):
         return "Polygon: [...]"
+
+    def __eq__(self, other):
+        """Return True if the two Polygons are equal."""
+        return ((self.__class__ == other.__class__) and
+                (self.vertices == other.vertices))
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""

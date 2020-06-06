@@ -1,34 +1,43 @@
-"""Define and implement the Venue class and all of its subclasses, along with
-a few helper functions.
+"""Define and implement the Venue class and all of its subclasses.
 
 Classes
 -------
-class Venue
-    Abstract base class for all Venue.
+City(Polygon)
+    City duck-type of Venue.
 
-class City
-    City subclass of Venue.
+Township(Polygon)
+    Township duck-type of Venue.
 
-class Township
-    Township subclass of Venue.
+County(Polygon)
+    County duck-type of Venue.
 
-class County
-    County subclass of Venue.
+Watershed(Polygon)
+    Watershed duck-type of Venue.
 
-class Watershed
-    Watershed subclass of Venue.
+Subregion(Polygon)
+    Subregion duck-type of Venue.
 
-class Subregion
-    Subregion subclass of Venue.
+Neighborhood(Circle)
+    Neighborhood duck-type of Venue.
+
+Frame(Rectangle)
+    Rectangular frame duck-type of Venue.
+
+Patch(Polygon)
+    A general polygonal patch duck-type of Venue.
 
 Notes
 -----
 o   All of the classes in this module are of the informal type Venue.
-    Although it is not enforced by subclassing, any venue must have
+    Although it is not enforced by subclassing, any Venue must have
     the following methods:
 
+    __eq__(self, other) -> bool
+        Return True is the two venues are the same.
+
     boundary(self): -> ndarray, shape=(n, 2), dtype= float
-        Return the boundary vertices (domain to the left).
+        Return the boundary vertices -- domain to the left, and last vertex
+        repeats the first vertex.
 
     extent(self) -> [float, float, float, float]
         Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle.
@@ -48,9 +57,6 @@ o   All of the classes in this module are of the informal type Venue.
     fullname(self) -> str
         Return a form of the venue's name appropriate for a plot title.
 
-    __eq__(self, other) -> bool
-        Return True is the two venues are the same.
-
 Author
 ------
 Dr. Randal J. Barnes
@@ -59,7 +65,7 @@ University of Minnesota
 
 Version
 -------
-05 June 2020
+06 June 2020
 """
 
 import gis
@@ -73,9 +79,13 @@ class Error(Exception):
 class MissingArgumentError(Error):
     """The call is missing one or more arguments. """
 
+class ConflictingArgumentError(Error):
+    """Two or more of the arguments are in conflict."""
+
+
 # -----------------------------------------------------------------------------
 class City(Polygon):
-    """City subclass of the Venue.
+    """City duck-type of the Venue.
 
     Attributes
     ----------
@@ -114,7 +124,7 @@ class City(Polygon):
 
 # -----------------------------------------------------------------------------
 class Township(Polygon):
-    """Township subclass of Venue.
+    """Township duck-type of Venue.
 
     Attributes
     ----------
@@ -153,7 +163,7 @@ class Township(Polygon):
 
 # -----------------------------------------------------------------------------
 class County(Polygon):
-    """County subclass of Venue.
+    """County duck-type of Venue.
 
     Attributes
     ----------
@@ -192,7 +202,7 @@ class County(Polygon):
 
 # -----------------------------------------------------------------------------
 class Watershed(Polygon):
-    """Watershed subclass of Venue.
+    """Watershed duck-type of Venue.
 
     Attributes
     ----------
@@ -231,7 +241,7 @@ class Watershed(Polygon):
 
 # -----------------------------------------------------------------------------
 class Subregion(Polygon):
-    """Subregion subclass of Venue.
+    """Subregion duck-type of Venue.
 
     Attributes
     ----------
@@ -270,7 +280,7 @@ class Subregion(Polygon):
 
 # -----------------------------------------------------------------------------
 class State(Polygon):
-    """State subclass of Venue.
+    """State duck-type of Venue.
 
     Attributes
     ----------
@@ -309,7 +319,7 @@ class State(Polygon):
 
 # -----------------------------------------------------------------------------
 class Neighborhood(Circle):
-    """Neighborhood subclass of Venue.
+    """Neighborhood duck-type of Venue.
 
     Attributes
     ----------
@@ -332,7 +342,7 @@ class Neighborhood(Circle):
         The radius of the circle [m].
     """
 
-    def __init__(self, *, relateid=None, point=None, radius=None, name=None):
+    def __init__(self, *, name=None, relateid=None, point=None, radius=None):
         if radius is None:
             raise MissingArgumentError("A radius is required.")
 
@@ -368,7 +378,7 @@ class Neighborhood(Circle):
 
 # -----------------------------------------------------------------------------
 class Frame(Rectangle):
-    """Neighborhood subclass of Venue.
+    """Rectangular frame duck-type of Venue.
 
     Attributes
     ----------
@@ -388,8 +398,45 @@ class Frame(Rectangle):
         The y coordinate of the top [m].
     """
 
-    def __init__(self, *, xmin=None, xmax=None, ymin=None, ymax=None, name=None):
-        Rectangle.__init__(self, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+    def __init__(self, *, name=None,
+                 xmin=None, xmax=None, ymin=None, ymax=None,
+                 lowerleft=None, width=None, height=None,
+                 upperright=None, center=None):
+        """If specified,
+            xmin, xmax, ymin, ymax, width, height -> float,
+            lowerleft, upperright, center -> indexable (float, float).
+
+        The rectangular frame may be specified one of five ways:
+                [xmin, xmax, ymin, ymax]
+                [lowerleft, width, height]
+                [upperright, width, height]
+                [lowerleft, upperright]
+                [center, width, height]
+        """
+
+        if lowerleft is not None:
+            xmin = lowerleft[0]
+            ymin = lowerleft[1]
+            if width is not None:
+                xmax = lowerleft[0] + width
+            if height is not None:
+                ymax = lowerleft[1] + height
+
+        if upperright is not None:
+            xmax = upperright[0]
+            ymax = upperright[1]
+            if width is not None:
+                xmin = upperright[0] - width
+            if height is not None:
+                ymin = upperright[1] - height
+
+        if center is not None:
+            xmin = center[0] - width/2
+            xmax = center[0] + width/2
+            ymin = center[1] - height/2
+            ymax = center[1] + height/2
+
+        Rectangle.__init__(self, xmin, xmax, ymin, ymax)
 
         if name is not None:
             self.name = name
@@ -399,10 +446,10 @@ class Frame(Rectangle):
     def __repr__(self):
         return (f"{self.__class__.__name__}("
                 f"name = '{self.name}', "
-                f"xmin = {self.xmin!r}, "
-                f"xmax = {self.xmax!r}, "
-                f"ymin = {self.ymin!r}, "
-                f"ymax = {self.ymax!r})")
+                f"xmin = {self.xmin}, "
+                f"xmax = {self.xmax}, "
+                f"ymin = {self.ymin}, "
+                f"ymax = {self.ymax})")
 
     def __eq__(self, other):
         return (
@@ -411,6 +458,45 @@ class Frame(Rectangle):
                 (self.xmax == other.xmax) and
                 (self.ymin == other.ymin) and
                 (self.ymax == other.ymax))
+
+    def fullname(self):
+        return f"User Defined: {self.name}"
+
+
+# -----------------------------------------------------------------------------
+class Patch(Polygon):
+    """A general polygonal patch duck-type of Venue.
+
+    Attributes
+    ----------
+    name : str
+        The patch name.
+
+    vertices : ndarray, shape=(n, 2), dtype=float
+        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
+        The vertices are stored so that the domain is on the left, and the
+        first vertex is repeated as the last vertex.
+    """
+
+    def __init__(self, *, name=None, vertices=None):
+        if vertices is None:
+            raise MissingArgumentError("The vertices must be specified.")
+
+        Polygon.__init__(self, vertices)
+
+        if name is not None:
+            self.name = name
+        else:
+            self.name = "Patch"
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"name = '{self.name}', "
+                f"vertices = {self.vertices})")
+
+    def __eq__(self, other):
+        return ((self.__class__ == other.__class__) and
+                (self.vertices == other.vertices))
 
     def fullname(self):
         return f"User Defined: {self.name}"

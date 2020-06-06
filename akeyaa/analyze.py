@@ -7,9 +7,6 @@ Settings
 
 Functions
 ---------
-akeyaa_settings(aquifers, method, radius, required, spacing)
-    Create a dictionary with a complete set of valid settings.
-
 by_venue(venue, settings)
     Compute the Akeyaa analysis across the specified venue.
 
@@ -31,7 +28,7 @@ University of Minnesota
 
 Version
 -------
-04 June 2020
+06 June 2020
 """
 
 import numpy as np
@@ -52,34 +49,36 @@ DEFAULT_SPACING = 1000
 
 # -----------------------------------------------------------------------------
 # The following is a complete list of all 4-character aquifer codes used in
-# the Minnesota County Well index as of 1 January 2020.
+# the Minnesota County Well index as of 1 January 2020. There are 10 groups
+# by first letter: {C, D, I, K, M, O, P, Q, R, U}.
 ALL_AQUIFERS = {
-    "CAMB", "CECR", "CEMS", "CJDN", "CJDW", "CJMS", "CJSL", "CJTC", "CLBK",
-    "CMFL", "CMRC", "CMSH", "CMTS", "CSLT", "CSLW", "CSTL", "CTCE", "CTCG",
-    "CTCM", "CTCW", "CTLR", "CTMZ", "CWEC", "CWMS", "CWOC",
-    "DCLP", "DCLS", "DCOG", "DCOM", "DCVA", "DCVL", "DCVU", "DEVO", "DPOG",
-    "DPOM", "DSOG", "DSOM", "DSPL", "DWAP", "DWPR",
-    "INDT", "KDNB", "KREG", "KRET", "MTPL",
-    "ODCR", "ODGL", "ODPL", "ODUB", "OGCD", "OGCM", "OGDP", "OGPC", "OGPD",
-    "OGPR", "OGSC", "OGSD", "OGSV", "OGVP", "OGWD", "OMAQ", "OMQD", "OMQG",
-    "OPCJ", "OPCM", "OPCT", "OPCW", "OPDC", "OPGW", "OPNR", "OPOD", "OPSH",
-    "OPSP", "OPVJ", "OPVL", "OPWR", "ORDO", "ORRV", "OSCJ", "OSCM", "OSCS",
-    "OSCT", "OSPC", "OSTP", "OWIN",
-    "PAAI", "PAAM", "PABD", "PABG", "PABK", "PACG", "PAEF", "PAES", "PAEY",
-    "PAFL", "PAFR", "PAFV", "PAGR", "PAGU", "PAJL", "PAKG", "PALC", "PALG",
-    "PALL", "PALP", "PALS", "PALT", "PALV", "PAMB", "PAMC", "PAMD", "PAMG",
-    "PAML", "PAMR", "PAMS", "PAMT", "PAMU", "PAMV", "PANB", "PANL", "PANS",
-    "PANU", "PAOG", "PAQF", "PASG", "PASH", "PASL", "PASM", "PASN", "PASR",
-    "PAST", "PASZ", "PATL", "PAUD", "PAVC", "PAWB", "PCCR", "PCRG", "PCUU",
-    "PEAG", "PEAL", "PEBC", "PEBI", "PEDN", "PEDQ", "PEFG", "PEFH", "PEFM",
-    "PEGT", "PEGU", "PEHL", "PEIL", "PELF", "PELR", "PEMG", "PEML", "PEMN",
-    "PEMU", "PEPG", "PEPK", "PEPP", "PEPZ", "PERB", "PERF", "PERV", "PESC",
-    "PEST", "PESX", "PETR", "PEUD", "PEVT", "PEWR", "PEWT", "PEWV", "PMBB",
-    "PMBE", "PMBI", "PMBL", "PMBM", "PMBO", "PMBR", "PMCV", "PMDA", "PMDC",
-    "PMDE", "PMDF", "PMDL", "PMEP", "PMES", "PMFL", "PMGI", "PMGL", "PMHF",
-    "PMHN", "PMHR", "PMLD", "PMMU", "PMNF", "PMNI", "PMNL", "PMNM", "PMNS",
-    "PMPA", "PMRC", "PMSU", "PMTH", "PMUD", "PMUS", "PMVU", "PMWL", "PUDF",
-    "QBAA", "QBUA", "QUUU", "QWTA", "RUUU", "UREG"
+    "CAMB", "CECR", "CEMS", "CJDN", "CJDW", "CJMS", "CJSL", "CJTC", "CLBK", "CMFL", "CMRC",
+    "CMSH", "CMTS", "CSLT", "CSLW", "CSTL", "CTCE", "CTCG", "CTCM", "CTCW", "CTLR", "CTMZ",
+    "CWEC", "CWMS", "CWOC",
+    "DCLP", "DCLS", "DCOG", "DCOM", "DCVA", "DCVL", "DCVU", "DEVO", "DPOG", "DPOM", "DSOG",
+    "DSOM", "DSPL", "DWAP", "DWPR",
+    "INDT",
+    "KDNB", "KREG", "KRET",
+    "MTPL",
+    "ODCR", "ODGL", "ODPL", "ODUB", "OGCD", "OGCM", "OGDP", "OGPC", "OGPD", "OGPR", "OGSC",
+    "OGSD", "OGSV", "OGVP", "OGWD", "OMAQ", "OMQD", "OMQG", "OPCJ", "OPCM", "OPCT", "OPCW",
+    "OPDC", "OPGW", "OPNR", "OPOD", "OPSH", "OPSP", "OPVJ", "OPVL", "OPWR", "ORDO", "ORRV",
+    "OSCJ", "OSCM", "OSCS", "OSCT", "OSPC", "OSTP", "OWIN",
+    "PAAI", "PAAM", "PABD", "PABG", "PABK", "PACG", "PAEF", "PAES", "PAEY", "PAFL", "PAFR",
+    "PAFV", "PAGR", "PAGU", "PAJL", "PAKG", "PALC", "PALG", "PALL", "PALP", "PALS", "PALT",
+    "PALV", "PAMB", "PAMC", "PAMD", "PAMG", "PAML", "PAMR", "PAMS", "PAMT", "PAMU", "PAMV",
+    "PANB", "PANL", "PANS", "PANU", "PAOG", "PAQF", "PASG", "PASH", "PASL", "PASM", "PASN",
+    "PASR", "PAST", "PASZ", "PATL", "PAUD", "PAVC", "PAWB", "PCCR", "PCRG", "PCUU", "PEAG",
+    "PEAL", "PEBC", "PEBI", "PEDN", "PEDQ", "PEFG", "PEFH", "PEFM", "PEGT", "PEGU", "PEHL",
+    "PEIL", "PELF", "PELR", "PEMG", "PEML", "PEMN", "PEMU", "PEPG", "PEPK", "PEPP", "PEPZ",
+    "PERB", "PERF", "PERV", "PESC", "PEST", "PESX", "PETR", "PEUD", "PEVT", "PEWR", "PEWT",
+    "PEWV", "PMBB", "PMBE", "PMBI", "PMBL", "PMBM", "PMBO", "PMBR", "PMCV", "PMDA", "PMDC",
+    "PMDE", "PMDF", "PMDL", "PMEP", "PMES", "PMFL", "PMGI", "PMGL", "PMHF", "PMHN", "PMHR",
+    "PMLD", "PMMU", "PMNF", "PMNI", "PMNL", "PMNM", "PMNS", "PMPA", "PMRC", "PMSU", "PMTH",
+    "PMUD", "PMUS", "PMVU", "PMWL", "PUDF",
+    "QBAA", "QBUA", "QUUU", "QWTA",
+    "RUUU",
+    "UREG"
     }
 
 
@@ -94,7 +93,6 @@ class ArgumentError(Error):
     """
     Invalid argument.
     """
-
 
 class UnknownMethodError(Error):
     """
@@ -220,18 +218,19 @@ class Settings:
 def by_venue(venue, settings):
     """Compute the Akeyaa analysis across the specified venue.
 
-    The Akeyaa analysis is carried out at target locations within the
-    <venue>'s domain. The target locations are selected as the nodes of a
-    square grid covering the <venue>'s domain.
+    The Akeyaa analysis is carried out at target locations within the <venue>.
+    The target locations are selected as the nodes of a square grid covering
+    the <venue>.
 
     The square grid of target locations is anchored at the centroid of the
-    <venue>'s domain, and the grid lines are separated by <spacing>.
-    If a target location is not inside of the venue"s domain it is discarded.
+    <venue>'s domain, and the grid lines are separated by <spacing>. If a
+    target location is not inside of the venue it is discarded.
 
-    For each remaining target location all wells that satisfy the following
+    For each remaining target location, all wells that satisfy the following
     two conditions are identified:
         (1) completed in one or more of the <aquifers>, and
         (2) within a horizontal distance of <radius> of the target location.
+
     If a target location has fewer than <required> identified (neighboring)
     wells it is discarded.
 
@@ -240,7 +239,7 @@ def by_venue(venue, settings):
 
     Parameters
     ----------
-    venue: venues.Venue & geometry.Shape
+    venue: venues.Venue
         An instance of a concrete subclass of the marriage of venues.Venue
         and geometry.Shape, e.g. City.
 
