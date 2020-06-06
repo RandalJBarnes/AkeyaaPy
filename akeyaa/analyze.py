@@ -29,6 +29,7 @@ University of Minnesota
 Version
 -------
 06 June 2020
+
 """
 
 import numpy as np
@@ -84,20 +85,13 @@ ALL_AQUIFERS = {
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """
-    Local base exception.
-    """
-
+    """Local base exception."""
 
 class ArgumentError(Error):
-    """
-    Invalid argument.
-    """
+    """Invalid argument."""
 
 class UnknownMethodError(Error):
-    """
-    The requested method is not supported.
-    """
+    """The requested method is not supported."""
 
 
 # -----------------------------------------------------------------------------
@@ -133,6 +127,7 @@ class Settings:
     Raises
     ------
     ValueError
+
     """
 
     def __init__(self,
@@ -290,6 +285,7 @@ def by_venue(venue, settings):
     o   Note, data from outside of the venue may also used in the
         computations. However, only data from the Minnesota CWI are
         considered.
+
     """
 
     xgrd, ygrd = layout_the_grid(venue, settings.spacing)
@@ -380,10 +376,6 @@ def fit_conic_potential(x, y, z, method):
     varp : ndarray, shape=(6, 6)
         The variance matrix for the model settings.
 
-    Raises
-    ------
-    None.
-
     Notes
     -----
     o   The underlying conic discharge potential model is
@@ -394,6 +386,7 @@ def fit_conic_potential(x, y, z, method):
 
     o   Note that most of the work is done by the statsmodels library. There
         are other fitting methods available.
+
     """
 
     X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)

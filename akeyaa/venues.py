@@ -66,6 +66,7 @@ University of Minnesota
 Version
 -------
 06 June 2020
+
 """
 
 import gis
@@ -74,10 +75,10 @@ from geometry import Circle, Polygon, Rectangle
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """The base exception for the module. """
+    """The base exception for the module."""
 
 class MissingArgumentError(Error):
-    """The call is missing one or more arguments. """
+    """The call is missing one or more arguments."""
 
 class ConflictingArgumentError(Error):
     """Two or more of the arguments are in conflict."""
@@ -102,6 +103,7 @@ class City(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, gnis_id=None):
@@ -141,6 +143,7 @@ class Township(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, gnis_id=None):
@@ -180,6 +183,7 @@ class County(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, abbr=None, cty_fips=None):
@@ -219,6 +223,7 @@ class Watershed(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, huc10=None):
@@ -258,6 +263,7 @@ class Subregion(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, huc8=None):
@@ -297,6 +303,7 @@ class State(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self):
@@ -340,6 +347,7 @@ class Neighborhood(Circle):
 
     radius : float
         The radius of the circle [m].
+
     """
 
     def __init__(self, *, name=None, relateid=None, point=None, radius=None):
@@ -396,6 +404,7 @@ class Frame(Rectangle):
 
     ymax : float
         The y coordinate of the top [m].
+
     """
 
     def __init__(self, *, name=None,
@@ -412,6 +421,7 @@ class Frame(Rectangle):
                 [upperright, width, height]
                 [lowerleft, upperright]
                 [center, width, height]
+
         """
 
         if lowerleft is not None:
@@ -476,6 +486,7 @@ class Patch(Polygon):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, *, name=None, vertices=None):

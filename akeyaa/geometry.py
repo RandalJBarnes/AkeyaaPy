@@ -23,6 +23,7 @@ University of Minnesota
 Version
 -------
 06 June 2020
+
 """
 
 from abc import ABC, abstractmethod
@@ -36,6 +37,7 @@ class Shape(ABC):
     For the purposes of a Shape:
     -- a <point> is a numpy.array([x, y], dtype=float),
     -- <vertices> is a numpy.array of points (i.e. a 2D array).
+
     """
 
     @abstractmethod
@@ -85,6 +87,7 @@ class Circle(Shape):
 
     radius : float
         The radius of the circle [m].
+
     """
 
     NUMBER_OF_VERTICES = 100
@@ -161,6 +164,7 @@ class Rectangle(Shape):
 
     ymax : float
         The y coordinate of the top [m].
+
     """
 
     def __init__(self, xmin, xmax, ymin, ymax):
@@ -231,6 +235,7 @@ class Polygon(Shape):
         An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
         The vertices are stored so that the domain is on the left, and the
         first vertex is repeated as the last vertex.
+
     """
 
     def __init__(self, vertices):

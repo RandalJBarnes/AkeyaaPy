@@ -44,6 +44,7 @@ University of Minnesota
 Version
 -------
 31 May 2020
+
 """
 
 from math import cos, sin, exp, sqrt, pi
@@ -54,8 +55,10 @@ from scipy.integrate import quad
 
 # -----------------------------------------------------------------------------
 def pnormpdf(angles, mu, sigma):
-    """Evaluate the probability density function for the general projected
-    normal distribution.
+    """General projected normal distribution PDF.
+
+    Evaluate probability density function for the general projected normal
+    distribution.
 
     Parameters
     ----------
@@ -84,6 +87,7 @@ def pnormpdf(angles, mu, sigma):
         However, the exact representation given by Hernandez et al. is
         prone to numerical overflow. To ameliorate the problem we have
         refactored the exponential components of the equation.
+
     """
 
     if isinstance(angles, np.ndarray):
@@ -119,7 +123,9 @@ def pnormpdf(angles, mu, sigma):
 
 # -----------------------------------------------------------------------------
 def pnormcdf(lowerbound, upperbound, mu, sigma):
-    """Evaluate the Pr(lb < theta < ub) for a general projected normal
+    """General projected normal distribution CDF.
+
+    Evaluate the Pr(lb < theta < ub) for a general projected normal
     distribution.
 
     Parameters
@@ -144,6 +150,7 @@ def pnormcdf(lowerbound, upperbound, mu, sigma):
     Raises
     ------
     None
+
     """
 
     try:

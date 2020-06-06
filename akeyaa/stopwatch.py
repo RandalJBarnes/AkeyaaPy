@@ -15,6 +15,7 @@ Version
 06 June 2020
 
 """
+
 import time
 
 class stopwatch():
@@ -38,6 +39,7 @@ class stopwatch():
 
     reset(self)
         Reset the start time.
+
     """
 
     def __init__(self):

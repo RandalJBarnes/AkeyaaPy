@@ -1,4 +1,6 @@
-"""All calls to ArcGIS Pro/ArcPy, and the interactions with any
+"""ArcGIS Pro/ArcPy isolation.
+
+All calls to ArcGIS Pro/ArcPy, and the interactions with any
 ArcGIS Pro/ArcPy data types, are ISOLATED in this module.
 
 Functions
@@ -51,6 +53,7 @@ University of Minnesota
 Version
 -------
 05 June 2020
+
 """
 
 import numpy as np
@@ -110,19 +113,19 @@ ALL_STATES = (
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """The base exception for the module. """
+    """The base exception for the module."""
 
 class VenueNotFoundError(Error):
-    """The requested venue was not found in the database. """
+    """The requested venue was not found in the database."""
 
 class VenueNotUniqueError(Error):
-    """The requested venue is not unique in the database. """
+    """The requested venue is not unique in the database."""
 
 class WellNotFoundError(Error):
-    """The requested well was not found in the database. """
+    """The requested well was not found in the database."""
 
 class WellNotUniqueError(Error):
-    """The requested well is not unique in the database. """
+    """The requested well is not unique in the database."""
 
 
 # ------------------------------------------------------------------
@@ -148,6 +151,7 @@ def get_all_well_data():
         aquifer : str
             The 4-character aquifer abbreviation string, as defined in
             Minnesota Geologic Survey's coding system.
+
     """
 
     ALLWELLS = SOURCE['ALLWELLS']
@@ -184,6 +188,7 @@ def get_well_data_by_venue(venue):
         aquifer : str
             The 4-character aquifer abbreviation string, as defined in
             Minnesota Geologic Survey's coding system.
+
     """
 
     vertices = venue.boundary()

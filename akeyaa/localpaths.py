@@ -9,6 +9,7 @@ University of Minnesota
 Version
 -------
 04 June 2020
+
 """
 
 # Minnesota County Well Index (CWI). Obtained from the Minnesota Department

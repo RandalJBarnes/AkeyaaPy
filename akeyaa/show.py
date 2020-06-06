@@ -23,6 +23,7 @@ University of Minnesota
 Version
 -------
 05 June 2020
+
 """
 
 import math
@@ -35,26 +36,16 @@ import pnorm
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """
-    The base exception for the module.
-    """
-
+    """The base exception for the module."""
 
 class NotFoundError(Error):
-    """
-    Requested item was not found.
-    """
-
+    """Requested item was not found."""
 
 class ArgumentError(Error):
-    """
-    Invalid argument.
-    """
+    """Invalid argument."""
 
 class EmptySelectionError(Error):
-    """
-    There are no wells in the selection.
-    """
+    """There are no wells in the selection."""
 
 
 # -----------------------------------------------------------------------------
@@ -93,6 +84,7 @@ def results_by_venue(venue, results):
     Returns
     -------
     None
+
     """
 
     local_flow_direction(venue, results)
@@ -130,6 +122,7 @@ def local_flow_direction(venue, results):
     Returns
     -------
     None
+
     """
 
     bdry = venue.boundary()
@@ -204,6 +197,7 @@ def local_number_of_wells(venue, results):
     Returns
     -------
     None
+
     """
 
     bdry = venue.boundary()
@@ -254,6 +248,7 @@ def local_head_gradient_magnitude(venue, results):
     Returns
     -------
     None
+
     """
 
     bdry = venue.boundary()

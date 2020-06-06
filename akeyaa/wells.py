@@ -99,6 +99,7 @@ def fetch(xtarget, ytarget, radius, aquifers=None):
         has to extract the data from a .gdb and setup the kd tree.
 
     o   Every call after the first is very fast.
+
     """
 
     if 'welldata' not in fetch.__dict__:

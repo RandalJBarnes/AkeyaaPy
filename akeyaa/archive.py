@@ -20,6 +20,7 @@ University of Minnesota
 Version
 -------
 05 June 2020
+
 """
 
 import bz2
@@ -58,6 +59,7 @@ def saveme(venue, settings, results, pklzfile=None):
     -------
     pklzfile : str
         The compressed pickle filename used.
+
     """
 
     if pklzfile is None:
@@ -99,6 +101,7 @@ def loadme(pklzfile):
 
         results : list of tuples
             (xtarget, ytarget, n, evp, varp)
+
     """
 
     with bz2.open(pklzfile, 'rb') as fileobject:
@@ -127,6 +130,7 @@ def load_and_show_results(pklzfile):
     Returns
     -------
     None
+
     """
 
     venue, _, results = loadme(pklzfile)

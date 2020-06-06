@@ -20,6 +20,7 @@ University of Minnesota
 Version
 -------
 05 June 2020
+
 """
 
 import matplotlib.pyplot as plt
@@ -32,15 +33,11 @@ import venues
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
-    """
-    The base exception for the module.
-    """
-
+    """The base exception for the module."""
 
 class EmptySelectionError(Error):
-    """
-    There are no wells in the selection.
-    """
+    """There are no wells in the selection."""
+
 
 # -----------------------------------------------------------------------------
 def aquifers_by_venue(venue, aquifers=None):
@@ -68,6 +65,7 @@ def aquifers_by_venue(venue, aquifers=None):
         -- count : int
                 The number of wells in the associated aquifer type.
         The list is sorted in descending order by count.
+
     """
 
     bdry = venue.boundary()
@@ -143,6 +141,7 @@ def whereis(venue):
     Returns
     -------
     None
+
     """
 
     state = venues.State()
