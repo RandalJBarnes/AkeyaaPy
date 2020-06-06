@@ -102,7 +102,7 @@ def fetch(xtarget, ytarget, radius, aquifers=None):
 
     """
 
-    if 'welldata' not in fetch.__dict__:
+    if "welldata" not in fetch.__dict__:
         fetch.welldata = gis.get_all_well_data()
         fetch.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in fetch.welldata])
 

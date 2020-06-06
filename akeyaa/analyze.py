@@ -82,13 +82,14 @@ ALL_AQUIFERS = {
     "UREG"
     }
 
-
 # -----------------------------------------------------------------------------
 class Error(Exception):
     """Local base exception."""
 
+
 class ArgumentError(Error):
     """Invalid argument."""
+
 
 class UnknownMethodError(Error):
     """The requested method is not supported."""
@@ -130,12 +131,14 @@ class Settings:
 
     """
 
-    def __init__(self,
-                 aquifers=DEFAULT_AQUIFERS,
-                 method=DEFAULT_METHOD,
-                 radius=DEFAULT_RADIUS,
-                 required=DEFAULT_REQUIRED,
-                 spacing=DEFAULT_SPACING):
+    def __init__(
+        self,
+        aquifers=DEFAULT_AQUIFERS,
+        method=DEFAULT_METHOD,
+        radius=DEFAULT_RADIUS,
+        required=DEFAULT_REQUIRED,
+        spacing=DEFAULT_SPACING,
+    ):
         self.aquifers = aquifers
         self.method = method
         self.radius = radius
@@ -143,20 +146,24 @@ class Settings:
         self.spacing = spacing
 
     def __repr__(self):
-        return ("Settings("
-                "aquifers={0.aquifers!r}, "
-                "method={0.method!r}, "
-                "radius={0.radius!r}, "
-                "required={0.required!r}, "
-                "spacing={0.spacing!r})".format(self))
+        return (
+            "Settings("
+            "aquifers={0.aquifers!r}, "
+            "method={0.method!r}, "
+            "radius={0.radius!r}, "
+            "required={0.required!r}, "
+            "spacing={0.spacing!r})".format(self)
+        )
 
     def __eq__(self, other):
-        return ((self.__class__ == other.__class__) and
-                (self.aquifers == other.aquifers) and
-                (self.method == other.method) and
-                (self.radius == other.radius) and
-                (self.required == other.required) and
-                (self.spacing == other.spacing))
+        return (
+            (self.__class__ == other.__class__)
+            and (self.aquifers == other.aquifers)
+            and (self.method == other.method)
+            and (self.radius == other.radius)
+            and (self.required == other.required)
+            and (self.spacing == other.spacing)
+        )
 
     @property
     def aquifers(self):
@@ -298,7 +305,9 @@ def by_venue(venue, settings):
 
                 # Note that we are converting the zw from [ft] to [m].
                 if len(xw) >= settings.required:
-                    evp, varp = fit_conic_potential(xw-xo, yw-yo, 0.3048*zw, settings.method)
+                    evp, varp = fit_conic_potential(
+                        xw - xo, yw - yo, 0.3048 * zw, settings.method
+                    )
                     results.append((xo, yo, len(xw), evp, varp))
 
     return results
@@ -389,7 +398,7 @@ def fit_conic_potential(x, y, z, method):
 
     """
 
-    X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
+    X = np.stack([x ** 2, y ** 2, x * y, x, y, np.ones(x.shape)], axis=1)
 
     if method == "OLS":
         ols_model = sm.OLS(z, X)

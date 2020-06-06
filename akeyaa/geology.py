@@ -35,6 +35,7 @@ import venues
 class Error(Exception):
     """The base exception for the module."""
 
+
 class EmptySelectionError(Error):
     """There are no wells in the selection."""
 
@@ -90,9 +91,9 @@ def aquifers_by_venue(venue, aquifers=None):
     plt.axis("equal")
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
-    sns.scatterplot(xsel, ysel,
-                    hue=geo_hue, hue_order=geo_hue_order, palette=geo_palette,
-                    zorder=10)
+    sns.scatterplot(
+        xsel, ysel, hue=geo_hue, hue_order=geo_hue_order, palette=geo_palette, zorder=10
+    )
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
@@ -116,18 +117,17 @@ def geologic_color_map(aquifers):
         "Cxxx": "limegreen",
         "Pxxx": "crimson",
         "Mxxx": "cornflowerblue",
-        "other": "darkblue"
+        "other": "darkblue",
     }
 
     geo_hue = []
     for aqui in aquifers:
         if aqui[0] in {"Q", "K", "D", "O", "C", "P", "M"}:
-            geo_hue.append(aqui[0] + 'xxx')
+            geo_hue.append(aqui[0] + "xxx")
         else:
-            geo_hue.append('other')
+            geo_hue.append("other")
 
     return (geo_hue, geo_hue_order, geo_palette)
-
 
 
 # -----------------------------------------------------------------------------

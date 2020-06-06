@@ -76,53 +76,55 @@ from localpaths import SOURCE
 #
 # If the required attributes to be included in <welldata> change, then these
 # few lines of code will need to be updated to reflect the change.
-ATTRIBUTES = ["allwells.SHAPE",
-              "C5WL.MEAS_ELEV",
-              "allwells.AQUIFER"]
+ATTRIBUTES = ["allwells.SHAPE", "C5WL.MEAS_ELEV", "allwells.AQUIFER"]
 
 # -----------------------------------------------------------------------------
 # Wells that satisfy all of these criteria are called "authorized wells".
 # These include: must have at least one recorded static water level (SWL),
 # must have an identified aquifer, and must be located.
 WHERE = (
-        "(C5WL.MEAS_ELEV is not NULL) AND "
-        "(allwells.AQUIFER is not NULL) AND "
-        "(allwells.UTME is not NULL) AND "
-        "(allwells.UTMN is not NULL)"
-        )
+    "(C5WL.MEAS_ELEV is not NULL) AND "
+    "(allwells.AQUIFER is not NULL) AND "
+    "(allwells.UTME is not NULL) AND "
+    "(allwells.UTMN is not NULL)"
+)
 
 # -----------------------------------------------------------------------------
 # This is a list of all state combinations in the USGS hydrologic databases
 # that include 'MN'. This is a klude to cover for arcpy's weak SQL tools.
 ALL_STATES = (
-        "("
-        "(STATES = 'CN,MI,MN,WI') OR "
-        "(STATES = 'CN,MN') OR "
-        "(STATES = 'CN,MN,ND') OR "
-        "(STATES = 'IA,MN') OR "
-        "(STATES = 'IA,MN,NE,SD') OR "
-        "(STATES = 'IA,MN,SD') OR "
-        "(STATES = 'IA,MN,WI') OR "
-        "(STATES = 'MN') OR "
-        "(STATES = 'MN,ND') OR "
-        "(STATES = 'MN,ND,SD') OR "
-        "(STATES = 'MN,SD') OR "
-        "(STATES = 'MN,WI'))"
-        )
+    "("
+    "(STATES = 'CN,MI,MN,WI') OR "
+    "(STATES = 'CN,MN') OR "
+    "(STATES = 'CN,MN,ND') OR "
+    "(STATES = 'IA,MN') OR "
+    "(STATES = 'IA,MN,NE,SD') OR "
+    "(STATES = 'IA,MN,SD') OR "
+    "(STATES = 'IA,MN,WI') OR "
+    "(STATES = 'MN') OR "
+    "(STATES = 'MN,ND') OR "
+    "(STATES = 'MN,ND,SD') OR "
+    "(STATES = 'MN,SD') OR "
+    "(STATES = 'MN,WI'))"
+)
 
 
 # -----------------------------------------------------------------------------
 class Error(Exception):
     """The base exception for the module."""
 
+
 class VenueNotFoundError(Error):
     """The requested venue was not found in the database."""
+
 
 class VenueNotUniqueError(Error):
     """The requested venue is not unique in the database."""
 
+
 class WellNotFoundError(Error):
     """The requested well was not found in the database."""
+
 
 class WellNotUniqueError(Error):
     """The requested well is not unique in the database."""
@@ -154,8 +156,8 @@ def get_all_well_data():
 
     """
 
-    ALLWELLS = SOURCE['ALLWELLS']
-    C5WL = SOURCE['C5WL']
+    ALLWELLS = SOURCE["ALLWELLS"]
+    C5WL = SOURCE["C5WL"]
 
     table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
     with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
@@ -196,15 +198,16 @@ def get_well_data_by_venue(venue):
     array = arcpy.Array([arcpy.Point(row[0], row[1]) for row in vertices])
     arcpy_polygon = arcpy.Geometry("polygon", array, sr_out)
 
-    ALLWELLS = SOURCE['ALLWELLS']
-    C5WL = SOURCE['C5WL']
+    ALLWELLS = SOURCE["ALLWELLS"]
+    C5WL = SOURCE["C5WL"]
 
     table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
     located_wells = arcpy.SelectLayerByLocation_management(
-            table,
-            select_features=arcpy_polygon,
-            overlap_type="WITHIN",
-            selection_type="NEW_SELECTION")
+        table,
+        select_features=arcpy_polygon,
+        overlap_type="WITHIN",
+        selection_type="NEW_SELECTION",
+    )
     with arcpy.da.SearchCursor(located_wells, ATTRIBUTES, WHERE) as cursor:
         welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
     return welldata
@@ -214,7 +217,7 @@ def get_well_data_by_venue(venue):
 def get_well_location(relateid):
     """Get a single well location and aquifer by relateid."""
 
-    source = SOURCE['ALLWELLS']
+    source = SOURCE["ALLWELLS"]
     what = ["SHAPE", "AQUIFER"]
     where = f"(RELATEID = '{relateid}')"
 

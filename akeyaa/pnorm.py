@@ -96,27 +96,26 @@ def pnormpdf(angles, mu, sigma):
         pdf = np.empty(len(angles))
     else:
         angles = [angles]
-        pdf = np.empty([1, ])
+        pdf = np.empty([1,])
 
     # Manually compute the det and inv of the 2x2 matrix.
-    detS = sigma[0, 0]*sigma[1, 1] - sigma[0, 1]*sigma[1, 0]
-    Sinv = np.array([[sigma[1, 1], -sigma[0, 1]],
-                     [-sigma[1, 0], sigma[0, 0]]]) / detS
+    detS = sigma[0, 0] * sigma[1, 1] - sigma[0, 1] * sigma[1, 0]
+    Sinv = np.array([[sigma[1, 1], -sigma[0, 1]], [-sigma[1, 0], sigma[0, 0]]]) / detS
 
     C = mu.T @ Sinv @ mu
-    D = 2*pi*sqrt(detS)
+    D = 2 * pi * sqrt(detS)
 
     for j, theta in enumerate(angles):
         r = np.array([[cos(theta)], [sin(theta)]])
         A = r.T @ Sinv @ r
         B = r.T @ Sinv @ mu
-        E = B/sqrt(A)
+        E = B / sqrt(A)
 
         # Note: this will still overflow for (E*E - C) > 700, or so.
         if E < 5:
-            pdf[j] = exp(-C/2) * (1 + E * norm.cdf(E)/norm.pdf(E)) / (A*D)
+            pdf[j] = exp(-C / 2) * (1 + E * norm.cdf(E) / norm.pdf(E)) / (A * D)
         else:
-            pdf[j] = E * sqrt(2*pi) * exp((E*E - C)/2) / (A*D)
+            pdf[j] = E * sqrt(2 * pi) * exp((E * E - C) / 2) / (A * D)
 
     return pdf
 
@@ -154,8 +153,7 @@ def pnormcdf(lowerbound, upperbound, mu, sigma):
     """
 
     try:
-        cdf = quad(lambda theta: pnormpdf(theta, mu, sigma),
-                   lowerbound, upperbound)[0]
+        cdf = quad(lambda theta: pnormpdf(theta, mu, sigma), lowerbound, upperbound)[0]
     except OverflowError:
         cdf = 1.0
     except:

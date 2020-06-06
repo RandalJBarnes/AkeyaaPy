@@ -30,7 +30,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-#-----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 class Shape(ABC):
     """The abstract base class for all shapes.
 
@@ -76,7 +76,7 @@ class Shape(ABC):
         raise NotImplementedError
 
 
-#-----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 class Circle(Shape):
     """A circle.
 
@@ -91,8 +91,13 @@ class Circle(Shape):
     """
 
     NUMBER_OF_VERTICES = 100
-    UNIT_VERTICES = np.array([(np.cos(theta), np.sin(theta))
-        for theta in np.linspace(0, 2*np.pi, NUMBER_OF_VERTICES)], dtype=float)
+    UNIT_VERTICES = np.array(
+        [
+            (np.cos(theta), np.sin(theta))
+            for theta in np.linspace(0, 2 * np.pi, NUMBER_OF_VERTICES)
+        ],
+        dtype=float,
+    )
 
     def __init__(self, center, radius):
         self.center = np.array([center[0], center[1]], dtype=float)
@@ -100,35 +105,36 @@ class Circle(Shape):
 
     def __repr__(self):
         return (
-                f"{self.__class__.__name__}("
-                f"center = {self.center!r}, "
-                f"radius = {self.radius!r})"
+            f"{self.__class__.__name__}("
+            f"center = {self.center!r}, "
+            f"radius = {self.radius!r})"
         )
 
     def __str__(self):
         return (
-                f"Circle: "
-                f"[{self.center[0]}, "
-                f"{self.center[1]}], "
-                f"{self.radius}"
-       )
+            f"Circle: " f"[{self.center[0]}, " f"{self.center[1]}], " f"{self.radius}"
+        )
 
     def __eq__(self, other):
         """Return True if the two Circle are equal."""
-        return ((self.__class__ == other.__class__) and
-                (self.center == other.center) and
-                (self.radius == other.radius))
+        return (
+            (self.__class__ == other.__class__)
+            and (self.center == other.center)
+            and (self.radius == other.radius)
+        )
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
-        return Circle.UNIT_VERTICES*self.radius + self.center
+        return Circle.UNIT_VERTICES * self.radius + self.center
 
     def extent(self):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
-        return [self.center[0]-self.radius,
-                self.center[0]+self.radius,
-                self.center[1]-self.radius,
-                self.center[1]+self.radius]
+        return [
+            self.center[0] - self.radius,
+            self.center[0] + self.radius,
+            self.center[1] - self.radius,
+            self.center[1] + self.radius,
+        ]
 
     def centroid(self):
         """Return the centroid as a point."""
@@ -136,18 +142,20 @@ class Circle(Shape):
 
     def area(self):
         """Return the area [m^2]."""
-        return np.pi * self.radius**2
+        return np.pi * self.radius ** 2
 
     def perimeter(self):
         """Return the perimeter [m]."""
-        return 2*np.pi * self.radius
+        return 2 * np.pi * self.radius
 
     def contains(self, point):
         """Return True if the Circle contains the point and False otherwise."""
-        return np.hypot(point[0]-self.center[0], point[1]-self.center[1]) < self.radius
+        return (
+            np.hypot(point[0] - self.center[0], point[1] - self.center[1]) < self.radius
+        )
 
 
-#-----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 class Rectangle(Shape):
     """An axis-aligned rectangle.
 
@@ -175,34 +183,38 @@ class Rectangle(Shape):
 
     def __repr__(self):
         return (
-                f"{self.__class__.__name__}("
-                f"xmin = {self.xmin!r}, "
-                f"xmax = {self.xmax!r}, "
-                f"ymin = {self.ymin!r}, "
-                f"ymax = {self.ymax!r})")
+            f"{self.__class__.__name__}("
+            f"xmin = {self.xmin!r}, "
+            f"xmax = {self.xmax!r}, "
+            f"ymin = {self.ymin!r}, "
+            f"ymax = {self.ymax!r})"
+        )
 
     def __str__(self):
-        return (
-                f"Rectangle: "
-                f"[{self.xmin}, {self.xmax}, {self.ymin}, {self.ymax}]")
+        return f"Rectangle: " f"[{self.xmin}, {self.xmax}, {self.ymin}, {self.ymax}]"
 
     def __eq__(self, other):
         """Return True if the two Rectangles are equal."""
-        return ((self.__class__ == other.__class__) and
-                (self.xmin == other.xmin) and
-                (self.xmax == other.xmax) and
-                (self.ymin == other.ymin) and
-                (self.ymax == other.ymax))
+        return (
+            (self.__class__ == other.__class__)
+            and (self.xmin == other.xmin)
+            and (self.xmax == other.xmax)
+            and (self.ymin == other.ymin)
+            and (self.ymax == other.ymax)
+        )
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
-        return np.array([
+        return np.array(
+            [
                 [self.xmin, self.ymin],
                 [self.xmax, self.ymin],
                 [self.xmax, self.ymax],
                 [self.xmin, self.ymax],
-                [self.xmin, self.ymin]
-                ], dtype=float)
+                [self.xmin, self.ymin],
+            ],
+            dtype=float,
+        )
 
     def extent(self):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
@@ -210,7 +222,9 @@ class Rectangle(Shape):
 
     def centroid(self):
         """Return the centroid as a point."""
-        return np.array([(self.xmax+self.xmin)/2, (self.ymax+self.ymin)/2], dtype=float)
+        return np.array(
+            [(self.xmax + self.xmin) / 2, (self.ymax + self.ymin) / 2], dtype=float
+        )
 
     def area(self):
         """Return the area [m^2]."""
@@ -218,14 +232,14 @@ class Rectangle(Shape):
 
     def perimeter(self):
         """Return the perimeter [m]."""
-        return 2*(self.xmax - self.xmin) + 2*(self.ymax - self.ymin)
+        return 2 * (self.xmax - self.xmin) + 2 * (self.ymax - self.ymin)
 
     def contains(self, point):
         """Return True if the Rectangle contains the point and False otherwise."""
         return (self.xmin < point[0] < self.xmax) and (self.ymin < point[1] < self.ymax)
 
 
-#-----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
 class Polygon(Shape):
     """A single, non-overlapping, but not necessarily convex, polygon.
 
@@ -252,8 +266,7 @@ class Polygon(Shape):
 
     def __eq__(self, other):
         """Return True if the two Polygons are equal."""
-        return ((self.__class__ == other.__class__) and
-                (self.vertices == other.vertices))
+        return (self.__class__ == other.__class__) and (self.vertices == other.vertices)
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
@@ -273,13 +286,13 @@ class Polygon(Shape):
         cx = 0.0
         cy = 0.0
 
-        for i in range(len(self.vertices)-1):
-            cx += (x[i]+x[i+1]) * (x[i]*y[i+1] - x[i+1]*y[i])
-            cy += (y[i]+y[i+1]) * (x[i]*y[i+1] - x[i+1]*y[i])
+        for i in range(len(self.vertices) - 1):
+            cx += (x[i] + x[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
+            cy += (y[i] + y[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
 
         area = self.area()
-        cx /= (6*area)
-        cy /= (6*area)
+        cx /= 6 * area
+        cy /= 6 * area
         return np.array([cx, cy], dtype=float)
 
     def area(self):
@@ -288,8 +301,8 @@ class Polygon(Shape):
         y = self.vertices[:, 1]
 
         area = 0.0
-        for i in range(len(self.vertices)-1):
-            area += x[i]*y[i+1] - x[i+1]*y[i]
+        for i in range(len(self.vertices) - 1):
+            area += x[i] * y[i + 1] - x[i + 1] * y[i]
         area /= 2
         return area
 
@@ -299,8 +312,8 @@ class Polygon(Shape):
         y = self.vertices[:, 1]
 
         length = 0.0
-        for i in range(len(self.vertices)-1):
-            length += np.hypot(x[i+1]-x[i], y[i+1]-y[i])
+        for i in range(len(self.vertices) - 1):
+            length += np.hypot(x[i + 1] - x[i], y[i + 1] - y[i])
         return length
 
     def contains(self, point):
@@ -314,7 +327,7 @@ class Polygon(Shape):
                 if point[1] <= max(ya, yb):
                     if point[0] <= max(xa, xb):
                         if ya != yb:
-                            xints = (point[1]-ya)*(xb-xa)/(yb-ya) + xa
+                            xints = (point[1] - ya) * (xb - xa) / (yb - ya) + xa
                         if xa == xb or point[0] <= xints:
                             inside = not inside
             xa, ya = xb, yb

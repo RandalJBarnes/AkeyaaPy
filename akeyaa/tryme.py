@@ -23,24 +23,24 @@ if __name__ == "__main__":
 
     rolex = stopwatch()
 
-    wash = venues.County(abbr='WASH')
-    rolex.read('venues')
+    wash = venues.County(abbr="WASH")
+    rolex.read("venues")
 
     geology.aquifers_by_venue(wash)
-    rolex.read('geology')
+    rolex.read("geology")
 
     settings = analyze.Settings(spacing=1000)
     results = analyze.by_venue(wash, settings)
-    rolex.read('analyze')
+    rolex.read("analyze")
 
     show.results_by_venue(wash, results)
-    rolex.read('show')
+    rolex.read("show")
 
     pklzfile = archive.saveme(wash, settings, results)
-    rolex.read('archive')
+    rolex.read("archive")
 
     archive.load_and_show_results(pklzfile)
-    rolex.read('load')
+    rolex.read("load")
 
     os.remove(pklzfile)
-    rolex.read('final')
+    rolex.read("final")

@@ -38,11 +38,14 @@ import pnorm
 class Error(Exception):
     """The base exception for the module."""
 
+
 class NotFoundError(Error):
     """Requested item was not found."""
 
+
 class ArgumentError(Error):
     """Invalid argument."""
+
 
 class EmptySelectionError(Error):
     """There are no wells in the selection."""
@@ -141,12 +144,12 @@ def local_flow_direction(venue, results):
         mu = evp[3:5]
         sigma = varp[3:5, 3:5]
 
-        xvec[i] = -mu[0]/np.hypot(mu[0], mu[1])
-        yvec[i] = -mu[1]/np.hypot(mu[0], mu[1])
+        xvec[i] = -mu[0] / np.hypot(mu[0], mu[1])
+        yvec[i] = -mu[1] / np.hypot(mu[0], mu[1])
 
         theta = math.atan2(mu[1], mu[0])
-        lowerbound = theta - np.pi/18.0
-        upperbound = theta + np.pi/18.0
+        lowerbound = theta - np.pi / 18.0
+        upperbound = theta + np.pi / 18.0
 
         try:
             p10[i] = pnorm.pnormcdf(lowerbound, upperbound, mu, sigma)
@@ -159,8 +162,7 @@ def local_flow_direction(venue, results):
     plt.axis("equal")
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
-    plt.quiver(xgrd, ygrd, xvec, yvec, p10,
-               width=0.0018, zorder=10, cmap='Greens')
+    plt.quiver(xgrd, ygrd, xvec, yvec, p10, width=0.0018, zorder=10, cmap="Greens")
     cbar = plt.colorbar()
     cbar.ax.set_title("p10")
 
@@ -262,7 +264,7 @@ def local_head_gradient_magnitude(venue, results):
         magnitude[i] = np.hypot(mu[0], mu[1])
 
     jdx = np.argsort(np.argsort(magnitude))
-    quantile = (jdx+0.5)/len(jdx)
+    quantile = (jdx + 0.5) / len(jdx)
 
     plt.figure()
     plt.axis("equal")

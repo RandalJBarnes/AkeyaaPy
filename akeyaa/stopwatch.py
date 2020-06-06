@@ -18,7 +18,8 @@ Version
 
 import time
 
-class stopwatch():
+
+class stopwatch:
     """A simple stopwatch.
 
     Attributes

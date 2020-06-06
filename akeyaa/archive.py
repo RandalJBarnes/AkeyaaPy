@@ -63,14 +63,10 @@ def saveme(venue, settings, results, pklzfile=None):
     """
 
     if pklzfile is None:
-        pklzfile = 'Akeyaa' + datetime.now().strftime('%Y%m%dT%H%M%S') + '.pklz'
+        pklzfile = "Akeyaa" + datetime.now().strftime("%Y%m%dT%H%M%S") + ".pklz"
 
-    archive = {
-        'venue': venue,
-        'settings': settings,
-        'results': results
-        }
-    with bz2.open(pklzfile, 'wb') as fileobject:
+    archive = {"venue": venue, "settings": settings, "results": results}
+    with bz2.open(pklzfile, "wb") as fileobject:
         pickle.dump(archive, fileobject)
 
     return pklzfile
@@ -104,12 +100,12 @@ def loadme(pklzfile):
 
     """
 
-    with bz2.open(pklzfile, 'rb') as fileobject:
+    with bz2.open(pklzfile, "rb") as fileobject:
         archive = pickle.load(fileobject)
 
-    venue = archive['venue']
-    settings = archive['settings']
-    results = archive['results']
+    venue = archive["venue"]
+    settings = archive["settings"]
+    results = archive["results"]
 
     return (venue, settings, results)
 

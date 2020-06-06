@@ -77,8 +77,10 @@ from geometry import Circle, Polygon, Rectangle
 class Error(Exception):
     """The base exception for the module."""
 
+
 class MissingArgumentError(Error):
     """The call is missing one or more arguments."""
+
 
 class ConflictingArgumentError(Error):
     """Two or more of the arguments are in conflict."""
@@ -113,9 +115,11 @@ class City(Polygon):
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"gnis_id = '{self.code}')")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"gnis_id = '{self.code}')"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -153,9 +157,11 @@ class Township(Polygon):
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"gnis_id = '{self.code}')")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"gnis_id = '{self.code}')"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -187,15 +193,19 @@ class County(Polygon):
     """
 
     def __init__(self, *, name=None, abbr=None, cty_fips=None):
-        name, code, vertices = gis.get_county_data(name=name, abbr=abbr, cty_fips=cty_fips)
+        name, code, vertices = gis.get_county_data(
+            name=name, abbr=abbr, cty_fips=cty_fips
+        )
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"cty_fips = {self.code})")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"cty_fips = {self.code})"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -233,9 +243,11 @@ class Watershed(Polygon):
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"huc10 = '{self.code}')")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"huc10 = '{self.code}')"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -273,9 +285,11 @@ class Subregion(Polygon):
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"huc8 = '{self.code}')")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"huc8 = '{self.code}')"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -313,9 +327,11 @@ class State(Polygon):
         Polygon.__init__(self, vertices)
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"fips = {self.code})")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"fips = {self.code})"
+        )
 
     def __eq__(self, other):
         return (self.__class__ == other.__class__) and (self.code == other.code)
@@ -369,16 +385,19 @@ class Neighborhood(Circle):
             self.name = "Neighborhood"
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"center = {self.center}, "
-                f"radius = {self.radius})")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"center = {self.center}, "
+            f"radius = {self.radius})"
+        )
 
     def __eq__(self, other):
         return (
-                (self.__class__ == other.__class__) and
-                (self.center == other.center) and
-                (self.radius == other.radius))
+            (self.__class__ == other.__class__)
+            and (self.center == other.center)
+            and (self.radius == other.radius)
+        )
 
     def fullname(self):
         return f"User Defined: {self.name}"
@@ -407,10 +426,20 @@ class Frame(Rectangle):
 
     """
 
-    def __init__(self, *, name=None,
-                 xmin=None, xmax=None, ymin=None, ymax=None,
-                 lowerleft=None, width=None, height=None,
-                 upperright=None, center=None):
+    def __init__(
+        self,
+        *,
+        name=None,
+        xmin=None,
+        xmax=None,
+        ymin=None,
+        ymax=None,
+        lowerleft=None,
+        width=None,
+        height=None,
+        upperright=None,
+        center=None,
+    ):
         """If specified,
             xmin, xmax, ymin, ymax, width, height -> float,
             lowerleft, upperright, center -> indexable (float, float).
@@ -441,10 +470,10 @@ class Frame(Rectangle):
                 ymin = upperright[1] - height
 
         if center is not None:
-            xmin = center[0] - width/2
-            xmax = center[0] + width/2
-            ymin = center[1] - height/2
-            ymax = center[1] + height/2
+            xmin = center[0] - width / 2
+            xmax = center[0] + width / 2
+            ymin = center[1] - height / 2
+            ymax = center[1] + height / 2
 
         Rectangle.__init__(self, xmin, xmax, ymin, ymax)
 
@@ -454,20 +483,23 @@ class Frame(Rectangle):
             self.name = "Frame"
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"xmin = {self.xmin}, "
-                f"xmax = {self.xmax}, "
-                f"ymin = {self.ymin}, "
-                f"ymax = {self.ymax})")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"xmin = {self.xmin}, "
+            f"xmax = {self.xmax}, "
+            f"ymin = {self.ymin}, "
+            f"ymax = {self.ymax})"
+        )
 
     def __eq__(self, other):
         return (
-                (self.__class__ == other.__class__) and
-                (self.xmin == other.xmin) and
-                (self.xmax == other.xmax) and
-                (self.ymin == other.ymin) and
-                (self.ymax == other.ymax))
+            (self.__class__ == other.__class__)
+            and (self.xmin == other.xmin)
+            and (self.xmax == other.xmax)
+            and (self.ymin == other.ymin)
+            and (self.ymax == other.ymax)
+        )
 
     def fullname(self):
         return f"User Defined: {self.name}"
@@ -501,13 +533,14 @@ class Patch(Polygon):
             self.name = "Patch"
 
     def __repr__(self):
-        return (f"{self.__class__.__name__}("
-                f"name = '{self.name}', "
-                f"vertices = {self.vertices})")
+        return (
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"vertices = {self.vertices})"
+        )
 
     def __eq__(self, other):
-        return ((self.__class__ == other.__class__) and
-                (self.vertices == other.vertices))
+        return (self.__class__ == other.__class__) and (self.vertices == other.vertices)
 
     def fullname(self):
         return f"User Defined: {self.name}"
