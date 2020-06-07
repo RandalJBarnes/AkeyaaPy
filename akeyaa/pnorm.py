@@ -12,41 +12,30 @@ pnormcdf(lb, ub, mu, sigma):
 
 Notes
 -----
-o   The variance/covariance matrix, sigma, must be positive definite.
+The variance/covariance matrix, sigma, must be positive definite.
 
-o   The general projected normal distribution is a 2D circular distribution.
-    The domain is [0, 2pi]. See, for example, Lark [2014].
+The general projected normal distribution is a 2D circular distribution.
+The domain is [0, 2pi]. See, for example, Lark [2014].
 
-o   See Justus [1978, (4-11)] or Hernandez et al. [2017, (1)] for details on
-    the general projected normal distribution pdf.
+See Justus [1978, (4-11)] or Hernandez et al. [2017, (1)] for details on
+the general projected normal distribution pdf.
 
 References
 ----------
-o   D. Hernandez-Stumpfhauser, F. J. Breidt, and M. J. van der Woerd.
-    The General Projected Normal Distribution of Arbitrary Dimension:
-    Modeling and Bayesian Inference Bayesian Analysis. Institute of
-    Mathematical Statistics, 12:113-133, 2017.
+- D. Hernandez-Stumpfhauser, F. J. Breidt, and M. J. van der Woerd.
+The General Projected Normal Distribution of Arbitrary Dimension:
+Modeling and Bayesian Inference Bayesian Analysis. Institute of
+Mathematical Statistics, 12:113-133, 2017.
 
-o   C. G. Justus. Winds and Wind System Performance. Solar energy.
-    Franklin Institute Press, Philadelphia, Pennsylvania, 1978. ISBN
-    9780891680062. 120 pp.
+- C. G. Justus. Winds and Wind System Performance. Solar energy.
+Franklin Institute Press, Philadelphia, Pennsylvania, 1978. ISBN
+9780891680062. 120 pp.
 
-o   R. M. Lark, D. Clifford, and C. N. Waters. Modelling complex geological
-    circular data with the projected normal distribution and mixtures of
-    von Mises distributions. Solid Earth, Copernicus GmbH, 5:631-639, 2014.
-
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-31 May 2020
+- R. M. Lark, D. Clifford, and C. N. Waters. Modelling complex geological
+circular data with the projected normal distribution and mixtures of
+von Mises distributions. Solid Earth, Copernicus GmbH, 5:631-639, 2014.
 
 """
-
 from math import cos, sin, exp, sqrt, pi
 import numpy as np
 from scipy.stats import norm
@@ -77,16 +66,12 @@ def pnormpdf(angles, mu, sigma):
     pdf : ndarray, shape (M, )
         The array of pdf values at each of the angles specified in `alpha`.
 
-    Raises
-    ------
-    None
-
     Notes
     -----
-    o   This implementation is based on (1) in Hernandez et al. [2017].
-        However, the exact representation given by Hernandez et al. is
-        prone to numerical overflow. To ameliorate the problem we have
-        refactored the exponential components of the equation.
+    This implementation is based on (1) in Hernandez et al. [2017].
+    However, the exact representation given by Hernandez et al. is
+    prone to numerical overflow. To ameliorate the problem we have
+    refactored the exponential components of the equation.
 
     """
 
@@ -146,12 +131,7 @@ def pnormcdf(lowerbound, upperbound, mu, sigma):
     cdf : float
         Pr(lowerbound < alpha < upperbound)
 
-    Raises
-    ------
-    None
-
     """
-
     try:
         cdf = quad(lambda theta: pnormpdf(theta, mu, sigma), lowerbound, upperbound)[0]
     except OverflowError:

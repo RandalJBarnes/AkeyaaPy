@@ -283,17 +283,17 @@ class Polygon(Shape):
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
-        cx = 0.0
-        cy = 0.0
+        sumx = 0.0
+        sumy = 0.0
 
         for i in range(len(self.vertices) - 1):
-            cx += (x[i] + x[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
-            cy += (y[i] + y[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
+            sumx += (x[i] + x[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
+            sumy += (y[i] + y[i + 1]) * (x[i] * y[i + 1] - x[i + 1] * y[i])
 
         area = self.area()
-        cx /= 6 * area
-        cy /= 6 * area
-        return np.array([cx, cy], dtype=float)
+        sumx /= 6 * area
+        sumy /= 6 * area
+        return np.array([sumx, sumy], dtype=float)
 
     def area(self):
         """Return the area [m^2]."""

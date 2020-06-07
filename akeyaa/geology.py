@@ -1,9 +1,9 @@
-"""Akeyaa visualization tools.
+"""Plot the geolocial information within a venue.
 
 Functions
 ---------
 aquifers_by_venue(venue, aquifers)
-    Plot the wells in the vnue coded by aquifer.
+    Plot the wells in the venue coded by aquifer.
 
 geologic_color_map(aquifers)
     Map the aquifer code to colors.
@@ -11,18 +11,7 @@ geologic_color_map(aquifers)
 whereis(venue):
     Plot the venue's shape over the state's ploygon.
 
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-05 June 2020
-
 """
-
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -68,7 +57,6 @@ def aquifers_by_venue(venue, aquifers=None):
         The list is sorted in descending order by count.
 
     """
-
     bdry = venue.boundary()
     welldata = gis.get_well_data_by_venue(venue)
 
@@ -90,7 +78,7 @@ def aquifers_by_venue(venue, aquifers=None):
     plt.figure()
     plt.axis("equal")
 
-    plt.fill(bdry[:, 0], bdry[:, 1], "0.90")
+    plt.fill(bdry[:, 0], bdry[:, 1], "0.80")
     sns.scatterplot(
         xsel, ysel, hue=geo_hue, hue_order=geo_hue_order, palette=geo_palette, zorder=10
     )
@@ -106,8 +94,26 @@ def aquifers_by_venue(venue, aquifers=None):
 
 # -----------------------------------------------------------------------------
 def geologic_color_map(aquifers):
-    """Map the aquifer code to colors."""
+    """Map the aquifer codes to colors.
 
+    Parameters
+    ----------
+    aquifers : list
+        List of four-character aquifer abbreviation strings, as defined in
+        Minnesota Geologic Survey's coding system.
+
+    Returns
+    -------
+    geo_hue : list[str]
+        List of the color category for each aquifer.
+
+    geo_hue_order : list[str]
+        List of geologically-related color categories in order.
+
+    geo_palette : dict{str : str}
+        Dictionary of colors for each geologically-related color category.
+
+    """
     geo_hue_order = ["Qxxx", "Kxxx", "Dxxx", "Oxxx", "Cxxx", "Pxxx", "Mxxx", "other"]
     geo_palette = {
         "Qxxx": "gold",
@@ -143,7 +149,6 @@ def whereis(venue):
     None
 
     """
-
     state = venues.State()
     state_bdry = state.boundary()
     venue_bdry = venue.boundary()

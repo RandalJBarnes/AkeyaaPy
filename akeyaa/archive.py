@@ -3,26 +3,15 @@
 Functions
 ---------
 saveme(venue, settings, results, pklzfile)
-    Save an Akeyaa run to a compressed pickle file.
+    Save an Akeyaa run to the compressed pickle file.
 
 loadme(pklzfile)
     Load an Akeyaa run from a compressed pickle file created by saveme.
 
-load_and_show_results(pklzfile):
+load_and_show(pklzfile):
     Load an Akeyaa run and plot the results.
 
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-05 June 2020
-
 """
-
 import bz2
 from datetime import datetime
 import pickle
@@ -34,20 +23,22 @@ import show
 def saveme(venue, settings, results, pklzfile=None):
     """Save an Akeyaa run to a compressed pickle file.
 
-    Save an Akeyaa run (venue, settings, results) to the specified compressed
-    pickle file. The bz2 (Burrows-Wheeler) compression algorithm is used. If
-    no pickle file is specified a unique filename, based on the current date
-    and time, is created and used.
+    Save an Akeyaa run (`venue`, `settings`, `results`) to the specified
+    compressed pickle file `pklzfile`. If no pickle file is specified, a
+    unique filename, based on the current date and time, is created and used.
 
     Parameters
     ----------
-    venue: venues.Venue (concrete subclass)
-        An instance of a concrete subclass of venues.Venue, e.g. City.
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated and detailed in venues.py.
+        For example: a 'City', 'Watershed', or 'Neighborhood'.
 
-    settings : dict
-        A complete or partial set of akeyaa_settings.
+    settings : type
+        A complete, validated set of akeyaa parameters, as enumerated and
+        detailed in parameters.py.
 
-    results : list of tuples
+    results : list[tuples]
         (xtarget, ytarget, n, evp, varp)
 
     pklzfile : str, optional
@@ -60,8 +51,11 @@ def saveme(venue, settings, results, pklzfile=None):
     pklzfile : str
         The compressed pickle filename used.
 
-    """
+    Notes
+    -----
+    The bz2 (Burrows-Wheeler) compression algorithm is used.
 
+    """
     if pklzfile is None:
         pklzfile = "Akeyaa" + datetime.now().strftime("%Y%m%dT%H%M%S") + ".pklz"
 
@@ -76,9 +70,6 @@ def saveme(venue, settings, results, pklzfile=None):
 def loadme(pklzfile):
     """Load an Akeyaa run from a compressed pickle file created by saveme.
 
-    Load an Akeyaa run from the specified compressed pickle file created
-    by show.saveme.
-
     Parameters
     ----------
     pklzfile : str, optional
@@ -87,19 +78,19 @@ def loadme(pklzfile):
 
     Returns
     -------
-    tuple : (venue, settings, results)
+    venue : type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated and detailed in venues.py.
+        For example: a 'City', 'Watershed', or 'Neighborhood'.
 
-        venue: venues.Venue (concrete subclass)
-            An instance of a concrete subclass of venues.Venue, e.g. City.
+    settings : type
+        A complete, validated set of akeyaa parameters, as enumerated and
+        detailed in parameters.py.
 
-        settings : dict
-            A complete or partial set of akeyaa_settings.
-
-        results : list of tuples
-            (xtarget, ytarget, n, evp, varp)
+    results : list[tuples]
+        (xtarget, ytarget, n, evp, varp)
 
     """
-
     with bz2.open(pklzfile, "rb") as fileobject:
         archive = pickle.load(fileobject)
 
@@ -111,7 +102,7 @@ def loadme(pklzfile):
 
 
 # -----------------------------------------------------------------------------
-def load_and_show_results(pklzfile):
+def load_and_show(pklzfile):
     """Load an Akeyaa run and plot the results.
 
     Load an Akeyaa run from the specified compressed pickle file created
@@ -128,6 +119,5 @@ def load_and_show_results(pklzfile):
     None
 
     """
-
     venue, _, results = loadme(pklzfile)
-    show.results_by_venue(venue, results)
+    show.by_venue(venue, results)

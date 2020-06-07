@@ -3,34 +3,34 @@
 Classes
 -------
 City(Polygon)
-    City duck-type of Venue.
+    City Venue-by-duck-type.
 
 Township(Polygon)
-    Township duck-type of Venue.
+    Township Venue-by-duck-type.
 
 County(Polygon)
-    County duck-type of Venue.
+    County Venue-by-duck-type.
 
 Watershed(Polygon)
-    Watershed duck-type of Venue.
+    Watershed Venue-by-duck-type.
 
 Subregion(Polygon)
-    Subregion duck-type of Venue.
+    Subregion Venue-by-duck-type.
 
 Neighborhood(Circle)
-    Neighborhood duck-type of Venue.
+    Neighborhood Venue-by-duck-type.
 
 Frame(Rectangle)
-    Rectangular frame duck-type of Venue.
+    Rectangular frame Venue-by-duck-type.
 
 Patch(Polygon)
-    A general polygonal patch duck-type of Venue.
+    A general polygonal patch Venue-by-duck-type.
 
 Notes
 -----
-o   All of the classes in this module are of the informal type Venue.
-    Although it is not enforced by subclassing, any Venue must have
-    the following methods:
+All of the classes in this module are of the informal type Venue.
+Although it is not enforced by subclassing, any Venue must have
+the following methods:
 
     __eq__(self, other) -> bool
         Return True is the two venues are the same.
@@ -57,18 +57,7 @@ o   All of the classes in this module are of the informal type Venue.
     fullname(self) -> str
         Return a form of the venue's name appropriate for a plot title.
 
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-06 June 2020
-
 """
-
 import gis
 from geometry import Circle, Polygon, Rectangle
 
@@ -88,7 +77,7 @@ class ConflictingArgumentError(Error):
 
 # -----------------------------------------------------------------------------
 class City(Polygon):
-    """City duck-type of the Venue.
+    """City venue by duck-type.
 
     Attributes
     ----------
@@ -130,7 +119,7 @@ class City(Polygon):
 
 # -----------------------------------------------------------------------------
 class Township(Polygon):
-    """Township duck-type of Venue.
+    """Township Venue-by-duck-type.
 
     Attributes
     ----------
@@ -172,7 +161,7 @@ class Township(Polygon):
 
 # -----------------------------------------------------------------------------
 class County(Polygon):
-    """County duck-type of Venue.
+    """County Venue-by-duck-type.
 
     Attributes
     ----------
@@ -216,7 +205,7 @@ class County(Polygon):
 
 # -----------------------------------------------------------------------------
 class Watershed(Polygon):
-    """Watershed duck-type of Venue.
+    """Watershed Venue-by-duck-type.
 
     Attributes
     ----------
@@ -258,7 +247,7 @@ class Watershed(Polygon):
 
 # -----------------------------------------------------------------------------
 class Subregion(Polygon):
-    """Subregion duck-type of Venue.
+    """Subregion Venue-by-duck-type.
 
     Attributes
     ----------
@@ -300,7 +289,7 @@ class Subregion(Polygon):
 
 # -----------------------------------------------------------------------------
 class State(Polygon):
-    """State duck-type of Venue.
+    """State Venue-by-duck-type.
 
     Attributes
     ----------
@@ -342,7 +331,7 @@ class State(Polygon):
 
 # -----------------------------------------------------------------------------
 class Neighborhood(Circle):
-    """Neighborhood duck-type of Venue.
+    """Neighborhood Venue-by-duck-type.
 
     Attributes
     ----------
@@ -405,7 +394,7 @@ class Neighborhood(Circle):
 
 # -----------------------------------------------------------------------------
 class Frame(Rectangle):
-    """Rectangular frame duck-type of Venue.
+    """Rectangular frame Venue-by-duck-type.
 
     Attributes
     ----------
@@ -507,7 +496,7 @@ class Frame(Rectangle):
 
 # -----------------------------------------------------------------------------
 class Patch(Polygon):
-    """A general polygonal patch duck-type of Venue.
+    """A general polygonal patch Venue-by-duck-type.
 
     Attributes
     ----------

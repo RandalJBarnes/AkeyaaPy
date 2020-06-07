@@ -11,6 +11,7 @@ import os
 import analyze
 import archive
 import geology
+import parameters
 import show
 import venues
 
@@ -29,17 +30,17 @@ if __name__ == "__main__":
     geology.aquifers_by_venue(wash)
     rolex.read("geology")
 
-    settings = analyze.Settings(spacing=1000)
+    settings = parameters.Parameters(spacing=1000)
     results = analyze.by_venue(wash, settings)
     rolex.read("analyze")
 
-    show.results_by_venue(wash, results)
+    show.by_venue(wash, results)
     rolex.read("show")
 
     pklzfile = archive.saveme(wash, settings, results)
     rolex.read("archive")
 
-    archive.load_and_show_results(pklzfile)
+    archive.load_and_show(pklzfile)
     rolex.read("load")
 
     os.remove(pklzfile)

@@ -44,18 +44,7 @@ VenueNotUniqueError
 WellNotFoundError
 WellNotUniqueError
 
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-05 June 2020
-
 """
-
 import numpy as np
 
 import pyproj
@@ -155,11 +144,9 @@ def get_all_well_data():
             Minnesota Geologic Survey's coding system.
 
     """
-
-    ALLWELLS = SOURCE["ALLWELLS"]
-    C5WL = SOURCE["C5WL"]
-
-    table = arcpy.AddJoin_management(ALLWELLS, "RELATEID", C5WL, "RELATEID", False)
+    table = arcpy.AddJoin_management(
+        SOURCE["ALLWELLS"], "RELATEID", SOURCE["C5WL"], "RELATEID", False
+    )
     with arcpy.da.SearchCursor(table, ATTRIBUTES, WHERE) as cursor:
         welldata = [(x, y, z, aq) for (x, y), z, aq in cursor]
     return welldata

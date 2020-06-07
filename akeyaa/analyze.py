@@ -1,37 +1,20 @@
-"""The functions to carry out the actual Akeyaa analysis.
+"""Perform the Akeyaa analysis.
 
-Classes
--------
-Settings
-    A dataclass for the Akeyaa analysis settings.
+This modules contains the working function that perform the Akeyaa analysis
+across a venue.
 
 Functions
 ---------
 by_venue(venue, settings)
-    Compute the Akeyaa analysis across the specified venue.
+    Compute the Akeyaa analysis across the specified `venue`.
 
 layout_the_grid(venue, spacing)
-    Determine the locations of the x and y grid lines.
+    Determine the locations of the x and y grid lines to cover the `venue`.
 
 fit_conic(x, y, z, method)
-    Fit the local conic potential model to the selected heads.
-
-Raises
-------
-ValueError
-
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-06 June 2020
+    Fit the local conic potential model to the selected measurements.
 
 """
-
 import numpy as np
 import statsmodels.api as sm
 
@@ -39,276 +22,91 @@ import wells
 
 
 # -----------------------------------------------------------------------------
-# These are the default settings for the Akeyaa analysis. TODO: revisit these
-# default values after we have more exprience.
-DEFAULT_AQUIFERS = None
-DEFAULT_METHOD = "RLM"
-DEFAULT_RADIUS = 3000
-DEFAULT_REQUIRED = 25
-DEFAULT_SPACING = 1000
-
-
-# -----------------------------------------------------------------------------
-# The following is a complete list of all 4-character aquifer codes used in
-# the Minnesota County Well index as of 1 January 2020. There are 10 groups
-# by first letter: {C, D, I, K, M, O, P, Q, R, U}.
-ALL_AQUIFERS = {
-    "CAMB", "CECR", "CEMS", "CJDN", "CJDW", "CJMS", "CJSL", "CJTC", "CLBK", "CMFL", "CMRC",
-    "CMSH", "CMTS", "CSLT", "CSLW", "CSTL", "CTCE", "CTCG", "CTCM", "CTCW", "CTLR", "CTMZ",
-    "CWEC", "CWMS", "CWOC",
-    "DCLP", "DCLS", "DCOG", "DCOM", "DCVA", "DCVL", "DCVU", "DEVO", "DPOG", "DPOM", "DSOG",
-    "DSOM", "DSPL", "DWAP", "DWPR",
-    "INDT",
-    "KDNB", "KREG", "KRET",
-    "MTPL",
-    "ODCR", "ODGL", "ODPL", "ODUB", "OGCD", "OGCM", "OGDP", "OGPC", "OGPD", "OGPR", "OGSC",
-    "OGSD", "OGSV", "OGVP", "OGWD", "OMAQ", "OMQD", "OMQG", "OPCJ", "OPCM", "OPCT", "OPCW",
-    "OPDC", "OPGW", "OPNR", "OPOD", "OPSH", "OPSP", "OPVJ", "OPVL", "OPWR", "ORDO", "ORRV",
-    "OSCJ", "OSCM", "OSCS", "OSCT", "OSPC", "OSTP", "OWIN",
-    "PAAI", "PAAM", "PABD", "PABG", "PABK", "PACG", "PAEF", "PAES", "PAEY", "PAFL", "PAFR",
-    "PAFV", "PAGR", "PAGU", "PAJL", "PAKG", "PALC", "PALG", "PALL", "PALP", "PALS", "PALT",
-    "PALV", "PAMB", "PAMC", "PAMD", "PAMG", "PAML", "PAMR", "PAMS", "PAMT", "PAMU", "PAMV",
-    "PANB", "PANL", "PANS", "PANU", "PAOG", "PAQF", "PASG", "PASH", "PASL", "PASM", "PASN",
-    "PASR", "PAST", "PASZ", "PATL", "PAUD", "PAVC", "PAWB", "PCCR", "PCRG", "PCUU", "PEAG",
-    "PEAL", "PEBC", "PEBI", "PEDN", "PEDQ", "PEFG", "PEFH", "PEFM", "PEGT", "PEGU", "PEHL",
-    "PEIL", "PELF", "PELR", "PEMG", "PEML", "PEMN", "PEMU", "PEPG", "PEPK", "PEPP", "PEPZ",
-    "PERB", "PERF", "PERV", "PESC", "PEST", "PESX", "PETR", "PEUD", "PEVT", "PEWR", "PEWT",
-    "PEWV", "PMBB", "PMBE", "PMBI", "PMBL", "PMBM", "PMBO", "PMBR", "PMCV", "PMDA", "PMDC",
-    "PMDE", "PMDF", "PMDL", "PMEP", "PMES", "PMFL", "PMGI", "PMGL", "PMHF", "PMHN", "PMHR",
-    "PMLD", "PMMU", "PMNF", "PMNI", "PMNL", "PMNM", "PMNS", "PMPA", "PMRC", "PMSU", "PMTH",
-    "PMUD", "PMUS", "PMVU", "PMWL", "PUDF",
-    "QBAA", "QBUA", "QUUU", "QWTA",
-    "RUUU",
-    "UREG"
-    }
-
-# -----------------------------------------------------------------------------
 class Error(Exception):
     """Local base exception."""
 
 
-class ArgumentError(Error):
-    """Invalid argument."""
-
-
 class UnknownMethodError(Error):
-    """The requested method is not supported."""
-
-
-# -----------------------------------------------------------------------------
-class Settings:
-    """A dataclass for the Akeyaa analysis settings.
-
-    Attributes
-    ----------
-    aquifers : list, optional
-        List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey"s coding system. If None, then all
-        aquifers present will be included. The default is DEFAULT_AQUIFERS.
-
-    method : str, optional
-        The fitting method. This must be one of {"OLS", "RLM"}, where
-            -- "OLS" ordinary least squares regression.
-            -- "RLM" robust linear model regression with Tukey biweights.
-        The default is DEFAULT_METHOD.
-
-    radius : float, optional
-        Search radius for neighboring wells. radius >= 1. The default is
-        DEFAULT_RADIUS.
-
-    required : int, optional
-        Required number of neighboring wells. If fewer are found, the
-        target location is skipped. required >= 6. The default is
-        DEFAULT_REQUIRED.
-
-    spacing : float, optional
-        Grid spacing for target locations across the county. spacing >= 1.
-        The default is DEFAULT_SPACING.
-
-    Raises
-    ------
-    ValueError
-
-    """
-
-    def __init__(
-        self,
-        aquifers=DEFAULT_AQUIFERS,
-        method=DEFAULT_METHOD,
-        radius=DEFAULT_RADIUS,
-        required=DEFAULT_REQUIRED,
-        spacing=DEFAULT_SPACING,
-    ):
-        self.aquifers = aquifers
-        self.method = method
-        self.radius = radius
-        self.required = required
-        self.spacing = spacing
-
-    def __repr__(self):
-        return (
-            "Settings("
-            "aquifers={0.aquifers!r}, "
-            "method={0.method!r}, "
-            "radius={0.radius!r}, "
-            "required={0.required!r}, "
-            "spacing={0.spacing!r})".format(self)
-        )
-
-    def __eq__(self, other):
-        return (
-            (self.__class__ == other.__class__)
-            and (self.aquifers == other.aquifers)
-            and (self.method == other.method)
-            and (self.radius == other.radius)
-            and (self.required == other.required)
-            and (self.spacing == other.spacing)
-        )
-
-    @property
-    def aquifers(self):
-        return self._aquifers
-
-    @aquifers.setter
-    def aquifers(self, aquifers):
-        if (aquifers is not None) and (not set.issubset(set(aquifers), ALL_AQUIFERS)):
-            raise ValueError("Unknown aquifer code(s)")
-        self._aquifers = aquifers
-
-    @property
-    def method(self):
-        return self._method
-
-    @method.setter
-    def method(self, method):
-        if method not in ["OLS", "RLM"]:
-            raise ValueError("'method' must be one of {'OLS', 'RLM'}")
-        self._method = method
-
-    @property
-    def radius(self):
-        return self._radius
-
-    @radius.setter
-    def radius(self, radius):
-        if radius < 1.0:
-            raise ValueError("'radius' must be >= 1")
-        self._radius = radius
-
-    @property
-    def required(self):
-        return self._required
-
-    @required.setter
-    def required(self, required):
-        if required < 6:
-            raise ValueError("'required' must be >= 6")
-        self._required = required
-
-    @property
-    def spacing(self):
-        return self._spacing
-
-    @spacing.setter
-    def spacing(self, spacing):
-        if spacing < 1.0:
-            raise ValueError("'spacing' must be >= 1")
-        self._spacing = spacing
+    """The requested fitting method is not supported."""
 
 
 # -----------------------------------------------------------------------------
 def by_venue(venue, settings):
     """Compute the Akeyaa analysis across the specified venue.
 
-    The Akeyaa analysis is carried out at target locations within the <venue>.
-    The target locations are selected as the nodes of a square grid covering
-    the <venue>.
+    Parameters
+    ----------
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated and detailed in `venues.py`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
+
+    settings : type
+        A complete, validated set of akeyaa parameters, as enumerated and
+        detailed in parameters.py.
+
+    Returns
+    -------
+    results : list[tuples]
+        Each tuple takes the form (xtarget, ytarget, n, evp, varp).
+
+        xtarget : float
+            x-coordinate of target location.
+        ytarget : float
+            y-coordinate of target location.
+        n : int
+            number of neighborhood wells used in the local analysis.
+        evp : ndarray, shape=(6,1)
+            expected value vector of the model parameters.
+        varp : ndarray, shape=(6,6)
+            variance/covariance matrix of the model parameters.
+
+    Notes
+    -----
+    The Akeyaa analysis is carried out at target locations within the
+    `venue`. The target locations are selected as the nodes of a
+    square grid covering the `venue`.
 
     The square grid of target locations is anchored at the centroid of the
-    <venue>'s domain, and the grid lines are separated by <spacing>. If a
+    `venue`'s domain, and the grid lines are separated by `spacing`. If a
     target location is not inside of the venue it is discarded.
 
     For each remaining target location, all wells that satisfy the following
     two conditions are identified:
-        (1) completed in one or more of the <aquifers>, and
-        (2) within a horizontal distance of <radius> of the target location.
 
-    If a target location has fewer than <required> identified (neighboring)
+    - completed in one or more of the `aquifers`, and
+    - within a horizontal distance of `radius` of the target location.
+
+    If a target location has fewer than `required` identified (neighboring)
     wells it is discarded.
 
     The Akeyaa analysis is carried out at each of the remaining target
-    locations using the <method> for fitting the conic potential model.
+    locations using the `method` for fitting the conic potential model.
 
-    Parameters
-    ----------
-    venue: venues.Venue
-        An instance of a concrete subclass of the marriage of venues.Venue
-        and geometry.Shape, e.g. City.
-
-    settings : settings.Settings
-        A complete set of akeyaa settings.
-
-        aquifers : list, optional
-            List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey"s coding system. If None, then all
-            aquifers present will be included. The default is DEFAULT_AQUIFERS.
-
-        method : str, optional
-            The fitting method. This must be one of {"OLS", "RLM"}, where
-                -- "OLS" ordinary least squares regression.
-                -- "RLM" robust linear model regression with Tukey biweights.
-            The default is DEFAULT_METHOD.
-
-        radius : float, optional
-            Search radius for neighboring wells. radius >= 1. The default is
-            DEFAULT_RADIUS.
-
-        required : int, optional
-            Required number of neighboring wells. If fewer are found, the
-            target location is skipped. required >= 6. The default is
-            DEFAULT_REQUIRED.
-
-        spacing : float, optional
-            Grid spacing for target locations across the county. spacing >= 1.
-            The default is DEFAULT_SPACING.
-
-    Returns
-    -------
-    results : list of tuples
-        (xtarget, ytarget, n, evp, varp)
-        -- xtarget : float
-               x-coordinate of target location.
-        -- ytarget : float
-               y-coordinate of target location.
-        -- n : int
-               number of neighborhood wells used in the local analysis.
-        -- evp : ndarray, shape=(6,1)
-               expected value vector of the prarameters.
-        -- varp : ndarray, shape=(6,6)
-               variance/covariance matrix of the settings.
-
-    Notes
-    -----
-    o   Note, data from outside of the venue may also used in the
-        computations. However, only data from the Minnesota CWI are
-        considered.
+    Data from outside of the venue may also be used in the computations.
+    However, only data from the Minnesota CWI are considered.
 
     """
-
     xgrd, ygrd = layout_the_grid(venue, settings.spacing)
 
     results = []
-    for xo in xgrd:
-        for yo in ygrd:
-            if venue.contains((xo, yo)):
-                xw, yw, zw = wells.fetch(xo, yo, settings.radius, settings.aquifers)
+    for xtarget in xgrd:
+        for ytarget in ygrd:
+            if venue.contains((xtarget, ytarget)):
+                xwell, ywell, zwell = wells.fetch(
+                    xtarget, ytarget, settings.radius, settings.aquifers
+                )
+                neighbors = len(xwell)
 
                 # Note that we are converting the zw from [ft] to [m].
-                if len(xw) >= settings.required:
+                if neighbors >= settings.required:
                     evp, varp = fit_conic_potential(
-                        xw - xo, yw - yo, 0.3048 * zw, settings.method
+                        xwell - xtarget,
+                        ywell - ytarget,
+                        0.3048 * zwell,
+                        settings.method,
                     )
-                    results.append((xo, yo, len(xw), evp, varp))
+                    results.append((xtarget, ytarget, neighbors, evp, varp))
 
     return results
 
@@ -318,28 +116,29 @@ def layout_the_grid(venue, spacing):
     """Determine the locations of the x and y grid lines.
 
     The square grid of target locations is anchored at the centroid of the
-    <domain>, axes aligned, and the grid lines are separated by <spacing>.
+    `venue`, axes aligned, and the grid lines are separated by `spacing`.
     The extent of the grid captures all of the vertices of the domain.
 
     Parameters
     ----------
-    venue: venues.Venue & geometry.Shape
-        An instance of a concrete subclass of the marriage of venues.Venue
-        and geometry.Shape, e.g. City.
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated and detailed in venues.py.
+        For example: a 'City', 'Watershed', or 'Neighborhood'.
 
-    spacing : float, optional
-        Grid spacing for target locations across the venue.
+    spacing : float
+        Grid spacing for target locations across the venue. The grid is
+        square, so only one `spacing` is needed.
 
     Returns
     -------
-    xgrd : list of floats
+    xgrd : list[float]
         x-coordinates of the vertical gridlines.
 
-    ygrd : list of floats
+    ygrd : list[float]
         y-coordinates of the horizontal gridlines.
 
     """
-
     xgrd = [venue.centroid()[0]]
     while xgrd[-1] > venue.extent()[0]:
         xgrd.append(xgrd[-1] - spacing)
@@ -363,42 +162,40 @@ def fit_conic_potential(x, y, z, method):
 
     Parameters
     ----------
-    x : ndarray, shape=(N,)
+    x : ndarray, shape=(n,)
         x-coordinates of observation locations [m].
 
-    y : ndarray, shape=(N,)
+    y : ndarray, shape=(n,)
         y-coordinates of observation locations [m].
 
-    z : ndarray, shape=(N,)
+    z : ndarray, shape=(n,)
         observed head values [m].
 
     method : str
-        The fitting method; one of {"OLS", "RLM"}, where
-        -- "OLS" ordinary least squares regression.
-        -- "RLM" robust linear model regression with Tukey biweights.
+        The fitting method; one of {"OLS", "TUKEY", "HUBER"}.
+
+        - "OLS" ordinary least squares regression.
+        - "TUKEY" robust linear model regression with Tukey biweights.
+        - "HUBER" robust linear model regression with Huber T weights.
 
     Returns
     -------
     evp : ndarray, shape=(6,)
-        The expected value vector for the model settings.
+        The expected value vector for the fitted model parameters.
 
     varp : ndarray, shape=(6, 6)
-        The variance matrix for the model settings.
+        The variance/covariance matrix for the fitted model parameters.
 
     Notes
     -----
-    o   The underlying conic discharge potential model is
+    The underlying conic discharge potential model is
 
-            z = A*x**2 + B*y**2 + C*x*y + D*x + E*y + F + noise
+        z = Ax^2 + By^2 + Cxy + Dx + Ey + F + noise
 
-        where the settings map as: [A, B, C, D, E, F] = p[0:5].
-
-    o   Note that most of the work is done by the statsmodels library. There
-        are other fitting methods available.
+    where the fitted parameters map as: [A, B, C, D, E, F] = p[0:5].
 
     """
-
-    X = np.stack([x ** 2, y ** 2, x * y, x, y, np.ones(x.shape)], axis=1)
+    X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 
     if method == "OLS":
         ols_model = sm.OLS(z, X)
@@ -407,8 +204,15 @@ def fit_conic_potential(x, y, z, method):
         evp = ols_results.params
         varp = ols_results.cov_params()
 
-    elif method == "RLM":
+    elif method == "TUKEY":
         rlm_model = sm.RLM(z, X, M=sm.robust.norms.TukeyBiweight())
+        rlm_results = rlm_model.fit()
+
+        evp = rlm_results.params
+        varp = rlm_results.bcov_scaled
+
+    elif method == "HUBER":
+        rlm_model = sm.RLM(z, X, M=sm.robust.norms.HuberT())
         rlm_results = rlm_model.fit()
 
         evp = rlm_results.params
