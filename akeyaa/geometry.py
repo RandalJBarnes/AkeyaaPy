@@ -1,7 +1,7 @@
 """Simple geometric shape classes: Circle, Rectangle, and Polygon.
 
-Classes
--------
+.. Classes
+
 Shape(ABC)
     The abstract base class for all Shapes.
 

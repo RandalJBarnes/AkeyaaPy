@@ -1,7 +1,5 @@
 """Plot the geolocial information within a venue.
 
-Functions
----------
 aquifers_by_venue(venue, aquifers)
     Plot the wells in the venue coded by aquifer.
 
@@ -52,6 +50,7 @@ def aquifers_by_venue(venue, aquifers=None):
 
         - aquifer_abbr : str
             The four-character aquifer abbreviation string.
+
         - count : int
             The number of wells in the associated aquifer type.
 

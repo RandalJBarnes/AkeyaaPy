@@ -3,8 +3,6 @@
 All calls to ArcGIS Pro/ArcPy, and the interactions with any
 ArcGIS Pro/ArcPy data types, are ISOLATED in this module.
 
-Functions
----------
 get_all_well_data()
     Query arcpy for the welldata from all authorized wells in the state.
 
@@ -31,13 +29,6 @@ get_county_data(name=None, abbr=None, cty_fips=None)
 
 get_state_data()
     Return the State venue data.
-
-Raises
-------
-VenueNotFoundError
-VenueNotUniqueError
-WellNotFoundError
-WellNotUniqueError
 
 """
 import numpy as np

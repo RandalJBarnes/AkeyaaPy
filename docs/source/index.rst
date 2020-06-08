@@ -10,7 +10,19 @@ Welcome to Akeyaa's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   readme
 
+   akeyaa.analyze
+   akeyaa.archive
+   akeyaa.geology
+   akeyaa.geometry
+   akeyaa.gis
+   akeyaa.localpaths
+   akeyaa.parameters
+   akeyaa.pnorm
+   akeyaa.show
+   akeyaa.venues
+   akeyaa.wells
 
 Indices and tables
 ==================
@@ -18,3 +30,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+

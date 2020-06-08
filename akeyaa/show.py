@@ -1,7 +1,5 @@
 """Akeyaa visualization tools.
 
-Functions
----------
 by_venue(venue, results)
     Driver to plot the results.
 

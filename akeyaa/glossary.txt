@@ -1,3 +1,15 @@
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated in `akeyaa.venues`.
+        For example: a `City`, `Watershed`, or `Neighborhood`.
+
+    settings :
+        Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
+
+    results : list[tuples]
+        (xtarget, ytarget, n, evp, varp)
+
+
 # -----------------------------------------------------------------------------
 # The following is a complete list of all 4-character aquifer codes used in
 # the Minnesota County Well index as of 1 January 2020. There are 10 groups

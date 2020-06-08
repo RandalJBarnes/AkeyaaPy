@@ -14,9 +14,9 @@ import gis
 def fetch(xtarget, ytarget, radius, aquifers=None):
     """Fetch the nearby wells.
 
-    Fetch the (x, y, z) data for all authorized wells within ``radius`` of the
-    target coordinates (``xtarget``, ``ytarget``) that are completed in within
-    one or more of the identified ``aquifers``.
+    Fetch the (x, y, z) data for all authorized wells within `radius` of the
+    target coordinates (`xtarget`, `ytarget`) that are completed in within
+    one or more of the identified `aquifers`.
 
     If there are no wells that satisfy the search criteria, three empty
     ndarrys are returned.
@@ -41,60 +41,60 @@ def fetch(xtarget, ytarget, radius, aquifers=None):
 
     Returns
     -------
-    x : ndarray, shape=(n,), dtype=float
+    x : (n,) ndarray
         The well x-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
-    y : ndarray, shape=(n,), dtype=float
+    y : (n,) ndarray
         The well y-coordinates in "NAD 83 UTM zone 15N" (EPSG:26915) [m].
 
-    z : ndarray, shape=(n,), dtype=float
+    z : (n,) ndarray
         The measured static water levels [ft].
-
-    Function Attributes
-    -------------------
-    welldata : list
-         The list contains data from authorized wells taken across the state.
-         Wells that have multiple static water level measurements in the
-         C5WL table will have multiple entries in this table: one entry for
-         every measurement.
-
-         There is one or more tuple for each well in the list. The tuples are
-
-            (x, y, z, aquifer)
-
-        where
-        - x : float
-            well x-coordinate in NAD 83 UTM zone 15N [m]
-
-        - y : float
-            well y-coordinate in NAD 83 UTM zone 15N [m]
-
-        - z : float
-            measured static water level [ft]
-
-        - aquifer : str
-            The 4-character aquifer abbreviation string, as defined in
-            Minnesota Geologic Survey's coding system.
-
-        For example, (232372.0, 5377518.0, 964.0, "QBAA").
-
-    tree : scipy.spatial.cKDTree
-        A kd-tree for all of the wells in self.welldata.
 
     Notes
     -----
-    Beware! The x and y coordinates are in [m], but z is in [ft].
+    * Beware! The x and y coordinates are in [m], but z is in [ft].
 
-    This function uses function attributes to serve as function static
-    variables, in the C++ sense. The first call is slow because it
-    has to extract the data from a .gdb and setup the kd tree.
-
-    Every call after the first is very fast.
+    * The first call is slow because it has to extract the data from an
+      external .gdb and setup the search tree. Every call after the first
+      is very fast.
 
     """
+
+    # This function uses two function attributes to serve as function static
+    # variables -- in the C++ sense. These are:
+    #
+    #   fetch.welldata
+    #   fetch.tree
+    #
+    # where
+    #
+    #   welldata : list[tupel] of the form (x, y, z, aquifer) where
+    #       x : float
+    #           The well x-coordinate in NAD 83 UTM zone 15N [m].
+    #
+    #       y : float
+    #           The well y-coordinate in NAD 83 UTM zone 15N [m].
+    #
+    #       z : float
+    #           The measured static water level [ft].
+    #
+    #       aquifer : str
+    #           The 4-character aquifer abbreviation string, as defined in
+    #           Minnesota Geologic Survey's coding system.
+    #
+    #       For example, (232372.0, 5377518.0, 964.0, "QBAA").
+    #
+    #    tree : scipy.spatial.cKDTree
+    #        A kd-tree for all of the wells in fetch.welldata.
+    #
+    # The welldata list contains data from all authorized wells taken across
+    # the state. Wells that have multiple static water level measurements
+    # will have multiple entries in this table -- one entry for every
+    # measurement.
+
     if "welldata" not in fetch.__dict__:
         fetch.welldata = gis.get_all_well_data()
-        fetch.tree = scipy.spatial.cKDTree([(x, y) for x, y, *_ in fetch.welldata])
+        fetch.tree = scipy.spatial.cKDTree([(row[0], row[1]) for row in fetch.welldata])
 
     indx = fetch.tree.query_ball_point([xtarget, ytarget], radius)
 

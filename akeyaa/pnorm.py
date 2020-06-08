@@ -1,7 +1,5 @@
 """Support for the general projected normal distribution.
 
-Functions
----------
 pnormpdf(theta, mu, sigma):
     Evaluate the probability density function for the general projected
     normal distribution.
@@ -22,18 +20,18 @@ the general projected normal distribution pdf.
 
 References
 ----------
-- D. Hernandez-Stumpfhauser, F. J. Breidt, and M. J. van der Woerd.
-    The General Projected Normal Distribution of Arbitrary Dimension:
-    Modeling and Bayesian Inference Bayesian Analysis. Institute of
-    Mathematical Statistics, 12:113-133, 2017.
+D. Hernandez-Stumpfhauser, F. J. Breidt, and M. J. van der Woerd.
+The General Projected Normal Distribution of Arbitrary Dimension:
+Modeling and Bayesian Inference Bayesian Analysis. Institute of
+Mathematical Statistics, 12:113-133, 2017.
 
-- C. G. Justus. Winds and Wind System Performance. Solar energy.
-    Franklin Institute Press, Philadelphia, Pennsylvania, 1978. ISBN
-    9780891680062. 120 pp.
+C. G. Justus. Winds and Wind System Performance. Solar energy.
+Franklin Institute Press, Philadelphia, Pennsylvania, 1978. ISBN
+9780891680062. 120 pp.
 
-- R. M. Lark, D. Clifford, and C. N. Waters. Modelling complex geological
-    circular data with the projected normal distribution and mixtures of
-    von Mises distributions. Solid Earth, Copernicus GmbH, 5:631-639, 2014.
+R. M. Lark, D. Clifford, and C. N. Waters. Modelling complex geological
+circular data with the projected normal distribution and mixtures of
+von Mises distributions. Solid Earth, Copernicus GmbH, 5:631-639, 2014.
 
 """
 from math import cos, sin, exp, sqrt, pi

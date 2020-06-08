@@ -1,7 +1,7 @@
 """Define and implement the Venue class and all of its subclasses.
 
-Classes
--------
+.. Classes
+
 City(Polygon)
     City Venue-by-duck-type.
 

@@ -3,10 +3,6 @@
 The Parameters class self-validates the individual values and simplifies the
 the passing and archiving of the many user-defined parameters.
 
-Raises
-------
-ValueError
-
 """
 
 #------------------------------------------------------------------------------

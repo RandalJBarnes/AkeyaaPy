@@ -1,22 +1,7 @@
-"""Tools for for archiving Akeyaa runs.
-
-Functions
----------
-saveme(venue, settings, results, pklzfile)
-    Save an Akeyaa run to the compressed pickle file.
-
-loadme(pklzfile)
-    Load an Akeyaa run from a compressed pickle file created by saveme.
-
-load_and_show(pklzfile):
-    Load an Akeyaa run and plot the results.
-
-"""
+"""Save and load complete Akeyaa runs from compressed pickle files."""
 import bz2
 from datetime import datetime
 import pickle
-
-import show
 
 
 # -----------------------------------------------------------------------------
@@ -31,14 +16,13 @@ def saveme(venue, settings, results, pklzfile=None):
     ----------
     venue: type
         An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in venues.py.
-        For example: a 'City', 'Watershed', or 'Neighborhood'.
+        user-defined domain, as enumerated in `akeyaa.venues`.
+        For example: a `City`, `Watershed`, or `Neighborhood`.
 
-    settings : type
-        A complete, validated set of akeyaa parameters, as enumerated and
-        detailed in parameters.py.
+    settings :
+        Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
-    results : list[tuples]
+    results : list[tuple]
         (xtarget, ytarget, n, evp, varp)
 
     pklzfile : str, optional
@@ -51,9 +35,9 @@ def saveme(venue, settings, results, pklzfile=None):
     pklzfile : str
         The compressed pickle filename used.
 
-    Notes
-    -----
-    The bz2 (Burrows-Wheeler) compression algorithm is used.
+    See Also
+    --------
+    akeyaa.parameters, akeyaa.venues
 
     """
     if pklzfile is None:
@@ -72,23 +56,26 @@ def loadme(pklzfile):
 
     Parameters
     ----------
-    pklzfile : str, optional
+    pklzfile : str
         A compressed pickle filename, including the extension, which was
         created by saveme.
 
     Returns
     -------
-    venue : type
+    venue: type
         An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in venues.py.
-        For example: a 'City', 'Watershed', or 'Neighborhood'.
+        user-defined domain, as enumerated in `akeyaa.venues`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    settings : type
-        A complete, validated set of akeyaa parameters, as enumerated and
-        detailed in parameters.py.
+    settings :
+        Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
     results : list[tuples]
         (xtarget, ytarget, n, evp, varp)
+
+    See Also
+    --------
+    akeyaa.parameters, akeyaa.venues
 
     """
     with bz2.open(pklzfile, "rb") as fileobject:
@@ -99,25 +86,3 @@ def loadme(pklzfile):
     results = archive["results"]
 
     return (venue, settings, results)
-
-
-# -----------------------------------------------------------------------------
-def load_and_show(pklzfile):
-    """Load an Akeyaa run and plot the results.
-
-    Load an Akeyaa run from the specified compressed pickle file created
-    by show.saveme and plot the results using show.by_venue.
-
-    Parameters
-    ----------
-    pklzfile : str
-        A compressed pickle filename, including the extension, which was
-        created by show.saveme.
-
-    Returns
-    -------
-    None
-
-    """
-    venue, _, results = loadme(pklzfile)
-    show.by_venue(venue, results)

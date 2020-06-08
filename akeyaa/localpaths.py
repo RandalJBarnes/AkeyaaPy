@@ -1,16 +1,4 @@
-"""Local explicit paths to the necessary ArcGIS Pro/ArcPy gdb files.
-
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-04 June 2020
-
-"""
+"""Local explicit paths to the necessary ArcGIS Pro/ArcPy gdb files."""
 
 # Minnesota County Well Index (CWI). Obtained from the Minnesota Department
 # of Health. The CWI is administered by the Minnesota Geological Survey.
