@@ -14,18 +14,7 @@ Rectangle(Shape)
 Polygon(Shape)
     A single, non-overlapping, but not necessarily convex, polygon.
 
-Author
-------
-Dr. Randal J. Barnes
-Department of Civil, Environmental, and Geo- Engineering
-University of Minnesota
-
-Version
--------
-06 June 2020
-
 """
-
 from abc import ABC, abstractmethod
 import numpy as np
 

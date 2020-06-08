@@ -5,9 +5,6 @@ ArcGIS Pro/ArcPy data types, are ISOLATED in this module.
 
 Functions
 ---------
-
------ Functions that interact directly with ArcGIS Pro/ArcPy -----
-
 get_all_well_data()
     Query arcpy for the welldata from all authorized wells in the state.
 
@@ -20,18 +17,16 @@ get_well_location(relateid)
 get_venue_data(source, what, where)
     Query acrpy for venue data.
 
------ Functions that interact indirectly with ArcGIS Pro/ArcPy -----
-
-get_city_data(*, name=None, gnis_id=None ):
+get_city_data(name=None, gnis_id=None)
     Return the City venue data.
 
-get_township_data(*, name=None, gnis_id=None)
+get_township_data(name=None, gnis_id=None)
     Return the Township venue data.
 
-get_subregion_data(*, name=None, huc8=None)
+get_subregion_data(name=None, huc8=None)
     Return the Subregion venue data.
 
-get_county_data(*, name=None, abbr=None, cty_fips=None)
+get_county_data(name=None, abbr=None, cty_fips=None)
     Return the County venue data.
 
 get_state_data()

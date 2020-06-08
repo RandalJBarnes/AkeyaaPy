@@ -25,16 +25,16 @@ def fetch(xtarget, ytarget, radius, aquifers=None):
     ----------
     xtarget : float
         x-coordinate (easting) of the target location in
-        NAD 83 UTM zone 15N [m]
+        NAD 83 UTM zone 15N [m].
 
     ytarget : float
         y-coordinate (northing) of the target location in
-        NAD 83 UTM zone 15N [m]
+        NAD 83 UTM zone 15N [m].
 
     radius : float
         The radius of the search neighborhood [m].
 
-    aquifers : list, optional
+    aquifers : list[str], optional
         List of four-character aquifer abbreviation strings, as defined in
         Minnesota Geologic Survey's coding system. The default is None. If
         None, then wells from all aquifers will be included.
@@ -76,8 +76,7 @@ def fetch(xtarget, ytarget, radius, aquifers=None):
             The 4-character aquifer abbreviation string, as defined in
             Minnesota Geologic Survey's coding system.
 
-        For example,
-            (232372.0, 5377518.0, 964.0, "QBAA")
+        For example, (232372.0, 5377518.0, 964.0, "QBAA").
 
     tree : scipy.spatial.cKDTree
         A kd-tree for all of the wells in self.welldata.
