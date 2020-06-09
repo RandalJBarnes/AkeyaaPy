@@ -1,25 +1,25 @@
 """Akeyaa visualization tools.
 
-by_venue(venue, results)
-    Driver to plot the results.
+There are five separate plots that can be constructed, and one driver
+function that will create all five at once.
 
-local_flow_direction(venue, results)
-    Plot the local flow directions.
+    * by_venue(venue, results)
+        Driver to plot the results.
 
-local_number_of_wells(venue, results)
-    Plot the local number of wells.
+    * local_flow_direction(venue, results)
+        Plot the local flow directions.
 
-local_head(venue, results)
-    Plot the magnitude of the local head.
+    * local_number_of_wells(venue, results)
+        Plot the local number of wells.
 
-local_gradient(venue, results)
-    Plot the local head gradient.
+    * local_head(venue, results)
+        Plot the magnitude of the local head.
 
-local_gradient_quantile(venue, results)
-    Plot the relative magnitude of the local head gradient.
+    * local_gradient(venue, results)
+        Plot the local head gradient.
 
-local_laplacian_zscore(venue, results)
-    Plot the local laplacian z-score.
+    * local_laplacian_zscore(venue, results)
+        Plot the local laplacian z-score.
 
 """
 import math
@@ -392,5 +392,5 @@ def local_laplacian_zscore(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Local vertically-averaged Laplacian Z-score", {"fontsize": 24})
+    plt.title(venue.fullname() + " Local Vertically-averaged Laplacian Z-score", {"fontsize": 24})
     plt.grid(True)

@@ -1,13 +1,26 @@
     venue: type
         An instance of a political division, administrative region, or
         user-defined domain, as enumerated in `akeyaa.venues`.
-        For example: a `City`, `Watershed`, or `Neighborhood`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    settings :
+    aquifers : list
+        List of four-character aquifer abbreviation strings, as defined in
+        Minnesota Geologic Survey's coding system.
+
+    settings : type
         Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
-    results : list[tuples]
-        (xtarget, ytarget, n, evp, varp)
+    results : list[tuple]
+        The tuples are of the form (xtarget, ytarget, n, evp, varp), as
+        detailed in `akeyaa.analyze`.
+
+    vertices : ndarray, shape=(n, 2), dtype=float
+        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
+        The vertices are stored so that the domain is on the left, and the
+        first vertex is repeated as the last vertex.
+
+
+
 
 
 # -----------------------------------------------------------------------------

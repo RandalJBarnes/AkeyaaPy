@@ -1,15 +1,4 @@
-"""Plot the geolocial information within a venue.
-
-aquifers_by_venue(venue, aquifers)
-    Plot the wells in the venue coded by aquifer.
-
-geologic_color_map(aquifers)
-    Map the aquifer code to colors.
-
-whereis(venue):
-    Plot the venue's shape over the state's ploygon.
-
-"""
+"""Plot the geolocial information within a venue."""
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -31,13 +20,16 @@ class EmptySelectionError(Error):
 def aquifers_by_venue(venue, aquifers=None):
     """Plot the wells in the venue coded by aquifer.
 
-    Plot the locations of the authorized wells in the venue that are completed
-    in one of the identified aquifers. The plotted marker for a well is
+    Plot the locations of the authorized wells in the `venue` that are completed
+    in one of the identified `aquifers`. The plotted marker for a well is
     color-coded by the aquifer in which it is completed.
 
     Parameters
     ----------
-    venue : a concrete subclass of venues.Venue (i.e. City)
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated in `akeyaa.venues`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
     aquifers : list, optional
         List of four-character aquifer abbreviation strings, as defined in
@@ -46,7 +38,7 @@ def aquifers_by_venue(venue, aquifers=None):
 
     Returns
     -------
-    aquifer_info : list[tuples] (aquifer_abbr, count)
+    aquifer_info : list[tuple] (aquifer_abbr, count)
 
         - aquifer_abbr : str
             The four-character aquifer abbreviation string.
@@ -86,7 +78,8 @@ def aquifers_by_venue(venue, aquifers=None):
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
     plt.title(venue.fullname() + " Wells Coded By Aquifer", {"fontsize": 24})
-
+    plt.grid(True)
+    
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
     return aquifer_info
@@ -95,6 +88,9 @@ def aquifers_by_venue(venue, aquifers=None):
 # -----------------------------------------------------------------------------
 def geologic_color_map(aquifers):
     """Map the aquifer codes to colors.
+
+    This mapping of colors is based on the recommendations of numerous
+    geologists and academics.
 
     Parameters
     ----------
@@ -142,7 +138,10 @@ def whereis(venue):
 
     Arguments
     ---------
-    venue : a concrete subclass of venues.Venue (i.e. City)
+    venue: type
+        An instance of a political division, administrative region, or
+        user-defined domain, as enumerated in `akeyaa.venues`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
     Returns
     -------

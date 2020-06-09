@@ -8,22 +8,23 @@ import pickle
 def saveme(venue, settings, results, pklzfile=None):
     """Save an Akeyaa run to a compressed pickle file.
 
-    Save an Akeyaa run (`venue`, `settings`, `results`) to the specified
-    compressed pickle file `pklzfile`. If no pickle file is specified, a
-    unique filename, based on the current date and time, is created and used.
+    Save an Akeyaa run to the specified compressed pickle file `pklzfile`.
+    If no pickle file is specified, a unique filename, based on the current
+    date and time, is created and used.
 
     Parameters
     ----------
     venue: type
         An instance of a political division, administrative region, or
         user-defined domain, as enumerated in `akeyaa.venues`.
-        For example: a `City`, `Watershed`, or `Neighborhood`.
+        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    settings :
+    settings : type
         Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
     results : list[tuple]
-        (xtarget, ytarget, n, evp, varp)
+        The tuples are of the form (xtarget, ytarget, n, evp, varp), as
+        detailed in 'akeyaa.analyze'.
 
     pklzfile : str, optional
         The compressed pickle filename, including the extension. The
@@ -37,7 +38,7 @@ def saveme(venue, settings, results, pklzfile=None):
 
     See Also
     --------
-    akeyaa.parameters, akeyaa.venues
+    akeyaa.analyze, akeyaa.parameters, akeyaa.venues
 
     """
     if pklzfile is None:
@@ -67,15 +68,16 @@ def loadme(pklzfile):
         user-defined domain, as enumerated in `akeyaa.venues`.
         For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    settings :
+    settings : type
         Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
-    results : list[tuples]
-        (xtarget, ytarget, n, evp, varp)
+    results : list[tuple]
+        The tuples are of the form (xtarget, ytarget, n, evp, varp), as
+        detailed in `akeyaa.analyze`.
 
     See Also
     --------
-    akeyaa.parameters, akeyaa.venues
+    akeyaa.analyze, akeyaa.parameters, akeyaa.venues
 
     """
     with bz2.open(pklzfile, "rb") as fileobject:

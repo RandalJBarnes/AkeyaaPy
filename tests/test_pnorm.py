@@ -1,10 +1,11 @@
+"""Test akeyaa.pnorm.py"""
 import numpy as np
 
-from pnorm import pnormpdf, pnormcdf
+from akeyaa.pnorm import pnormpdf, pnormcdf
 
 
-# -----------------------------------------------------------------------------
 def test_pnormpdf():
+    """Test pnormpdf by comparing with MATLAB results."""
     mu = np.array([[1.], [2.]])
     sigma = np.array([[2., 1.], [1., 3.]])
 
@@ -18,17 +19,16 @@ def test_pnormpdf():
         0.082633326709771
         ])
 
-    assert(np.allclose(pdf, pdf_ans))
+    assert np.allclose(pdf, pdf_ans)
 
-
-# -----------------------------------------------------------------------------
 def test_pnormcdf():
+    """Test pnormcdf by comparing with MATLAB results."""
     mu = np.array([[1.], [2.]])
     sigma = np.array([[2., 1.], [1., 3.]])
 
-    lb = np.pi/4
-    ub = np.pi/2
-    cdf = pnormcdf(lb, ub, mu, sigma)
+    lowerbound = np.pi/4
+    upperbound = np.pi/2
+    cdf = pnormcdf(lowerbound, upperbound, mu, sigma)
 
     cdf_ans = np.array([0.5066762601816892])
-    assert(np.allclose(cdf, cdf_ans))
+    assert np.allclose(cdf, cdf_ans)

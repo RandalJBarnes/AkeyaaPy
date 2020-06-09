@@ -1,36 +1,20 @@
 """Define and implement the Venue class and all of its subclasses.
 
-.. Classes
-
-City(Polygon)
-    City Venue-by-duck-type.
-
-Township(Polygon)
-    Township Venue-by-duck-type.
-
-County(Polygon)
-    County Venue-by-duck-type.
-
-Watershed(Polygon)
-    Watershed Venue-by-duck-type.
-
-Subregion(Polygon)
-    Subregion Venue-by-duck-type.
-
-Neighborhood(Circle)
-    Neighborhood Venue-by-duck-type.
-
-Frame(Rectangle)
-    Rectangular frame Venue-by-duck-type.
-
-Patch(Polygon)
-    A general polygonal patch Venue-by-duck-type.
-
 Notes
 -----
-All of the classes in this module are of the informal type Venue.
-Although it is not enforced by subclassing, any Venue must have
-the following methods:
+* Currently, there are eight unique classes of venues.
+    - City(Polygon)
+    - Township(Polygon)
+    - County(Polygon)
+    - Watershed(Polygon)
+    - Subregion(Polygon)
+    - Neighborhood(Circle)
+    - Frame(Rectangle)
+    - Patch(Polygon)
+
+* All of the classes in this module are of the informal type Venue.
+  Although it is not enforced by subclassing, any Venue must have
+  the following methods:
 
     __eq__(self, other) -> bool
         Return True is the two venues are the same.

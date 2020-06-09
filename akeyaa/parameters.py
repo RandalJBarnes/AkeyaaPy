@@ -107,7 +107,7 @@ class Parameters:
         return (
             "Settings("
             f"aquifers={self.aquifers}, "
-            f"method={self.method}, "
+            f"method='{self.method}'', "
             f"radius={self.radius}, "
             f"required={self.required}, "
             f"spacing={self.spacing})"
