@@ -7,6 +7,9 @@ associated, index-based, kd-tree for very fast lookup based on coordinates.
 from bisect import bisect_left
 from operator import itemgetter
 import scipy
+from itertools import compress
+
+import numpy as np
 
 from akeyaa.gis import get_all_well_data
 
@@ -146,11 +149,11 @@ class Wells(object):
         xycenter, radius = venue.circumcircle()
         candidates = self.fetch(xycenter, radius, aquifers)
 
-        welldata = []
-        for row in candidates:
-            if venue.contains(row[0]):
-                welldata.append(row)
-        return welldata
+        if not candidates:
+            return []
+
+        flag = venue.contains_points([row[0] for row in candidates])
+        return list(compress(candidates, flag))
 
     def get_well(self, relateid):
         """Get the welldata for a single well by relateid.

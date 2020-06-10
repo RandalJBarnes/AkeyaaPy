@@ -24,6 +24,7 @@ akeyaa.venues
 """
 from abc import ABC, abstractmethod
 import numpy as np
+from matplotlib.path import Path
 
 
 class Shape(ABC):
@@ -71,8 +72,13 @@ class Shape(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def contains(self, point):
-        """Return True if the Shape contains the point and False otherwise."""
+    def contains_point(self, point):
+        """Return True if the Shape contains the point."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def contains_points(self, points):
+        """Returns a bool array which is True if the Shape contains the point."""
         raise NotImplementedError
 
 
@@ -149,11 +155,16 @@ class Circle(Shape):
         """Return the length of the perimeter [m]."""
         return 2 * np.pi * self.radius
 
-    def contains(self, point):
-        """Return True if the Circle contains the point and False otherwise."""
+    def contains_point(self, point):
+        """Return True if the Circle contains the point."""
         return (
             np.hypot(point[0] - self.center[0], point[1] - self.center[1]) < self.radius
         )
+
+    def contains_points(self, points):
+        """Returns a bool array which is True if the Circle contains the point."""
+        return [np.hypot(point[0] - self.center[0], point[1] - self.center[1]) < self.radius
+                for point in points]
 
 
 class Rectangle(Shape):
@@ -241,9 +252,14 @@ class Rectangle(Shape):
         """Return the length of the perimeter [m]."""
         return 2 * (self.xmax - self.xmin) + 2 * (self.ymax - self.ymin)
 
-    def contains(self, point):
-        """Return True if the Rectangle contains the point and False otherwise."""
+    def contains_point(self, point):
+        """Return True if the Rectangle contains the point."""
         return (self.xmin < point[0] < self.xmax) and (self.ymin < point[1] < self.ymax)
+
+    def contains_points(self, points):
+        """Returns a bool array which is True if the rectangle contains the point."""
+        return [(self.xmin < point[0] < self.xmax) and (self.ymin < point[1] < self.ymax)
+                for point in points]
 
 
 class Polygon(Shape):
@@ -332,28 +348,12 @@ class Polygon(Shape):
             length += np.hypot(x[i + 1] - x[i], y[i + 1] - y[i])
         return length
 
-    def contains(self, point):
-        """Return True if the Polygon contains the point and False otherwise."""
-        xp = point[0]
-        yp = point[1]
+    def contains_point(self, point):
+        """Return True if the Polygon contains the point."""
+        path = Path(self.vertices)
+        return path.contains_point(point)
 
-        if (
-            (xp <= self._xmin) or
-            (xp >= self._xmax) or
-            (yp <= self._ymin) or
-            (yp >= self._ymax)
-        ):
-            return False
-
-        inside = False
-        xa, ya = self.vertices[0]
-        for xb, yb in self.vertices:
-            if yp > min(ya, yb):
-                if yp <= max(ya, yb):
-                    if xp <= max(xa, xb):
-                        if ya != yb:
-                            xints = (yp - ya) * (xb - xa) / (yb - ya) + xa
-                        if xa == xb or xp <= xints:
-                            inside = not inside
-            xa, ya = xb, yb
-        return inside
+    def contains_points(self, points):
+        """Returns a bool array which is True if the rectangle contains the point."""
+        path = Path(self.vertices)
+        return path.contains_points(points)

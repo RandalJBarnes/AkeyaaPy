@@ -36,9 +36,14 @@ def test_circle():
     # perimeter(self):
     assert np.isclose(circle_a.perimeter(), 6*np.pi)
 
-    # contains(self, point):
-    assert circle_a.contains((1, 2))
-    assert not circle_a.contains((10, 20))
+    # contains_point(self, point):
+    assert circle_a.contains_point((1, 2))
+    assert not circle_a.contains_point((10, 20))
+
+    # contains_points(self, points):
+    assert np.all(circle_a.contains_points([(1, 2), (2, 1), (1.5, 1.5)]))
+    assert np.any(circle_a.contains_points([(1, 2), (10, 20)]))
+    assert not np.all(circle_a.contains_points([(1, 2), (10, 20)]))
 
 def test_rectangle():
     """Test geometry.rectangle"""
@@ -70,9 +75,15 @@ def test_rectangle():
     # perimeter(self):
     assert np.isclose(rect_a.perimeter(), 6)
 
-    # contains(self, point):
-    assert rect_a.contains((2, 2.5))
-    assert not rect_a.contains((20, 25))
+    # contains_point(self, point):
+    assert rect_a.contains_point((2, 2.5))
+    assert not rect_a.contains_point((20, 25))
+
+    # contains_points(self, points):
+    assert np.all(rect_a.contains_points([(2, 2.5), (2.5, 2.5), (1.5, 2.5)]))
+    assert np.any(rect_a.contains_points([(2, 2.5), (10, 20)]))
+    assert not np.all(rect_a.contains_points([(2, 2.5), (10, 20)]))
+
 
 def test_polygon():
     """Test geometry.polygon"""
@@ -104,6 +115,11 @@ def test_polygon():
     # perimeter(self):
     assert np.isclose(poly_a.perimeter(), 8)
 
-    # contains(self, point):
-    assert poly_a.contains((2, 2))
-    assert not poly_a.contains((20, 20))
+    # contains_point(self, point):
+    assert poly_a.contains_point((2, 2))
+    assert not poly_a.contains_point((20, 20))
+
+    # contains_points(self, points):
+    assert np.all(poly_a.contains_points([(2, 2.5), (2.5, 2.5), (1.5, 2.5)]))
+    assert np.any(poly_a.contains_points([(2, 2.5), (10, 20)]))
+    assert not np.all(poly_a.contains_points([(2, 2.5), (10, 20)]))

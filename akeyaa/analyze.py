@@ -83,7 +83,7 @@ def by_venue(venue, settings):
     for xtarget in xgrd:
         for ytarget in ygrd:
             xytarget = (xtarget, ytarget)
-            if venue.contains(xytarget):
+            if venue.contains_point(xytarget):
                 welldata = wells.fetch(xytarget, settings.radius, settings.aquifers)
                 if len(welldata) >= settings.required:
                     xyz = [row[0:2] for row in welldata]
@@ -147,7 +147,7 @@ def fit_conic_potential(xytarget, xyz, method):
     Parameters
     ----------
     xytarget : tuple (xtarget, ytarget)
-        The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m] of 
+        The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m] of
         the target location.
 
     list[tuple] : ((x, y), z)
