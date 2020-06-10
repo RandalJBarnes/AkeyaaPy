@@ -25,11 +25,15 @@ potential model.
 
 Data from outside of the venue may be used in the computations.
 
+See Also
+--------
+akeyaa.venues, akeyaa.wells
+
 """
 import numpy as np
 import statsmodels.api as sm
 
-import wells
+from akeyaa.wells import Wells
 
 
 # -----------------------------------------------------------------------------
@@ -69,34 +73,26 @@ def by_venue(venue, settings):
 
     See Also
     --------
-    akeyaa.parameters, akeyaa.venues
+    akeyaa.parameters, akeyaa.venues, akeyaa.wells
 
     """
     xgrd, ygrd = layout_the_grid(venue, settings.spacing)
+    wells = Wells()
 
     results = []
     for xtarget in xgrd:
         for ytarget in ygrd:
-            if venue.contains((xtarget, ytarget)):
-                xwell, ywell, zwell = wells.fetch(
-                    xtarget, ytarget, settings.radius, settings.aquifers
-                )
-                neighbors = len(xwell)
-
-                # Note that we are converting the zw from [ft] to [m].
-                if neighbors >= settings.required:
-                    evp, varp = fit_conic_potential(
-                        xwell - xtarget,
-                        ywell - ytarget,
-                        0.3048 * zwell,
-                        settings.method,
-                    )
-                    results.append((xtarget, ytarget, neighbors, evp, varp))
+            xytarget = (xtarget, ytarget)
+            if venue.contains(xytarget):
+                welldata = wells.fetch(xytarget, settings.radius, settings.aquifers)
+                if len(welldata) >= settings.required:
+                    xyz = [row[0:2] for row in welldata]
+                    evp, varp = fit_conic_potential(xytarget, xyz, settings.method)
+                    results.append((xytarget, len(xyz), evp, varp))
 
     return results
 
 
-# -----------------------------------------------------------------------------
 def layout_the_grid(venue, spacing):
     """Determine the evenly-spaced locations of the x and y grid lines.
 
@@ -145,20 +141,21 @@ def layout_the_grid(venue, spacing):
     return (xgrd, ygrd)
 
 
-# -----------------------------------------------------------------------------
-def fit_conic_potential(x, y, z, method):
+def fit_conic_potential(xytarget, xyz, method):
     """Fit the local conic potential model to the selected heads.
 
     Parameters
     ----------
-    x : (n,) ndarray
-        x-coordinates of observation locations [m].
+    xytarget : tuple (xtarget, ytarget)
+        The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m] of 
+        the target location.
 
-    y : (n,) ndarray
-        y-coordinates of observation locations [m].
+    list[tuple] : ((x, y), z)
+        (x, y) : tuple(float, float)
+            The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
 
-    z : (n,) ndarray
-        observed head values [m].
+        z : float
+            The recorded static water level [ft]
 
     method : str
         The fitting method; one of
@@ -188,23 +185,27 @@ def fit_conic_potential(x, y, z, method):
     where the fitted parameters map as: [A, B, C, D, E, F] = p[0:5].
 
     """
-    X = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
+    x = np.array([row[0][0] for row in xyz], dtype=float) - xytarget[0]
+    y = np.array([row[0][1] for row in xyz], dtype=float) - xytarget[1]
+    z = np.array([row[1] for row in xyz], dtype=float) * 0.0348     # [ft] to [m].
+
+    exog = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 
     if method == "OLS":
-        ols_model = sm.OLS(z, X)
+        ols_model = sm.OLS(z, exog)
         ols_results = ols_model.fit()
         evp = ols_results.params
         varp = ols_results.cov_params()
 
     else:
         if method == "TUKEY":
-            M = sm.robust.norms.TukeyBiweight()
+            method_norm = sm.robust.norms.TukeyBiweight()
         elif method == "HUBER":
-            M = sm.robust.norms.HuberT()
+            method_norm = sm.robust.norms.HuberT()
         else:
             raise UnknownMethodError
 
-        rlm_model = sm.RLM(z, X, M)
+        rlm_model = sm.RLM(z, exog, method_norm)
         rlm_results = rlm_model.fit()
         evp = rlm_results.params
         varp = rlm_results.bcov_scaled

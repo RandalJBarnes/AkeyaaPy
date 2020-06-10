@@ -8,21 +8,21 @@ Created on Thu Jun  4 14:30:05 2020
 
 import os
 
-import analyze as analyze
-import archive as archive
-import geology as geology
-import parameters as parameters
-import show as show
-import venues as venues
+import akeyaa.analyze as analyze
+import akeyaa.archive as archive
+import akeyaa.geology as geology
+import akeyaa.parameters as parameters
+import akeyaa.show as show
+import akeyaa.venues as venues
+from akeyaa.wells import Wells
 
-from stopwatch import stopwatch
+from akeyaa.stopwatch import stopwatch
 
-
-# =============================================================================
-if __name__ == "__main__":
-    # execute only if run as a script
-
+def main():
     rolex = stopwatch()
+
+    wells = Wells()
+    rolex.read("initial")
 
     wash = venues.County(abbr="WASH")
     rolex.read("venues")
@@ -45,3 +45,9 @@ if __name__ == "__main__":
 
     os.remove(pklzfile)
     rolex.read("final")
+
+
+# =============================================================================
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()

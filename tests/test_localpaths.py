@@ -1,5 +1,4 @@
 """Test akeyaa.localpaths.py"""
-
 import os
 
 import akeyaa.localpaths as loc

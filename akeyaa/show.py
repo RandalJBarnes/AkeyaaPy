@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 
-import pnorm
+import akeyaa.pnorm as pnorm
 
 
 # -----------------------------------------------------------------------------
@@ -67,12 +67,10 @@ def by_venue(venue, results):
         user-defined domain, as enumerated and detailed in `venues.py`.
         For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
+    results : list[tuples] (xytarget, n, evp, varp)
 
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
+        - xytarget : tuple(float, float)
+            x- and y-coordinates of target location.
         - n : int
             number of neighborhood wells used in the local analysis.
         - evp : ndarray, shape=(6,1)
@@ -101,36 +99,12 @@ def local_number_of_wells(venue, results):
     Plot the grid showing the number of local wells used in the analysis as
     color-coded markers.
 
-    Parameters
-    ----------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in `venues.py`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
-
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
-        - n : int
-            number of neighborhood wells used in the local analysis.
-        - evp : ndarray, shape=(6,1)
-            expected value vector of the prarameters.
-        - varp : ndarray, shape=(6,6)
-            variance/covariance matrix of the parameters.
-
-    Returns
-    -------
-    None
-
     """
-    bdry = venue.boundary()
+    xtarget = np.array([row[0][0] for row in results])
+    ytarget = np.array([row[0][1] for row in results])
+    ntarget = np.array([row[1] for row in results], dtype=int)
 
-    xtarget = np.array([row[0] for row in results])
-    ytarget = np.array([row[1] for row in results])
-    ntarget = np.array([row[2] for row in results], dtype=int)
+    bdry = venue.boundary()
 
     plt.figure()
     plt.axis("equal")
@@ -153,38 +127,15 @@ def local_head(venue, results):
     Plot the grid showing the relative magnitude of the estimated local head
     as color-coded markers.
 
-    Parameters
-    ----------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in `venues.py`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
-
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
-        - n : int
-            number of neighborhood wells used in the local analysis.
-        - evp : ndarray, shape=(6,1)
-            expected value vector of the prarameters.
-        - varp : ndarray, shape=(6,6)
-            variance/covariance matrix of the parameters.
-
-    Returns
-    -------
-    None
-
     """
+    xtarget = np.array([row[0][0] for row in results])
+    ytarget = np.array([row[0][1] for row in results])
+
     bdry = venue.boundary()
-    xtarget = np.array([row[0] for row in results])
-    ytarget = np.array([row[1] for row in results])
 
     head = np.empty(xtarget.shape)
     for i, row in enumerate(results):
-        evp = row[3]
+        evp = row[2]
         head[i] = 3.28084 * evp[5]          # convert [m] to [ft].
 
     plt.figure()
@@ -209,34 +160,11 @@ def local_flow_direction(venue, results):
     The arrow color depicts the probability that the flow direction is within
     +/- 10 degrees of the drawn arrow.
 
-    Parameters
-    ----------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in `venues.py`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
-
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
-        - n : int
-            number of neighborhood wells used in the local analysis.
-        - evp : ndarray, shape=(6,1)
-            expected value vector of the prarameters.
-        - varp : ndarray, shape=(6,6)
-            variance/covariance matrix of the parameters.
-
-    Returns
-    -------
-    None
-
     """
+    xgrd = np.array([row[0][0] for row in results])
+    ygrd = np.array([row[0][1] for row in results])
+
     bdry = venue.boundary()
-    xgrd = np.array([row[0] for row in results])
-    ygrd = np.array([row[1] for row in results])
 
     xvec = np.empty(xgrd.shape)
     yvec = np.empty(xgrd.shape)
@@ -244,9 +172,8 @@ def local_flow_direction(venue, results):
     p10 = np.empty(xgrd.shape)
 
     for i, row in enumerate(results):
-        evp = row[3]
-        varp = row[4]
-
+        evp = row[2]
+        varp = row[3]
         mu = evp[3:5]
         sigma = varp[3:5, 3:5]
 
@@ -285,38 +212,15 @@ def local_gradient(venue, results):
     Plot the grid showing the magnitude of the estimated local head
     gradient as color-coded markers.
 
-    Parameters
-    ----------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in `venues.py`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
-
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
-        - n : int
-            number of neighborhood wells used in the local analysis.
-        - evp : ndarray, shape=(6,1)
-            expected value vector of the prarameters.
-        - varp : ndarray, shape=(6,6)
-            variance/covariance matrix of the parameters.
-
-    Returns
-    -------
-    None
-
     """
+    xtarget = np.array([row[0][0] for row in results])
+    ytarget = np.array([row[0][1] for row in results])
+
     bdry = venue.boundary()
-    xtarget = np.array([row[0] for row in results])
-    ytarget = np.array([row[1] for row in results])
 
     magnitude = np.empty(xtarget.shape)
     for i, row in enumerate(results):
-        evp = row[3]
+        evp = row[2]
         mu = evp[3:5]
         magnitude[i] = np.hypot(mu[0], mu[1])
 
@@ -344,39 +248,17 @@ def local_laplacian_zscore(venue, results):
     places 0 in the middle. Thus, blue values (negative) indicate local net
     infiltration, red values (positive) indicate local net exfiltration.
 
-    Parameters
-    ----------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated and detailed in `venues.py`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    results : list[tuples] (xtarget, ytarget, n, evp, varp)
-
-        - xtarget : float
-            x-coordinate of target location.
-        - ytarget : float
-            y-coordinate of target location.
-        - n : int
-            number of neighborhood wells used in the local analysis.
-        - evp : ndarray, shape=(6,1)
-            expected value vector of the prarameters.
-        - varp : ndarray, shape=(6,6)
-            variance/covariance matrix of the parameters.
-
-    Returns
-    -------
-    None
-
     """
+    xtarget = np.array([row[0][0] for row in results])
+    ytarget = np.array([row[0][1] for row in results])
+
     bdry = venue.boundary()
-    xtarget = np.array([row[0] for row in results])
-    ytarget = np.array([row[1] for row in results])
 
     score = np.empty(xtarget.shape)
     for i, row in enumerate(results):
-        evp = row[3]
-        varp = row[4]
+        evp = row[2]
+        varp = row[3]
+
         laplacian = 2*(evp[0]+evp[1])
         stdev = 2*np.sqrt(varp[0, 0] + varp[1, 1] + 2*varp[0, 1])
         score[i] = min(max(laplacian/stdev, -3), 3)

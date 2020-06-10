@@ -2,15 +2,15 @@
 
 Notes
 -----
-* Currently, there are eight unique classes of venues.
-    - City(Polygon)
-    - Township(Polygon)
-    - County(Polygon)
-    - Watershed(Polygon)
-    - Subregion(Polygon)
-    - Neighborhood(Circle)
-    - Frame(Rectangle)
-    - Patch(Polygon)
+* Currently, there are eight unique types of venues.
+    - City(Polygon)             political division
+    - Township(Polygon)         political division
+    - County(Polygon)           political division
+    - Watershed(Polygon)        administrative region
+    - Subregion(Polygon)        administrative region
+    - Neighborhood(Circle)      user-defined domain
+    - Frame(Rectangle)          user-defined domain
+    - Patch(Polygon)            user-defined domain
 
 * All of the classes in this module are of the informal type Venue.
   Although it is not enforced by subclassing, any Venue must have
@@ -25,6 +25,9 @@ Notes
 
     extent(self) -> [float, float, float, float]
         Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle.
+
+    circumcircle(self) -> ((float, float), float)
+        return ((x, y), radius) of the bounding circumcircle.
 
     centroid(self) -> ndarray, shape=(2,), dtype=float
         Return the centroid as a point.
@@ -41,12 +44,23 @@ Notes
     fullname(self) -> str
         Return a form of the venue's name appropriate for a plot title.
 
+See Also
+--------
+akeyaa.geometry
+
 """
-import gis
-from geometry import Circle, Polygon, Rectangle
+from akeyaa.gis import (
+    get_city_data,
+    get_township_data,
+    get_watershed_data,
+    get_subregion_data,
+    get_county_data,
+    get_state_data,
+)
+from akeyaa.wells import Wells
+from akeyaa.geometry import Circle, Polygon, Rectangle
 
 
-# -----------------------------------------------------------------------------
 class Error(Exception):
     """The base exception for the module."""
 
@@ -59,7 +73,6 @@ class ConflictingArgumentError(Error):
     """Two or more of the arguments are in conflict."""
 
 
-# -----------------------------------------------------------------------------
 class City(Polygon):
     """City venue by duck-type.
 
@@ -82,7 +95,7 @@ class City(Polygon):
     """
 
     def __init__(self, *, name=None, gnis_id=None):
-        name, code, vertices = gis.get_city_data(name=name, gnis_id=gnis_id)
+        name, code, vertices = get_city_data(name=name, gnis_id=gnis_id)
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -101,7 +114,6 @@ class City(Polygon):
         return f"City of {self.name}"
 
 
-# -----------------------------------------------------------------------------
 class Township(Polygon):
     """Township Venue-by-duck-type.
 
@@ -124,7 +136,7 @@ class Township(Polygon):
     """
 
     def __init__(self, *, name=None, gnis_id=None):
-        name, code, vertices = gis.get_township_data(name=name, gnis_id=gnis_id)
+        name, code, vertices = get_township_data(name=name, gnis_id=gnis_id)
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -143,7 +155,6 @@ class Township(Polygon):
         return f"{self.name} Township"
 
 
-# -----------------------------------------------------------------------------
 class County(Polygon):
     """County Venue-by-duck-type.
 
@@ -166,9 +177,7 @@ class County(Polygon):
     """
 
     def __init__(self, *, name=None, abbr=None, cty_fips=None):
-        name, code, vertices = gis.get_county_data(
-            name=name, abbr=abbr, cty_fips=cty_fips
-        )
+        name, code, vertices = get_county_data(name=name, abbr=abbr, cty_fips=cty_fips)
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -187,7 +196,6 @@ class County(Polygon):
         return f"{self.name} County"
 
 
-# -----------------------------------------------------------------------------
 class Watershed(Polygon):
     """Watershed Venue-by-duck-type.
 
@@ -210,7 +218,7 @@ class Watershed(Polygon):
     """
 
     def __init__(self, *, name=None, huc10=None):
-        name, code, vertices = gis.get_watershed_data(name=name, huc10=huc10)
+        name, code, vertices = get_watershed_data(name=name, huc10=huc10)
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -229,7 +237,6 @@ class Watershed(Polygon):
         return f"{self.name} Watershed"
 
 
-# -----------------------------------------------------------------------------
 class Subregion(Polygon):
     """Subregion Venue-by-duck-type.
 
@@ -252,7 +259,7 @@ class Subregion(Polygon):
     """
 
     def __init__(self, *, name=None, huc8=None):
-        name, code, vertices = gis.get_subregion_data(name=name, huc8=huc8)
+        name, code, vertices = get_subregion_data(name=name, huc8=huc8)
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -271,7 +278,6 @@ class Subregion(Polygon):
         return f"{self.name} Subregion"
 
 
-# -----------------------------------------------------------------------------
 class State(Polygon):
     """State Venue-by-duck-type.
 
@@ -294,7 +300,7 @@ class State(Polygon):
     """
 
     def __init__(self):
-        name, code, vertices = gis.get_state_data()
+        name, code, vertices = get_state_data()
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -313,7 +319,6 @@ class State(Polygon):
         return f"State of {self.name}"
 
 
-# -----------------------------------------------------------------------------
 class Neighborhood(Circle):
     """Neighborhood Venue-by-duck-type.
 
@@ -340,17 +345,17 @@ class Neighborhood(Circle):
     """
 
     def __init__(self, *, name=None, relateid=None, point=None, radius=None):
-        if radius is None:
-            raise MissingArgumentError("A radius is required.")
-
         if relateid is not None:
-            well_location = gis.get_well_location(relateid)
+            well_location = get_well_location(relateid)
             point = well_location[0]
 
         elif point is None:
             raise MissingArgumentError("A relateid or point is required.")
 
-        Circle.__init__(point, radius)
+        if radius is not None:
+            Circle.__init__(point, radius)
+        else:
+            raise MissingArgumentError("A radius is required.")
 
         if name is not None:
             self.name = name
@@ -376,7 +381,6 @@ class Neighborhood(Circle):
         return f"User Defined: {self.name}"
 
 
-# -----------------------------------------------------------------------------
 class Frame(Rectangle):
     """Rectangular frame Venue-by-duck-type.
 
@@ -400,18 +404,18 @@ class Frame(Rectangle):
     """
 
     def __init__(
-        self,
-        *,
-        name=None,
-        xmin=None,
-        xmax=None,
-        ymin=None,
-        ymax=None,
-        lowerleft=None,
-        width=None,
-        height=None,
-        upperright=None,
-        center=None,
+            self,
+            *,
+            name=None,
+            xmin=None,
+            xmax=None,
+            ymin=None,
+            ymax=None,
+            lowerleft=None,
+            width=None,
+            height=None,
+            upperright=None,
+            center=None,
     ):
         """If specified,
             xmin, xmax, ymin, ymax, width, height -> float,
@@ -478,7 +482,6 @@ class Frame(Rectangle):
         return f"User Defined: {self.name}"
 
 
-# -----------------------------------------------------------------------------
 class Patch(Polygon):
     """A general polygonal patch Venue-by-duck-type.
 

@@ -1,7 +1,10 @@
-"""Simple geometric shape classes: Circle, Rectangle, and Polygon.
+"""Geometric shape classes: Circle, Rectangle, and Polygon.
 
-.. Classes
+Create three classes (Circle, Rectangle, Polygon) that satisfy all of the
+geometric requirements needed by a venue.
 
+Classes
+-------
 Shape(ABC)
     The abstract base class for all Shapes.
 
@@ -14,12 +17,15 @@ Rectangle(Shape)
 Polygon(Shape)
     A single, non-overlapping, but not necessarily convex, polygon.
 
+See Also
+--------
+akeyaa.venues
+
 """
 from abc import ABC, abstractmethod
 import numpy as np
 
 
-# -----------------------------------------------------------------------------------------
 class Shape(ABC):
     """The abstract base class for all shapes.
 
@@ -45,6 +51,11 @@ class Shape(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def circumcircle(self):
+        """Return (xycenter, radius) of the bounding circumcircle."""
+        raise NotImplementedError
+
+    @abstractmethod
     def centroid(self):
         """Return the centroid as a point."""
         raise NotImplementedError
@@ -56,7 +67,7 @@ class Shape(ABC):
 
     @abstractmethod
     def perimeter(self):
-        """Return the perimeter [m]."""
+        """Return the length of the perimeter [m]."""
         raise NotImplementedError
 
     @abstractmethod
@@ -65,7 +76,6 @@ class Shape(ABC):
         raise NotImplementedError
 
 
-# -----------------------------------------------------------------------------------------
 class Circle(Shape):
     """A circle.
 
@@ -79,17 +89,8 @@ class Circle(Shape):
 
     """
 
-    NUMBER_OF_VERTICES = 100
-    UNIT_VERTICES = np.array(
-        [
-            (np.cos(theta), np.sin(theta))
-            for theta in np.linspace(0, 2 * np.pi, NUMBER_OF_VERTICES)
-        ],
-        dtype=float,
-    )
-
-    def __init__(self, center, radius):
-        self.center = np.array([center[0], center[1]], dtype=float)
+    def __init__(self, xycenter, radius):
+        self.center = np.array([xycenter[0], xycenter[1]], dtype=float)
         self.radius = float(radius)
 
     def __repr__(self):
@@ -108,13 +109,20 @@ class Circle(Shape):
         """Return True if the two Circle are equal."""
         return (
             (self.__class__ == other.__class__)
-            and (self.center == other.center)
+            and (np.all(self.center == other.center))
             and (self.radius == other.radius)
         )
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
-        return Circle.UNIT_VERTICES * self.radius + self.center
+        unit_vertices = np.array(
+            [
+                (np.cos(theta), np.sin(theta))
+                for theta in np.linspace(0, 2 * np.pi, 100)
+            ],
+            dtype=float,
+        )
+        return unit_vertices * self.radius + self.center
 
     def extent(self):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
@@ -125,8 +133,12 @@ class Circle(Shape):
             self.center[1] + self.radius,
         ]
 
+    def circumcircle(self):
+        """Return (xycenter, radius) of the bounding circumcircle."""
+        return (self.center, self.radius)
+
     def centroid(self):
-        """Return the centroid as a point."""
+        """Return the centroid as a point (x, y)."""
         return self.center
 
     def area(self):
@@ -134,7 +146,7 @@ class Circle(Shape):
         return np.pi * self.radius ** 2
 
     def perimeter(self):
-        """Return the perimeter [m]."""
+        """Return the length of the perimeter [m]."""
         return 2 * np.pi * self.radius
 
     def contains(self, point):
@@ -144,7 +156,6 @@ class Circle(Shape):
         )
 
 
-# -----------------------------------------------------------------------------------------
 class Rectangle(Shape):
     """An axis-aligned rectangle.
 
@@ -209,8 +220,15 @@ class Rectangle(Shape):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
         return [self.xmin, self.xmax, self.ymin, self.ymax]
 
+    def circumcircle(self):
+        """Return (xycenter, radius) of the bounding circumcircle."""
+        xcenter = (self.xmin + self.xmax) / 2
+        ycenter = (self.ymin + self.ymax) / 2
+        radius = np.hypot(self.xmax - self.xmin, self.ymax - self.ymin) / 2
+        return (np.array([xcenter, ycenter], dtype=float), radius)
+
     def centroid(self):
-        """Return the centroid as a point."""
+        """Return the centroid as a point (x, y)."""
         return np.array(
             [(self.xmax + self.xmin) / 2, (self.ymax + self.ymin) / 2], dtype=float
         )
@@ -220,7 +238,7 @@ class Rectangle(Shape):
         return (self.xmax - self.xmin) * (self.ymax - self.ymin)
 
     def perimeter(self):
-        """Return the perimeter [m]."""
+        """Return the length of the perimeter [m]."""
         return 2 * (self.xmax - self.xmin) + 2 * (self.ymax - self.ymin)
 
     def contains(self, point):
@@ -228,7 +246,6 @@ class Rectangle(Shape):
         return (self.xmin < point[0] < self.xmax) and (self.ymin < point[1] < self.ymax)
 
 
-# -----------------------------------------------------------------------------------------
 class Polygon(Shape):
     """A single, non-overlapping, but not necessarily convex, polygon.
 
@@ -241,11 +258,18 @@ class Polygon(Shape):
 
     """
 
-    def __init__(self, vertices):
-        self.vertices = vertices
+    _xmin = None
+    _xmax = None
+    _ymin = None
+    _ymax = None
 
+    def __init__(self, vertices):
+        self.vertices = np.array(vertices, dtype=float)
         if self.area() < 0:
             self.vertices = np.flipud(self.vertices)
+
+        self._xmin, self._ymin = np.min(self.vertices, axis=0)
+        self._xmax, self._ymax = np.max(self.vertices, axis=0)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(vertices = {self.vertices})"
@@ -255,7 +279,9 @@ class Polygon(Shape):
 
     def __eq__(self, other):
         """Return True if the two Polygons are equal."""
-        return (self.__class__ == other.__class__) and (self.vertices == other.vertices)
+        return (self.__class__ == other.__class__) and np.all(
+            self.vertices == other.vertices
+        )
 
     def boundary(self):
         """Return the boundary vertices (domain to the left)."""
@@ -263,9 +289,15 @@ class Polygon(Shape):
 
     def extent(self):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
-        xmin, ymin = np.min(self.vertices, axis=0)
-        xmax, ymax = np.max(self.vertices, axis=0)
-        return [xmin, xmax, ymin, ymax]
+        return [self._xmin, self._xmax, self._ymin, self._ymax]
+
+    def circumcircle(self):
+        """Return (xycenter, radius) of the bounding circumcircle."""
+        xmin, xmax, ymin, ymax = self.extent()
+        xcenter = (xmin + xmax) / 2
+        ycenter = (ymin + ymax) / 2
+        radius = np.hypot(xmax - xmin, ymax - ymin) / 2
+        return (np.array([xcenter, ycenter], dtype=float), radius)
 
     def centroid(self):
         """Return the centroid as a point."""
@@ -296,7 +328,7 @@ class Polygon(Shape):
         return area
 
     def perimeter(self):
-        """Return the perimeter [m]."""
+        """Return the length of the perimeter [m]."""
         x = self.vertices[:, 0]
         y = self.vertices[:, 1]
 
@@ -307,17 +339,26 @@ class Polygon(Shape):
 
     def contains(self, point):
         """Return True if the Polygon contains the point and False otherwise."""
+        xp = point[0]
+        yp = point[1]
+
+        if (
+            (xp <= self._xmin) or
+            (xp >= self._xmax) or
+            (yp <= self._ymin) or
+            (yp >= self._ymax)
+        ):
+            return False
+
         inside = False
         xa, ya = self.vertices[0]
-
-        for i in range(len(self.vertices)):
-            xb, yb = self.vertices[i]
-            if point[1] > min(ya, yb):
-                if point[1] <= max(ya, yb):
-                    if point[0] <= max(xa, xb):
+        for xb, yb in self.vertices:
+            if yp > min(ya, yb):
+                if yp <= max(ya, yb):
+                    if xp <= max(xa, xb):
                         if ya != yb:
-                            xints = (point[1] - ya) * (xb - xa) / (yb - ya) + xa
-                        if xa == xb or point[0] <= xints:
+                            xints = (yp - ya) * (xb - xa) / (yb - ya) + xa
+                        if xa == xb or xp <= xints:
                             inside = not inside
             xa, ya = xb, yb
         return inside

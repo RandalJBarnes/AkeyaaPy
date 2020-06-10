@@ -3,20 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-import gis
-import venues
+from akeyaa.wells import Wells
 
 
-# -----------------------------------------------------------------------------
 class Error(Exception):
     """The base exception for the module."""
-
 
 class EmptySelectionError(Error):
     """There are no wells in the selection."""
 
 
-# -----------------------------------------------------------------------------
 def aquifers_by_venue(venue, aquifers=None):
     """Plot the wells in the venue coded by aquifer.
 
@@ -50,16 +46,18 @@ def aquifers_by_venue(venue, aquifers=None):
 
     """
     bdry = venue.boundary()
-    welldata = gis.get_well_data_by_venue(venue)
+    wells = Wells()
+    
+    welldata = wells.fetch_by_venue(venue)
 
     if aquifers is None:
-        xsel = [row[0] for row in welldata]
-        ysel = [row[1] for row in welldata]
-        asel = [row[3] for row in welldata]
+        xsel = [row[0][0] for row in welldata]
+        ysel = [row[0][1] for row in welldata]
+        asel = [row[2] for row in welldata]
     else:
-        xsel = [row[0] for row in welldata if row[3] in aquifers]
-        ysel = [row[1] for row in welldata if row[3] in aquifers]
-        asel = [row[3] for row in welldata if row[3] in aquifers]
+        xsel = [row[0][0] for row in welldata if row[2] in aquifers]
+        ysel = [row[0][1] for row in welldata if row[2] in aquifers]
+        asel = [row[2] for row in welldata if row[2] in aquifers]
 
     if len(xsel) == 0:
         raise EmptySelectionError
@@ -85,7 +83,6 @@ def aquifers_by_venue(venue, aquifers=None):
     return aquifer_info
 
 
-# -----------------------------------------------------------------------------
 def geologic_color_map(aquifers):
     """Map the aquifer codes to colors.
 
@@ -130,35 +127,3 @@ def geologic_color_map(aquifers):
             geo_hue.append("other")
 
     return (geo_hue, geo_hue_order, geo_palette)
-
-
-# -----------------------------------------------------------------------------
-def whereis(venue):
-    """Plot the venue's shape over the state's ploygon.
-
-    Arguments
-    ---------
-    venue: type
-        An instance of a political division, administrative region, or
-        user-defined domain, as enumerated in `akeyaa.venues`.
-        For example: a ``City``, ``Watershed``, or ``Neighborhood``.
-
-    Returns
-    -------
-    None
-
-    """
-    state = venues.State()
-    state_bdry = state.boundary()
-    venue_bdry = venue.boundary()
-
-    plt.figure()
-    plt.axis("equal")
-
-    plt.fill(state_bdry[:, 0], state_bdry[:, 1], "0.90")
-    plt.fill(venue_bdry[:, 0], venue_bdry[:, 1], "b")
-
-    plt.xlabel("Easting [m]")
-    plt.ylabel("Northing [m]")
-    plt.title(venue.fullname(), {"fontsize": 24})
-    plt.grid(True)
