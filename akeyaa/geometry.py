@@ -258,18 +258,13 @@ class Polygon(Shape):
 
     """
 
-    _xmin = None
-    _xmax = None
-    _ymin = None
-    _ymax = None
-
     def __init__(self, vertices):
         self.vertices = np.array(vertices, dtype=float)
         if self.area() < 0:
             self.vertices = np.flipud(self.vertices)
 
-        self._xmin, self._ymin = np.min(self.vertices, axis=0)
-        self._xmax, self._ymax = np.max(self.vertices, axis=0)
+        self.xmin, self.ymin = np.min(self.vertices, axis=0)
+        self.xmax, self.ymax = np.max(self.vertices, axis=0)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(vertices = {self.vertices})"
@@ -289,7 +284,7 @@ class Polygon(Shape):
 
     def extent(self):
         """Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle."""
-        return [self._xmin, self._xmax, self._ymin, self._ymax]
+        return [self.xmin, self.xmax, self.ymin, self.ymax]
 
     def circumcircle(self):
         """Return (xycenter, radius) of the bounding circumcircle."""

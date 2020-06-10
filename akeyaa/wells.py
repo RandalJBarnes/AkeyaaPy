@@ -143,8 +143,6 @@ class Wells(object):
             satisfy the search criteria an empty list is returned.
 
         """
-        from akeyaa.stopwatch import stopwatch
-
         xycenter, radius = venue.circumcircle()
         candidates = self.fetch(xycenter, radius, aquifers)
 
