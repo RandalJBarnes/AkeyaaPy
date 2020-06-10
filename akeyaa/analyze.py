@@ -30,6 +30,7 @@ See Also
 akeyaa.venues, akeyaa.wells
 
 """
+from itertools import compress
 import numpy as np
 import statsmodels.api as sm
 
@@ -76,29 +77,29 @@ def by_venue(venue, settings):
     akeyaa.parameters, akeyaa.venues, akeyaa.wells
 
     """
-    xgrd, ygrd = layout_the_grid(venue, settings.spacing)
     wells = Wells()
+    targets = layout_the_targets(venue, settings.spacing)
 
     results = []
-    for xtarget in xgrd:
-        for ytarget in ygrd:
-            xytarget = (xtarget, ytarget)
-            if venue.contains_point(xytarget):
-                welldata = wells.fetch(xytarget, settings.radius, settings.aquifers)
-                if len(welldata) >= settings.required:
-                    xyz = [row[0:2] for row in welldata]
-                    evp, varp = fit_conic_potential(xytarget, xyz, settings.method)
-                    results.append((xytarget, len(xyz), evp, varp))
+    for xytarget in targets:
+        welldata = wells.fetch(xytarget, settings.radius, settings.aquifers)
+        if len(welldata) >= settings.required:
+            xyz = [row[0:2] for row in welldata]
+            evp, varp = fit_conic_potential(xytarget, xyz, settings.method)
+            results.append((xytarget, len(xyz), evp, varp))
 
     return results
 
 
-def layout_the_grid(venue, spacing):
+def layout_the_targets(venue, spacing):
     """Determine the evenly-spaced locations of the x and y grid lines.
 
     The grid lines of target locations are anchored at the centroid of the
     `venue`, axes-aligned, and the separated by `spacing`. The outer extent
     of the grid captures all of the vertices of the `venue`.
+
+    The grid nodes are then filtered so that only nodes inside of the venue
+    are retained.
 
     Parameters
     ----------
@@ -113,11 +114,8 @@ def layout_the_grid(venue, spacing):
 
     Returns
     -------
-    xgrd : list[float]
-        x-coordinates of the vertical gridlines.
-
-    ygrd : list[float]
-        y-coordinates of the horizontal gridlines.
+    xytargets : list[tuple] (xgrd, ygrd)
+        x- and y-coordinates of the target points.
 
     See Also
     --------
@@ -138,7 +136,12 @@ def layout_the_grid(venue, spacing):
     while ygrd[-1] < venue.extent()[3]:
         ygrd.append(ygrd[-1] + spacing)
 
-    return (xgrd, ygrd)
+    xygrd = []
+    for x in xgrd:
+        for y in ygrd:
+            xygrd.append((x,y))
+    flag = venue.contains_points(xygrd)
+    return list(compress(xygrd, flag))
 
 
 def fit_conic_potential(xytarget, xyz, method):
