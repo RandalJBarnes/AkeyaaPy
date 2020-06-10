@@ -114,7 +114,7 @@ def layout_the_targets(venue, spacing):
 
     Returns
     -------
-    xytargets : list[tuple] (xgrd, ygrd)
+    targets : list[tuple] (xtarget, ytarget)
         x- and y-coordinates of the target points.
 
     See Also

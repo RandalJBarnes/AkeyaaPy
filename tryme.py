@@ -21,7 +21,7 @@ from akeyaa.stopwatch import stopwatch
 def main():
     rolex = stopwatch()
 
-    wells = Wells()
+    Wells.initialize()
     rolex.read("initial")
 
     wash = venues.County(abbr="WASH")

@@ -57,7 +57,6 @@ from akeyaa.gis import (
     get_county_data,
     get_state_data,
 )
-from akeyaa.wells import Wells
 from akeyaa.geometry import Circle, Polygon, Rectangle
 
 

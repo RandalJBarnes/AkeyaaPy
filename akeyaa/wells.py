@@ -60,7 +60,7 @@ class Wells(object):
 
 
     @classmethod
-    def __initialize(cls):
+    def initialize(cls):
         if cls.__welldata is None:
             cls.__welldata = sorted(get_all_well_data(), key=itemgetter(3))
             cls.__relateid = [row[3] for row in cls.__welldata]
@@ -77,7 +77,7 @@ class Wells(object):
 
         """
         if Wells.__welldata is None:
-            Wells.__initialize()
+            Wells.initialize()
 
     def fetch(self, xytarget, radius, aquifers=None):
         """Fetch the nearby wells.
