@@ -1,5 +1,9 @@
 """Define and implement the Venue class and all of its subclasses.
 
+A Venue is an instance of a political division, administrative region, or
+user-defined domain, as enumerated and detailed in `akeyaa.venues`.
+For example: a ``City``, ``Watershed``, or ``Neighborhood``.
+
 Notes
 -----
 * Currently, there are eight unique types of venues.
@@ -13,33 +17,12 @@ Notes
     - Patch(Polygon)            user-defined domain
 
 * All of the classes in this module are of the informal type Venue.
-  Although it is not enforced by subclassing, any Venue must have
-  the following methods:
+  But Venue is not a formal abstract base class. Nonetheless, any Venue must
+  have the following methods in addition to all of the methods promised
+  by the abstract base class geometry.Shape.
 
     __eq__(self, other) -> bool
         Return True is the two venues are the same.
-
-    boundary(self): -> ndarray, shape=(n, 2), dtype= float
-        Return the boundary vertices -- domain to the left, and last vertex
-        repeats the first vertex.
-
-    extent(self) -> [float, float, float, float]
-        Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle.
-
-    circumcircle(self) -> ((float, float), float)
-        return ((x, y), radius) of the bounding circumcircle.
-
-    centroid(self) -> ndarray, shape=(2,), dtype=float
-        Return the centroid as a point.
-
-    area(self) -> float
-        Return the area [m^2].
-
-    perimeter(self) -> float
-        Return the perimeter [m].
-
-    contains(self, point) -> bool
-        Return True if the Shape contains the point and False otherwise.
 
     fullname(self) -> str
         Return a form of the venue's name appropriate for a plot title.
@@ -245,8 +228,7 @@ class Subregion(Polygon):
         The subregion name found in the .gdb.
 
     code : str
-        The unique 8-digit hydrologic unit code (HUC10) encoded as a
-        string.
+        The unique 8-digit hydrologic unit code (HUC8) encoded as a string.
 
         For example, Twin Cities subregion HUC8 = "07010206".
 
@@ -371,9 +353,9 @@ class Neighborhood(Circle):
 
     def __eq__(self, other):
         return (
-            (self.__class__ == other.__class__)
-            and (self.center == other.center)
-            and (self.radius == other.radius)
+            (self.__class__ == other.__class__) and
+            (self.center == other.center) and
+            (self.radius == other.radius)
         )
 
     def fullname(self):
@@ -402,19 +384,10 @@ class Frame(Rectangle):
 
     """
 
-    def __init__(
-            self,
-            *,
-            name=None,
-            xmin=None,
-            xmax=None,
-            ymin=None,
-            ymax=None,
-            lowerleft=None,
-            width=None,
-            height=None,
-            upperright=None,
-            center=None,
+    def __init__(self, *, name=None,
+            xmin=None, xmax=None, ymin=None, ymax=None,
+            lowerleft=None, width=None, height=None,
+            upperright=None, center=None,
     ):
         """If specified,
             xmin, xmax, ymin, ymax, width, height -> float,
@@ -515,7 +488,10 @@ class Patch(Polygon):
         )
 
     def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.vertices == other.vertices)
+        return (
+            (self.__class__ == other.__class__) and
+            (self.vertices == other.vertices)
+        )
 
     def fullname(self):
         return f"User Defined: {self.name}"

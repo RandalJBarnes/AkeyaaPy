@@ -72,7 +72,7 @@ def loadme(pklzfile):
         Validated akeyaa parameters, as enumerated in `akeyaa.parameters`.
 
     results : list[tuple]
-        The tuples are of the form (xtarget, ytarget, n, evp, varp), as
+        The tuples are of the form (xytarget, n, evp, varp), as
         detailed in `akeyaa.analyze`.
 
     See Also

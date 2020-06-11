@@ -15,7 +15,7 @@ Rectangle(Shape)
     An axis-aligned rectangle.
 
 Polygon(Shape)
-    A single, non-overlapping, but not necessarily convex, polygon.
+    A single, non-overlapping, but not necessarily convex or monotone, polygon.
 
 See Also
 --------
@@ -30,9 +30,32 @@ from matplotlib.path import Path
 class Shape(ABC):
     """The abstract base class for all shapes.
 
-    For the purposes of a Shape:
-    -- a <point> is a numpy.array([x, y], dtype=float),
-    -- <vertices> is a numpy.array of points (i.e. a 2D array).
+    Methods
+    -------
+    boundary(self): -> ndarray, shape=(n, 2), dtype= float
+        Return the boundary vertices -- domain to the left, and last vertex
+        repeats the first vertex.
+
+    extent(self) -> [float, float, float, float]
+        Return [xmin, xmax, ymin, ymax] of the bounding axis-aligned rectangle.
+
+    circumcircle(self) -> ((float, float), float)
+        return ((x, y), radius) of the bounding circumcircle.
+
+    centroid(self) -> ndarray, shape=(2,), dtype=float
+        Return the centroid as a point.
+
+    area(self) -> float
+        Return the area [m^2].
+
+    perimeter(self) -> float
+        Return the perimeter [m].
+
+    contains_point(self, point) -> bool
+        Return True if the Shape contains the point and False otherwise.
+
+    contains_points(self, points) -> bool
+        Returns a bool array which is True if the Shape contains the point.
 
     """
 

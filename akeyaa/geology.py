@@ -36,10 +36,9 @@ def aquifers_by_venue(venue, aquifers=None):
     -------
     aquifer_info : list[tuple] (aquifer_abbr, count)
 
-        - aquifer_abbr : str
+        aquifer_abbr : str
             The four-character aquifer abbreviation string.
-
-        - count : int
+        count : int
             The number of wells in the associated aquifer type.
 
         The list is sorted in descending order by count.

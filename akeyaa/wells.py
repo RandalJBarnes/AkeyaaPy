@@ -1,15 +1,14 @@
-"""Define and implement the wells database and associated kd tree.
+"""Define and implement the wells database.
 
 Extract all of the necessary well data from the .gdb, and create an
-associated, index-based, kd-tree for very fast lookup based on coordinates.
+associated database for very fast lookup based on coordinates or relateid.
 
 """
 from bisect import bisect_left
+from itertools import compress
 from operator import itemgetter
 import scipy
-from itertools import compress
 
-import numpy as np
 
 from akeyaa.gis import get_all_well_data
 
@@ -19,8 +18,8 @@ class Wells(object):
 
     Attributes
     ----------
-    __welldata : list[tuple] ((x, y), z, aquifer, relateid)
-        (x, y) : tuple(float, float)
+    __welldata : list[tuple] (xy, z, aquifer, relateid)
+        xy : tuple (float, float)
             The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
 
         z : float
@@ -35,11 +34,11 @@ class Wells(object):
             leading zeros.
 
         For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720')
-        The welldata is sorted by the relateid.
-
+        
     __relateid : list[str]
-        The unique 10-digit well number encoded as a string with
-        leading zeros.
+        The unique 10-digit well number encoded as a string with leading 
+        zeros. This is a duplicate of the field realteid in __welldata to
+        be used as a search key.
 
     __tree : scipy.spatial.cKDTree
         A kd-tree for all of the wells in fetch.welldata.
@@ -51,7 +50,14 @@ class Wells(object):
         will have multiple entries in this table -- one entry for every
         measurement.
 
+    *   The welldata is sorted in ascending order by the relateid to allow for
+        quick searches on the relateid using the bisect tools.
+
     *   The __relateid list is created as a search key.
+
+    See Also
+    --------
+    akeyaa.wells
 
     """
     __welldata = None
@@ -61,6 +67,13 @@ class Wells(object):
 
     @classmethod
     def initialize(cls):
+        """Initialize the class attributes.
+
+        Initialize __welldata, __relateid, and __tree.  Specifically, extract 
+        the well data from an external .gdb, setup the kd search tree, and 
+        sort id list.
+
+        """
         if cls.__welldata is None:
             cls.__welldata = sorted(get_all_well_data(), key=itemgetter(3))
             cls.__relateid = [row[3] for row in cls.__welldata]
@@ -71,9 +84,8 @@ class Wells(object):
 
         Notes
         -----
-        The first call is slow because it has to extract the data from an
-        external .gdb, thensetup the kd search tree and the sorted id list.
-        Every call after the first is very fast.
+        The first call is slow (a few seconds) because this calls the class 
+        initialize. Every call after the first is very fast.
 
         """
         if Wells.__welldata is None:
@@ -102,10 +114,11 @@ class Wells(object):
 
         Returns
         -------
-        list[tuple] : ((x, y), z, aquifer, relateid)
-            Returns a list of tuples, with one tuple for each welldata entry
-            that satisfies the search criteria. If there are no wells that
-            satisfy the search criteria an empty list is returned.
+        list[tuple] : (xy, z, aquifer, relateid)
+            Returns a list of tuples (see welldata above), with one tuple for 
+            each welldata entry that satisfies the search criteria. If there 
+            are no wells that satisfy the search criteria an empty list is
+            returned.
 
         Notes
         -----
@@ -140,36 +153,36 @@ class Wells(object):
 
         Returns
         -------
-        list[tuple] : ((x, y), z, aquifer, relateid)
-            Returns a list of tuples, with one tuple for each welldata entry
-            that satisfies the search criteria. If there are no wells that
-            satisfy the search criteria an empty list is returned.
+        list[tuple] : (xy, z, aquifer, relateid)
+            Returns a list of tuples (see welldata above), with one tuple for 
+            each welldata entry that satisfies the search criteria. If there 
+            are no wells that satisfy the search criteria an empty list is
+            returned.
 
         """
         xycenter, radius = venue.circumcircle()
         candidates = self.fetch(xycenter, radius, aquifers)
 
-        if not candidates:
-            return []
-
-        flag = venue.contains_points([row[0] for row in candidates])
-        return list(compress(candidates, flag))
+        if candidates:
+            flag = venue.contains_points([row[0] for row in candidates])
+            return list(compress(candidates, flag))
+        return []
 
     def get_well(self, relateid):
         """Get the welldata for a single well by relateid.
 
         Parameters
         ---------
-        relateid : str
+        relateid : str, int
             The unique 10-digit well number encoded as a string with
             leading zeros.
 
             You can enter the relateid as an integer and this function
-            will convert it to a string.
+            will convert it to a string with the leading zeros.
 
         Returns
         -------
-        tuple : ((x, y), z, aquifer, relateid)
+        tuple : (xy, z, aquifer, relateid)
             If the relateid is found, return the associated complete welldata
             tuple. If the relateid is not found, return None.
 

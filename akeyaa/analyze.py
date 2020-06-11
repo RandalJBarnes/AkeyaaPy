@@ -37,12 +37,10 @@ import statsmodels.api as sm
 from akeyaa.wells import Wells
 
 
-# -----------------------------------------------------------------------------
 class UnknownMethodError(Exception):
     """The requested fitting method is not supported."""
 
 
-# -----------------------------------------------------------------------------
 def by_venue(venue, settings):
     """Compute the Akeyaa analysis across the specified venue.
 
@@ -59,18 +57,16 @@ def by_venue(venue, settings):
 
     Returns
     -------
-    results : list[tuple] (xtarget, ytarget, n, evp, varp)
+    results : list[tuple] (xytarget, n, evp, varp)
 
-            xtarget : float
-                x-coordinate of target location.
-            ytarget : float
-                y-coordinate of target location.
-            n : int
-                number of naerby wells used in the local analysis.
-            evp : (6, 1) ndarray
-                expected value vector of the model parameters.
-            varp : (6, 6) ndarray
-                variance/covariance matrix of the model parameters.
+        xytarget : tuple (float, float)
+            x- and y-coordinates of target location.
+        n : int
+            number of naerby wells used in the local analysis.
+        evp : (6, 1) ndarray
+            expected value vector of the model parameters.
+        varp : (6, 6) ndarray
+            variance/covariance matrix of the model parameters.
 
     See Also
     --------
@@ -154,9 +150,9 @@ def fit_conic_potential(xytarget, xyz, method):
         the target location.
 
     list[tuple] : ((x, y), z)
+
         (x, y) : tuple(float, float)
             The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
-
         z : float
             The recorded static water level [ft]
 

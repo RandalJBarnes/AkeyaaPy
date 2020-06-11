@@ -6,8 +6,8 @@ ArcGIS Pro/ArcPy data types, are ISOLATED in this module.
 get_all_well_data()
     Query arcpy for the welldata from all authorized wells in the state.
 
-get_venue_data(source, what, where)
-    Query acrpy for venue data.
+_get_venue_data(source, what, where)
+    Query acrpy for venue data. This is intended as a private method.
 
 get_city_data(name=None, gnis_id=None)
     Return the City venue data.
@@ -27,13 +27,28 @@ get_county_data(name=None, abbr=None, cty_fips=None)
 get_state_data()
     Return the State venue data.
 
+See Also
+--------
+akeyaa.venues, akeyaa.wells
+
 """
 import numpy as np
-
 import pyproj
 import arcpy
 
-from akeyaa.localpaths import SOURCE
+from akeyaa.localpaths import CTUGDB, CTYGDB, WBDGDB, STAGDB, CWIGDB
+
+# The location details of specific feature classes.
+SOURCE = {
+    "CITY"      : CTUGDB + r"\city_township_unorg",     # City boundaries
+    "TOWNSHIP"  : CTUGDB + r"\city_township_unorg",     # Township boundaries
+    "COUNTY"    : CTYGDB + r"\mn_county_boundaries",    # County boundaries
+    "WATERSHED" : WBDGDB + r"\WBDHU10",                 # Watershed boundaries
+    "SUBREGION" : WBDGDB + r"\WBDHU8",                  # Subregion boundaries
+    "STATE"     : STAGDB + r"\Boundaries_of_Minnesota", # MN state boundary
+    "ALLWELLS"  : CWIGDB + r"\allwells",                # MN county well index
+    "C5WL"      : CWIGDB + r"\C5WL",                    # MN static water levels
+}
 
 
 class Error(Exception):
@@ -105,9 +120,44 @@ def get_all_well_data():
         return list(cursor)
 
 
-def get_venue_data(source, what, where):
-    """Query acrpy for civil venue data."""
+def _get_venue_data(source, what, where):
+    """Query acrpy for venue data. This is intended as a private method.
 
+    Query various .gdb for the names, unique codes, and boundary polygon of
+    a political division or administrative region: for example: a ``City``,
+    ``County``, or ``Watershed``.
+
+    If the boundary polygon is given in lat/lon, the coordinates are converted
+    into NAD 83 UTM zone 15N (EPSG:26915).
+
+    Prameters
+    ---------
+    source : str
+        The complete, localized, path to the data, including the feature class.
+
+    what : list[str]
+        A list of field names to extract.
+
+    where : str
+        The detailed where SQL-type where clause.
+
+    Returns
+    -------
+    name : str
+        The venue name as stored in the .gdb.
+
+    code : str, int
+        The unique code (str or int) associated with the venue type.
+
+    vertices : list[(x, y)]
+        The vertices of the boundary polygon as stored in the .gdb.
+
+    Raises
+    ------
+    VenueNotFoundError
+    VenueNotUniqueError
+
+    """
     results = []
     with arcpy.da.SearchCursor(source, what, where) as cursor:
         for row in cursor:
@@ -117,9 +167,10 @@ def get_venue_data(source, what, where):
         raise VenueNotFoundError(f"{where}")
 
     if len(results) > 1:
+        message = f"{where}"
         for row in results:
-            print(row[0:2])
-        raise VenueNotUniqueError(f"{where}")
+            message += f"\n {row[0:2]}"
+        raise VenueNotUniqueError(message)
 
     poly = results[0][2]
 
@@ -144,8 +195,30 @@ def get_venue_data(source, what, where):
 # --------------------------------------------------------------------
 
 def get_city_data(*, name=None, gnis_id=None):
-    """Return the City venue data."""
+    """Return the City venue data.
 
+    Parameters
+    ----------
+    All arguments are key-word ONLY.
+
+    name : str
+        The city name, as stored in the *city_township_unorg* feature
+        class.
+
+    gnis_id : str
+        The unique 8-digit Geographic Names Information System (GNIS)
+        identification number encoded as a string.
+
+    Notes
+    -----
+    The `name`, the `gnis_id`, or both can be specified. The `name` is not
+    unique, whereas the `gnis_id` is.
+
+    If only the `name` is specified and it is not unique a VenueNotUniqueError
+    is raised. If the `name`, the `gnis_id`, or the combination of both cannot
+    be found a VenueNotFoundError is raised.
+
+    """
     source = SOURCE["CITY"]
     what = ["NAME", "GNIS_ID", "SHAPE@"]
     where = "(CTU_Type = 'CITY')"
@@ -156,12 +229,34 @@ def get_city_data(*, name=None, gnis_id=None):
     if gnis_id is not None:
         where += f" AND (GNIS_ID = '{gnis_id}')"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
 
 
 def get_township_data(*, name=None, gnis_id=None):
-    """Return the Township venue data."""
+    """Return the Township venue data.
 
+    Parameters
+    ----------
+    All arguments are key-word ONLY.
+
+    name : str
+        The township name, as stored in the *city_township_unorg* feature
+        class.
+
+    gnis_id : str
+        The unique 8-digit Geographic Names Information System (GNIS)
+        identification number encoded as a string.
+
+    Notes
+    -----
+    The `name`, the `gnis_id`, or both can be specified. The `name` is not
+    unique, whereas the `gnis_id` is.
+
+    If only the `name` is specified and it is not unique a VenueNotUniqueError
+    is raised. If the `name`, the `gnis_id`, or the combination of both cannot
+    be found a VenueNotFoundError is raised.
+
+    """
     source = SOURCE["TOWNSHIP"]
     what = ["NAME", "GNIS_ID", "SHAPE@"]
     where = "(CTU_Type = 'TOWNSHIP')"
@@ -172,12 +267,38 @@ def get_township_data(*, name=None, gnis_id=None):
     if gnis_id is not None:
         where += f" AND (GNIS_ID = '{gnis_id}')"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
 
 
 def get_county_data(*, name=None, abbr=None, cty_fips=None):
-    """Return the County venue data."""
+    """Return the County venue data.
 
+    Parameters
+    ----------
+    All arguments are key-word ONLY.
+
+    name : str
+        The county name, as stored in the *mn_county_boundaries* feature
+        class.
+
+    abbr : str
+        The 4-character county name abbreviation, as stored in the
+        *mn_county_boundaries* feature class.
+
+    cty_fips : int
+        The unique 5-digit Federal Information Processing Standards code
+        (FIPS), without the initial 2 digits state code.
+
+    Notes
+    -----
+    The `name`, 'abbr', `gnis_id`, or any combination can be specified.
+    The `name` is not unique, whereas the `abbr` and `cty_fips` are.
+
+    If only the `name` is specified and it is not unique a VenueNotUniqueError
+    is raised. If the `name`, `abbr`, `cty_fips`, or a combination cannot
+    be found a VenueNotFoundError is raised.
+
+    """
     source = SOURCE["COUNTY"]
     what = ["CTY_NAME", "CTY_FIPS", "SHAPE@"]
     where = ""
@@ -197,12 +318,33 @@ def get_county_data(*, name=None, abbr=None, cty_fips=None):
         else:
             where = f"(CTY_FIPS = '{cty_fips}')"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
 
 
 def get_watershed_data(*, name=None, huc10=None):
-    """Return the Watershed venue data."""
+    """Return the Watershed venue data.
 
+    Parameters
+    ----------
+    All arguments are key-word ONLY.
+
+    name : str
+        The watershed name, as stored in the *WBDHU10* feature class.
+
+    huc10 : str
+        The unique 10-digit hydrologic unit code (HUC10) encoded as a
+        string.
+
+    Notes
+    -----
+    The `name`, the `huc10`, or both can be specified. The `name` is not
+    unique, whereas the `huc10` is.
+
+    If only the `name` is specified and it is not unique within the state
+    a VenueNotUniqueError is raised. If the `name`, the `huc10`, or the
+    combination of both cannot be found a VenueNotFoundError is raised.
+
+    """
     source = SOURCE["WATERSHED"]
     what = ["NAME", "HUC10", "SHAPE@"]
     where = "(STATES LIKE '%MN%')"
@@ -213,12 +355,32 @@ def get_watershed_data(*, name=None, huc10=None):
     if huc10 is not None:
         where += f" AND (HUC10 = '{huc10}')"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
 
 
 def get_subregion_data(*, name=None, huc8=None):
-    """Return the Subregion venue data."""
+    """Return the Subregion venue data.
 
+    Parameters
+    ----------
+    All arguments are key-word ONLY.
+
+    name : str
+        The watershed name, as stored in the *WBDHU10* feature class.
+
+    huc8 : str
+        The unique 8-digit hydrologic unit code (HUC8) encoded as a string.
+
+    Notes
+    -----
+    The `name`, the `huc8`, or both can be specified. The `name` is not
+    unique, whereas the `huc8` is.
+
+    If only the `name` is specified and it is not unique within the state
+    a VenueNotUniqueError is raised. If the `name`, the `huc8`, or the
+    combination of both cannot be found a VenueNotFoundError is raised.
+
+    """
     source = SOURCE["SUBREGION"]
     what = ["NAME", "HUC8", "SHAPE@"]
     where = "(STATES LIKE '%MN%')"
@@ -229,7 +391,7 @@ def get_subregion_data(*, name=None, huc8=None):
     if huc8 is not None:
         where += f"AND (HUC8 = '{huc8}')"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
 
 
 def get_state_data():
@@ -239,4 +401,4 @@ def get_state_data():
     what = ["STATE_NAME", "STATE_FIPS_CODE", "SHAPE@"]
     where = "STATE_NAME = 'Minnesota'"
 
-    return get_venue_data(source, what, where)
+    return _get_venue_data(source, what, where)
