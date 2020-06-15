@@ -33,7 +33,10 @@ class Wells(object):
             The unique 10-digit well number encoded as a string with
             leading zeros.
 
-        For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720')
+        date : int
+            Recorded measurement date writeen as YYYYMMDD.
+
+        For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
         
     __relateid : list[str]
         The unique 10-digit well number encoded as a string with leading 
@@ -91,12 +94,13 @@ class Wells(object):
         if Wells.__welldata is None:
             Wells.initialize()
 
-    def fetch(self, xytarget, radius, aquifers=None):
+    def fetch(self, xytarget, radius, aquifers, before, after):
         """Fetch the nearby wells.
 
-        Fetch the welldata for all authorized wells within `radius` of the
-        coordinates `xytarget` that are completed in one or more of the
-        identified `aquifers`.
+        Fetch the welldata for all authorized wells within `radius` of the 
+        coordinates `xytarget`, that are completed in one or more of the
+        identified `aquifers`, and that have a measured date between `after`
+        and `before`.
 
         Parameters
         ----------
@@ -107,14 +111,18 @@ class Wells(object):
         radius : float
             The radius of the search neighborhood [m].
 
-        aquifers : list[str], optional
+        aquifers : list[str]
             List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. The default is None. If
-            None, then wells from all aquifers will be included.
+            Minnesota Geologic Survey's coding system. If None, then wells 
+            from all aquifers will be included.
+
+        after : int 
+
+        before : int
 
         Returns
         -------
-        list[tuple] : (xy, z, aquifer, relateid)
+        list[tuple] : (xy, z, aquifer, relateid, meas_date)
             Returns a list of tuples (see welldata above), with one tuple for 
             each welldata entry that satisfies the search criteria. If there 
             are no wells that satisfy the search criteria an empty list is
@@ -129,15 +137,20 @@ class Wells(object):
         indx = Wells.__tree.query_ball_point(xytarget, radius)
         if indx:
             for i in indx:
-                if (aquifers is None) or (Wells.__welldata[i][2] in aquifers):
+                if (
+                    ((aquifers is None) or (Wells.__welldata[i][2] in aquifers)) and
+                    ((after is None) or (Wells.__welldata[i][4] >= after)) and
+                    ((before is None) or (Wells.__welldata[i][4] <= before))
+                ):
                     welldata.append(Wells.__welldata[i])
         return welldata
 
-    def fetch_by_venue(self, venue, aquifers=None):
+    def fetch_by_venue(self, venue, aquifers, after, before):
         """Fetch wells in the specified venue.
 
-        Fetch the ((x, y), z) data for all authorized wells within `venue`
-        that are completed in one or more of the identified `aquifers`.
+        Fetch the welldata for all authorized wells that are completed in one
+        or more of the identified `aquifers`, and that have a measured date 
+        between `after` and `before`.
 
         Parameters
         ----------
@@ -146,10 +159,16 @@ class Wells(object):
             user-defined domain, as enumerated and detailed in `akeyaa.venues`.
             For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-        aquifers : list[str], optional
+        aquifers : list[str]
             List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. The default is None. If
-            None, then wells from all aquifers will be included.
+            Minnesota Geologic Survey's coding system. If None, then wells from
+            all aquifers will be included.
+
+        after : int
+            Earliest measurement date to use; written as YYYYMMDD. 
+
+        before : int
+            Latest measurement date to use; written as YYYYMMDD.
 
         Returns
         -------
@@ -161,7 +180,7 @@ class Wells(object):
 
         """
         xycenter, radius = venue.circumcircle()
-        candidates = self.fetch(xycenter, radius, aquifers)
+        candidates = self.fetch(xycenter, radius, aquifers, after, before)
 
         if candidates:
             flag = venue.contains_points([row[0] for row in candidates])

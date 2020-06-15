@@ -12,11 +12,13 @@ target locations is anchored at the centroid of the `venue`'s domain,
 and the grid lines are separated by `spacing`.
 
 If a target location is not inside of the `venue` it is discarded. For each
-remaining target location, all wells that satisfy the following two
-conditions are identified:
+remaining target location, all wells that satisfy the following criteria
+are identified:
 
-- the well is completed in one or more of the `aquifers`, and
-- the well is within a horizontal distance of `radius` of the target location.
+- the well is within a horizontal distance of `radius` of the target location,
+- the well is completed in one or more of the `aquifers`,
+- the water level measurement date is on or after `after`, and
+- the water level measurement date is on or before `before`.
 
 If a target location has fewer than `required` identified (neighboring)
 wells it is discarded. The Akeyaa analysis is carried out at each of the
@@ -78,7 +80,13 @@ def by_venue(venue, settings):
 
     results = []
     for xytarget in targets:
-        welldata = wells.fetch(xytarget, settings.radius, settings.aquifers)
+        welldata = wells.fetch(
+            xytarget, 
+            settings.radius, 
+            settings.aquifers,
+            settings.after,
+            settings.before
+        )
         if len(welldata) >= settings.required:
             xyz = [row[0:2] for row in welldata]
             evp, varp = fit_conic_potential(xytarget, xyz, settings.method)

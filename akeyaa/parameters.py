@@ -11,7 +11,8 @@ DEFAULT_METHOD = "TUKEY"        # Robust linear model with Tuckey bi-weights.
 DEFAULT_RADIUS = 3000           # Search radius.
 DEFAULT_REQUIRED = 25           # Required minimum numer of neighboring wells.
 DEFAULT_SPACING = 1000          # The grid spacing for the target locations.
-
+DEFAULT_BEFORE = None           # Latest data to keep YYYYMMDD.
+DEFAULT_AFTER = None            # Earliest data to keep YYYYMMDD.
 
 # The following is a complete list of all 4-character aquifer codes used in
 # the Minnesota County Well index as of 1 January 2020. There are 10 groups
@@ -57,8 +58,14 @@ class Parameters(object):
     ----------
     aquifers : list[str], optional
         List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey"s coding system. If None, then all
+        Minnesota Geologic Survey's coding system. If None, then all
         aquifers present will be included. The default is DEFAULT_AQUIFERS.
+
+    after : int
+        Earliest measurement date to use; written as YYYYMMDD. 
+
+    before : int
+        Latest measurement date to use; written as YYYYMMDD.
 
     method : str, optional
         The fitting method. This must be one of {"OLS", "TUKEY", "HUBER"}.
@@ -96,6 +103,8 @@ class Parameters(object):
         radius=DEFAULT_RADIUS,
         required=DEFAULT_REQUIRED,
         spacing=DEFAULT_SPACING,
+        after=DEFAULT_AFTER,
+        before=DEFAULT_BEFORE,        
     ):
         """Note: all parameters are by name only."""
         self.aquifers = aquifers
@@ -103,6 +112,8 @@ class Parameters(object):
         self.radius = radius
         self.required = required
         self.spacing = spacing
+        self.after = after
+        self.before = before
 
     def __repr__(self):
         return (
@@ -111,7 +122,9 @@ class Parameters(object):
             f"method='{self.method}'', "
             f"radius={self.radius}, "
             f"required={self.required}, "
-            f"spacing={self.spacing})"
+            f"spacing={self.spacing}, "
+            f"after={self.after}, "
+            f"before={self.before})"
         )
 
     def __eq__(self, other):
@@ -122,6 +135,8 @@ class Parameters(object):
             and (self.radius == other.radius)
             and (self.required == other.required)
             and (self.spacing == other.spacing)
+            and (self.after == other.after)
+            and (self.before == other.before)
         )
 
     @property
@@ -133,6 +148,26 @@ class Parameters(object):
         if (aquifers is not None) and (not set.issubset(set(aquifers), ALL_AQUIFERS)):
             raise ValueError("Unknown aquifer code(s)")
         self._aquifers = aquifers
+
+    @property
+    def after(self):
+        return self._after
+
+    @after.setter
+    def after(self, after):
+        if (after is not None) and (not isinstance(after, int)):
+            raise ValueError("'after' must be None or an int.")
+        self._after = after
+
+    @property
+    def before(self):
+        return self._before
+
+    @before.setter
+    def before(self, before):
+        if (before is not None) and (not isinstance(before, int)):
+            raise ValueError("'before' must be None or an int.")
+        self._before = before
 
     @property
     def method(self):

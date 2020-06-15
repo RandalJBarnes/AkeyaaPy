@@ -107,6 +107,7 @@ def get_all_well_data():
         "C5WL.MEAS_ELEV",
         "allwells.AQUIFER",
         "allwells.RELATEID",
+        "C5WL.MEAS_DATE",
     ]
 
     where_clause = (

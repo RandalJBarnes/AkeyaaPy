@@ -13,12 +13,13 @@ class EmptySelectionError(Error):
     """There are no wells in the selection."""
 
 
-def aquifers_by_venue(venue, aquifers=None):
+def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
     """Plot the wells in the venue coded by aquifer.
 
-    Plot the locations of the authorized wells in the `venue` that are completed
-    in one of the identified `aquifers`. The plotted marker for a well is
-    color-coded by the aquifer in which it is completed.
+    Plot the locations of the authorized wells in the `venue` that are
+    completed in one or more of the identified `aquifers`, and that have a
+    measured date between `after` and `before`. The plotted marker for a well
+    is color-coded by the aquifer in which it is completed.
 
     Parameters
     ----------
@@ -31,6 +32,12 @@ def aquifers_by_venue(venue, aquifers=None):
         List of four-character aquifer abbreviation strings, as defined in
         Minnesota Geologic Survey's coding system. The default is None. If
         None, then all aquifers present will be included.
+
+    after : int
+        Earliest measurement date to use; written as YYYYMMDD. 
+
+    before : int
+        Latest measurement date to use; written as YYYYMMDD.
 
     Returns
     -------
@@ -47,16 +54,11 @@ def aquifers_by_venue(venue, aquifers=None):
     bdry = venue.boundary()
     wells = Wells()
     
-    welldata = wells.fetch_by_venue(venue)
+    welldata = wells.fetch_by_venue(venue, aquifers, after, before)
 
-    if aquifers is None:
-        xsel = [row[0][0] for row in welldata]
-        ysel = [row[0][1] for row in welldata]
-        asel = [row[2] for row in welldata]
-    else:
-        xsel = [row[0][0] for row in welldata if row[2] in aquifers]
-        ysel = [row[0][1] for row in welldata if row[2] in aquifers]
-        asel = [row[2] for row in welldata if row[2] in aquifers]
+    xsel = [row[0][0] for row in welldata]
+    ysel = [row[0][1] for row in welldata]
+    asel = [row[2] for row in welldata]
 
     if len(xsel) == 0:
         raise EmptySelectionError

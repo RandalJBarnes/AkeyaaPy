@@ -64,10 +64,12 @@ covering the **venue**.
 The square grid of target locations is anchored at the centroid of the **venue**, and the grid lines are separated by `spacing`. If a target
 location is not inside of the **venue** it is discarded.
 
-For each remaining target location, all wells that satisfy the following two conditions are identified:
+For each remaining target location, all wells that satisfy the following criteria are identified:
 
-- completed in one or more of the selected `aquifers`, and
-- within a horizontal distance of `radius` of the target location.
+- the well is within a horizontal distance of `radius` of the target location,
+- the well is completed in one or more of the `aquifers`,
+- the water level measurement date is on or after `after`, and
+- the water level measurement date is on or before `before`.
 
 If a target location has fewer than `required` identified (neighboring) wells it is discarded.
 
