@@ -1,1 +1,0 @@
-$env:PYTHONPATH='D:\Google Drive\Projects\AkeyaaPy\akeyaa'

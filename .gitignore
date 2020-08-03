@@ -1,9 +1,9 @@
 # My stuff
 .pytest_cache/
-AkeyaaGIS/
 references/
 TeXAux/
 hold/
+.idea/
 *.synctex
 *.pickle
 *.pklz

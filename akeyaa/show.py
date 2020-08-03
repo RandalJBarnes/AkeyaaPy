@@ -30,6 +30,9 @@ import numpy as np
 
 import akeyaa.pnorm as pnorm
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 # -----------------------------------------------------------------------------
 class Error(Exception):

@@ -12,6 +12,9 @@ import scipy
 
 from akeyaa.gis import get_all_well_data
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class Wells(object):
     """Create and manage the in-memory, python-based, well database.
@@ -37,9 +40,9 @@ class Wells(object):
             Recorded measurement date writeen as YYYYMMDD.
 
         For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
-        
+
     __relateid : list[str]
-        The unique 10-digit well number encoded as a string with leading 
+        The unique 10-digit well number encoded as a string with leading
         zeros. This is a duplicate of the field realteid in __welldata to
         be used as a search key.
 
@@ -72,8 +75,8 @@ class Wells(object):
     def initialize(cls):
         """Initialize the class attributes.
 
-        Initialize __welldata, __relateid, and __tree.  Specifically, extract 
-        the well data from an external .gdb, setup the kd search tree, and 
+        Initialize __welldata, __relateid, and __tree.  Specifically, extract
+        the well data from an external .gdb, setup the kd search tree, and
         sort id list.
 
         """
@@ -87,7 +90,7 @@ class Wells(object):
 
         Notes
         -----
-        The first call is slow (a few seconds) because this calls the class 
+        The first call is slow (a few seconds) because this calls the class
         initialize. Every call after the first is very fast.
 
         """
@@ -97,7 +100,7 @@ class Wells(object):
     def fetch(self, xytarget, radius, aquifers, before, after):
         """Fetch the nearby wells.
 
-        Fetch the welldata for all authorized wells within `radius` of the 
+        Fetch the welldata for all authorized wells within `radius` of the
         coordinates `xytarget`, that are completed in one or more of the
         identified `aquifers`, and that have a measured date between `after`
         and `before`.
@@ -113,18 +116,18 @@ class Wells(object):
 
         aquifers : list[str]
             List of four-character aquifer abbreviation strings, as defined in
-            Minnesota Geologic Survey's coding system. If None, then wells 
+            Minnesota Geologic Survey's coding system. If None, then wells
             from all aquifers will be included.
 
-        after : int 
+        after : int
 
         before : int
 
         Returns
         -------
         list[tuple] : (xy, z, aquifer, relateid, meas_date)
-            Returns a list of tuples (see welldata above), with one tuple for 
-            each welldata entry that satisfies the search criteria. If there 
+            Returns a list of tuples (see welldata above), with one tuple for
+            each welldata entry that satisfies the search criteria. If there
             are no wells that satisfy the search criteria an empty list is
             returned.
 
@@ -149,7 +152,7 @@ class Wells(object):
         """Fetch wells in the specified venue.
 
         Fetch the welldata for all authorized wells that are completed in one
-        or more of the identified `aquifers`, and that have a measured date 
+        or more of the identified `aquifers`, and that have a measured date
         between `after` and `before`.
 
         Parameters
@@ -165,7 +168,7 @@ class Wells(object):
             all aquifers will be included.
 
         after : int
-            Earliest measurement date to use; written as YYYYMMDD. 
+            Earliest measurement date to use; written as YYYYMMDD.
 
         before : int
             Latest measurement date to use; written as YYYYMMDD.
@@ -173,8 +176,8 @@ class Wells(object):
         Returns
         -------
         list[tuple] : (xy, z, aquifer, relateid)
-            Returns a list of tuples (see welldata above), with one tuple for 
-            each welldata entry that satisfies the search criteria. If there 
+            Returns a list of tuples (see welldata above), with one tuple for
+            each welldata entry that satisfies the search criteria. If there
             are no wells that satisfy the search criteria an empty list is
             returned.
 

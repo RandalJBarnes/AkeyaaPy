@@ -42,6 +42,9 @@ from akeyaa.gis import (
 )
 from akeyaa.geometry import Circle, Polygon, Rectangle
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class Error(Exception):
     """The base exception for the module."""

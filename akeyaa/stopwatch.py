@@ -2,6 +2,9 @@
 
 import time
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class stopwatch:
     """A simple stopwatch class.
@@ -15,7 +18,6 @@ class stopwatch:
         The time at the beginning of the split.
 
     """
-
     def __init__(self):
         """Initialize and start the stopwatch."""
         self.start = time.time()

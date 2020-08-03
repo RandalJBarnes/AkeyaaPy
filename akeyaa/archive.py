@@ -3,6 +3,9 @@ import bz2
 from datetime import datetime
 import pickle
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 # -----------------------------------------------------------------------------
 def saveme(venue, settings, results, pklzfile=None):

@@ -5,6 +5,9 @@ import seaborn as sns
 
 from akeyaa.wells import Wells
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class Error(Exception):
     """The base exception for the module."""
@@ -34,7 +37,7 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
         None, then all aquifers present will be included.
 
     after : int
-        Earliest measurement date to use; written as YYYYMMDD. 
+        Earliest measurement date to use; written as YYYYMMDD.
 
     before : int
         Latest measurement date to use; written as YYYYMMDD.
@@ -53,7 +56,7 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
     """
     bdry = venue.boundary()
     wells = Wells()
-    
+
     welldata = wells.fetch_by_venue(venue, aquifers, after, before)
 
     xsel = [row[0][0] for row in welldata]
@@ -78,7 +81,7 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
     plt.ylabel("Northing [m]")
     plt.title(venue.fullname() + " Wells Coded By Aquifer", {"fontsize": 24})
     plt.grid(True)
-    
+
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
     return aquifer_info

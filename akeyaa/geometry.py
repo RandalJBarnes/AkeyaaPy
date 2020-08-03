@@ -26,6 +26,9 @@ from abc import ABC, abstractmethod
 import numpy as np
 from matplotlib.path import Path
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class Shape(ABC):
     """The abstract base class for all shapes.

@@ -39,6 +39,9 @@ import numpy as np
 from scipy.stats import norm
 from scipy.integrate import quad
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 # -----------------------------------------------------------------------------
 def pnormpdf(angles, mu, sigma):

@@ -38,6 +38,9 @@ import statsmodels.api as sm
 
 from akeyaa.wells import Wells
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 class UnknownMethodError(Exception):
     """The requested fitting method is not supported."""
@@ -81,8 +84,8 @@ def by_venue(venue, settings):
     results = []
     for xytarget in targets:
         welldata = wells.fetch(
-            xytarget, 
-            settings.radius, 
+            xytarget,
+            settings.radius,
             settings.aquifers,
             settings.after,
             settings.before
@@ -194,7 +197,7 @@ def fit_conic_potential(xytarget, xyz, method):
     """
     x = np.array([row[0][0] for row in xyz], dtype=float) - xytarget[0]
     y = np.array([row[0][1] for row in xyz], dtype=float) - xytarget[1]
-    z = np.array([row[1] for row in xyz], dtype=float) * 0.0348     # [ft] to [m].
+    z = np.array([row[1] for row in xyz], dtype=float) * 0.3048     # [ft] to [m].
 
     exog = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 

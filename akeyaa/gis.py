@@ -9,6 +9,21 @@ get_all_well_data()
 _get_venue_data(source, what, where)
     Query acrpy for venue data. This is intended as a private method.
 
+get_city_list()
+    Return list of all cities and gnis_ids
+
+get_township_list()
+    Return list of all townships and gnis_ids
+
+get_county_list()
+    Return list of all cities and cty_fips
+
+get_watershed_list()
+    Return list of all watersheds and HUC10s
+
+get_subregion_list()
+    Return list of all subregions and HUC8s
+
 get_city_data(name=None, gnis_id=None)
     Return the City venue data.
 
@@ -37,6 +52,10 @@ import pyproj
 import arcpy
 
 from akeyaa.localpaths import CTUGDB, CTYGDB, WBDGDB, STAGDB, CWIGDB
+
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
 
 # The location details of specific feature classes.
 SOURCE = {
@@ -189,6 +208,63 @@ def _get_venue_data(source, what, where):
     vertices = np.column_stack((x, y))
 
     return (name, code, vertices)
+
+
+# --------------------------------------------------------------------
+def get_city_list():
+    source = SOURCE["CITY"]
+    what = ["NAME", "GNIS_ID"]
+    where = "(CTU_Type = 'CITY')"
+
+    city_list = []
+    with arcpy.da.SearchCursor(source, what, where) as cursor:
+        for row in cursor:
+            city_list.append(row)
+    return city_list
+
+def get_township_list():
+    source = SOURCE["TOWNSHIP"]
+    what = ["NAME", "GNIS_ID"]
+    where = "(CTU_Type = 'TOWNSHIP')"
+
+    township_list = []
+    with arcpy.da.SearchCursor(source, what, where) as cursor:
+        for row in cursor:
+            township_list.append(row)
+    return township_list
+
+def get_county_list():
+    source = SOURCE["COUNTY"]
+    what = ["CTY_NAME", "CTY_FIPS"]
+    where = ""
+
+    county_list = []
+    with arcpy.da.SearchCursor(source, what, where) as cursor:
+        for row in cursor:
+            county_list.append(row)
+    return county_list
+
+def get_watershed_list():
+    source = SOURCE["WATERSHED"]
+    what = ["NAME", "HUC10", "SHAPE@"]
+    where = "(STATES LIKE '%MN%')"
+
+    watershed_list = []
+    with arcpy.da.SearchCursor(source, what, where) as cursor:
+        for row in cursor:
+            watershed_list.append(row)
+    return watershed_list
+
+def get_subregion_list():
+    source = SOURCE["SUBREGION"]
+    what = ["NAME", "HUC8", "SHAPE@"]
+    where = "(STATES LIKE '%MN%')"
+
+    subregion_list = []
+    with arcpy.da.SearchCursor(source, what, where) as cursor:
+        for row in cursor:
+            subregion_list.append(row)
+    return subregion_list
 
 
 # --------------------------------------------------------------------

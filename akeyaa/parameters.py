@@ -5,6 +5,10 @@ the passing and archiving of the many user-defined parameters.
 
 """
 
+__author__ = "Randal J Barnes"
+__version__ = "24 July 2020"
+
+
 # Specify the default settings for all Akeyaa analysis.
 DEFAULT_AQUIFERS = None         # Use wells completed in all aquifers.
 DEFAULT_METHOD = "TUKEY"        # Robust linear model with Tuckey bi-weights.
@@ -62,7 +66,7 @@ class Parameters(object):
         aquifers present will be included. The default is DEFAULT_AQUIFERS.
 
     after : int
-        Earliest measurement date to use; written as YYYYMMDD. 
+        Earliest measurement date to use; written as YYYYMMDD.
 
     before : int
         Latest measurement date to use; written as YYYYMMDD.
@@ -104,7 +108,7 @@ class Parameters(object):
         required=DEFAULT_REQUIRED,
         spacing=DEFAULT_SPACING,
         after=DEFAULT_AFTER,
-        before=DEFAULT_BEFORE,        
+        before=DEFAULT_BEFORE,
     ):
         """Note: all parameters are by name only."""
         self.aquifers = aquifers
