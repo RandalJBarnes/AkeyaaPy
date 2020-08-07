@@ -11,6 +11,8 @@ class VenueDialog(tk.Toplevel):
         super().__init__(parent)
 
         self.parent = parent
+        self.parent.wm_attributes("-disabled", True)        # Make the dialog modal
+
         self.venue = None
         self.choices = choices
 
@@ -18,9 +20,11 @@ class VenueDialog(tk.Toplevel):
 
         self.top_frame = tk.Frame(self)
         self.btn_frame = tk.Frame(self)
+        self.map_frame = tk.Frame(self)
 
         self.top_frame.grid(row=0, column=0, padx=5, pady=5)
-        self.btn_frame.grid(row=1, column=0, padx=5, pady=5, sticky="E")
+        self.btn_frame.grid(row=1, column=1, padx=5, pady=5, sticky="E")
+        self.map_frame.grid(row=0, column=1)
 
         self.var_text = tk.StringVar()
         self.var_text.trace('w', self.on_change)
@@ -38,7 +42,7 @@ class VenueDialog(tk.Toplevel):
         self.btn_okay = ttk.Button(self.btn_frame, text="OK", command=self.okay)
         self.btn_okay.grid(row=0, column=0, sticky="E")
 
-        self.btn_cancel = ttk.Button(self.btn_frame, text="Cancel", command=self.destroy)
+        self.btn_cancel = ttk.Button(self.btn_frame, text="Cancel", command=self.cancel)
         self.btn_cancel.grid(row=0, column=1, sticky="E")
 
     def on_change(self, *args):
@@ -67,7 +71,14 @@ class VenueDialog(tk.Toplevel):
 
     def okay(self):
         self.parent.venue = self.var_text.get()
+        self.parent.wm_attributes("-disabled", False)
         self.destroy()
+
+    def cancel(self):
+        self.parent.wm_attributes("-disabled", False)
+        self.destroy()
+
+
 
 
 # --- main ---
@@ -79,5 +90,4 @@ if __name__ == "__main__":
 
     root = tk.Tk()
     scb = VenueDialog(root, "Venue Dialog", test_list)
-#    scb.pack(fill=tk.BOTH, expand=1)
     root.mainloop()

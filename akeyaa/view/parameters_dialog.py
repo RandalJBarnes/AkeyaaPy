@@ -11,6 +11,7 @@ class ParametersDialog(tk.Toplevel):
         super().__init__(parent)
 
         self.parent = parent
+        self.parent.wm_attributes("-disabled", True)         # Make the dialog modal
 
         self.title("Parameters")
 
@@ -58,7 +59,7 @@ class ParametersDialog(tk.Toplevel):
         self.btn_okay = ttk.Button(self.btn_frame, text="OK", command=self.okay)
         self.btn_okay.grid(row=0, column=0, sticky="E")
 
-        self.btn_cancel = ttk.Button(self.btn_frame, text="Cancel", command=self.destroy)
+        self.btn_cancel = ttk.Button(self.btn_frame, text="Cancel", command=self.cancel)
         self.btn_cancel.grid(row=0, column=1, sticky="E")
 
     def okay(self):
@@ -69,4 +70,9 @@ class ParametersDialog(tk.Toplevel):
             "firstyear" : self.firstyear.get(),
             "lastyear" : self.lastyear.get()
         }
+        self.parent.wm_attributes("-disabled", False)
+        self.destroy()
+
+    def cancel(self):
+        self.parent.wm_attributes("-disabled", False)
         self.destroy()
