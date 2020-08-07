@@ -5,12 +5,8 @@ __version__ = "1 August 2020"
 
 import datetime
 import tkinter as tk
-import tkinter.ttk as ttk
-import json
 
-import akeyaa.gis
-
-from akeyaa.interface.parameters import Parameters
+from akeyaa.view.parameters_dialog import Parameters
 from akeyaa.interface.aquifers import Aquifers
 from akeyaa.interface.locations import Locations
 from akeyaa.interface.cities import Cities
@@ -21,28 +17,6 @@ class Root(tk.Tk):
 
         self.title("Akeyaa")
         self.geometry("800x800")
-
-        # data locations
-        self.cwi_path = None
-        self.ctu_path = None
-        self.cty_path = None
-        self.wbd_path = None
-        self.sta_path = None
-
-        self.load_configuration()
-
-        # get the various lists of possibilities
-        self.city_list = akeyaa.gis.get_city_list()
-        self.township_list = akeyaa.gis.get_township_list()
-        self.county_list = akeyaa.gis.get_county_list()
-        self.watershed_list = akeyaa.gis.get_watershed_list()
-        self.subregion_list = akeyaa.gis.get_subregion_list()
-
-        self.city = []
-        self.township = []
-        self.county = []
-        self.watershed = []
-        self.subregion = []
 
         # parameters
         self.radius = 2000
@@ -111,32 +85,3 @@ class Root(tk.Tk):
                 print(aq)
         else:
             print("No aquifers were selected.")
-
-    # -----------------------------------------------------
-    def save_configuration(self):
-        data = {
-            "cwi_path" : self.cwi_path,
-            "ctu_path" : self.ctu_path,
-            "cty_path" : self.cty_path,
-            "wbd_path" : self.wbd_path,
-            "sta_path" : self.sta_path,
-        }
-        with open("akeyaa.config", "w") as write_file:
-            json.dump(data, write_file)
-
-    def load_configuration(self):
-        try:
-            with open("akeyaa.config", "r") as read_file:
-                data = json.load(read_file)
-            self.cwi_path = data["cwi_path"]
-            self.ctu_path = data["ctu_path"]
-            self.cty_path = data["cty_path"]
-            self.wbd_path = data["wbd_path"]
-            self.sta_path = data["sta_path"]
-
-        except:
-            self.cwi_path = None
-            self.ctu_path = None
-            self.cty_path = None
-            self.wbd_path = None
-            self.sta_path = None

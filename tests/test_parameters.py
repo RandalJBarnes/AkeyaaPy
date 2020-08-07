@@ -1,8 +1,8 @@
 """Test akeyaa.paramters.py"""
 import pytest
 
-from akeyaa.parameters import Parameters
-from akeyaa.parameters import (
+from akeyaa.model.parameters import Parameters
+from akeyaa.model.parameters import (
     DEFAULT_AQUIFERS,
     DEFAULT_AFTER,
     DEFAULT_BEFORE,

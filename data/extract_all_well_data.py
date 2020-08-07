@@ -7,9 +7,13 @@ This program (file) is meant to be run as as a stand-alone script. This program
 is not meant to be distributed with AkeyaaPy. However, the resulting data file
 is part of the AkeyaaPy distribution.
 
+Requires
+--------
+* arcpy     this includes ESRI's arcgis and arcgispro.
+
 Notes
 -----
-* The resulting zipped pickle file is named: "Akeyaa_Well.pklz".
+* The resulting zipped pickle file is named: "Akeyaa_Wells.pklz".
 
 * The file contains a list of welldata, where
 
@@ -77,6 +81,6 @@ if __name__ == "__main__":
     with arcpy.da.SearchCursor(source, what, where) as cursor:
         well_list = list(cursor)
 
-    pklzfile = "Akeyaa_Well.pklz"
+    pklzfile = "Akeyaa_Wells.pklz"
     with bz2.open(pklzfile, "wb") as fileobject:
         pickle.dump(well_list, fileobject)

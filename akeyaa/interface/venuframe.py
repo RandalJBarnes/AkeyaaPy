@@ -5,7 +5,7 @@ __version__ = "1 August 2020"
 
 import tkinter as tk
 
-class VenumFrame(tk.Frame):
+class VenueFrame(tk.Frame):
     def __init__(self, parent, complete_list, contains=True):
         super().__init__(parent)
 
@@ -59,6 +59,6 @@ if __name__ == "__main__":
     # execute only if run as a script
     test_list = [('apple', 1), ('banana', 2), ('Cranberry', 3), ('dogwood', 4), ('alpha', 5), ('Acorn', 6), ('Anise', 7), ('Strawberry', 8)]
     root = tk.Tk()
-    scb = VenuFrame(root, test_list, contains=False)
+    scb = VenueFrame(root, test_list, contains=False)
     scb.pack(fill=tk.BOTH, expand=1)
     root.mainloop()

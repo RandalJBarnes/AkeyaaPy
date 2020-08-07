@@ -7,6 +7,12 @@ This program (file) is meant to be run as as a stand-alone script. This program
 is not meant to be distributed with AkeyaaPy. However, the resulting data files
 are part of the AkeyaaPy distribution.
 
+Requires
+--------
+* arcpy     this includes ESRI's arcgis and arcgispro.
+* pyproj    Python interface to the proj.4 library.
+* bzip2
+
 Notes
 _____
 * There are five venue types included: City, Township, County, Watershed,
@@ -106,51 +112,47 @@ if __name__ == "__main__":
     what = ["NAME", "GNIS_ID", "SHAPE@"]
     where = "(CTU_Type = 'CITY')"
     city_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_City.pklz"
-    with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(city_list, fileobject)
 
     # Get Township data
     source = SOURCE["TOWNSHIP"]
     what = ["NAME", "GNIS_ID", "SHAPE@"]
     where = "(CTU_Type = 'TOWNSHIP')"
     township_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_Township.pklz"
-    with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(township_list, fileobject)
 
     # Get County data
     source = SOURCE["COUNTY"]
     what = ["CTY_NAME", "CTY_FIPS", "SHAPE@"]
     where = ""
     county_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_County.pklz"
-    with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(county_list, fileobject)
 
     # Get Watershed data
     source = SOURCE["WATERSHED"]
     what = ["NAME", "HUC10", "SHAPE@"]
     where = "(STATES LIKE '%MN%')"
     watershed_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_Watershed.pklz"
-    with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(watershed_list, fileobject)
 
     # Get Subregion data
     source = SOURCE["SUBREGION"]
     what = ["NAME", "HUC8", "SHAPE@"]
     where = "(STATES LIKE '%MN%')"
     subregion_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_Subregion.pklz"
-    with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(subregion_list, fileobject)
 
     # Get the Minnesota State boundary.
     source = SOURCE["STATE"]
     what = ["STATE_NAME", "STATE_FIPS_CODE", "SHAPE@"]
     where = "STATE_NAME = 'Minnesota'"
     minnesota_list = get_venue_data(source, what, where)
-    pklzfile = "Akeyaa_Minnesota.pklz"
+
+    # Create the omnibus zipped pickle file of venue data.
+    archive = {
+        "city_list": city_list,
+        "township_list": township_list,
+        "county_list": county_list,
+        "watershed_list": watershed_list,
+        "subregion_list": subregion_list,
+        "minnesota_list": minnesota_list
+    }
+
+    pklzfile = "Akeyaa_Venues.pklz"
     with bz2.open(pklzfile, "wb") as fileobject:
-        pickle.dump(minnesota_list, fileobject)
+        pickle.dump(archive, fileobject)
