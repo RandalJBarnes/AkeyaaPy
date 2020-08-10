@@ -5,19 +5,22 @@ import tkinter.ttk as ttk
 
 from akeyaa.view.parameters_dialog import ParametersDialog
 from akeyaa.view.venue_dialog import VenueDialog
+from akeyaa.view.neighborhood_dialog import NeighborhoodDialog
+from akeyaa.view.frame_dialog import FrameDialog
 
 __author__ = "Randal J Barnes"
-__version__ = "07 August 2020"
+__version__ = "09 August 2020"
 
 
 class View(tk.Tk):
-    def __init__(self, parameters, venue_data):
+    def __init__(self, parameters, venue_data, run_callback):
         super().__init__()
 
         # Initialize.
         self.parameters = parameters
         self.venue_data = venue_data
-        self.venue = None
+        self.venue = {"type" : None}
+        self.run_callback = run_callback
 
         # Main window.
         self.title("AkeyaaPy")
@@ -44,45 +47,59 @@ class View(tk.Tk):
 
         self.config(menu=main_menu)
 
+        # Notebooks
+        nb = ttk.Notebook(self)
+        nb.pack()
 
-    def start(self):
-        self.mainloop()
+        f1 = tk.Frame(nb)
+        nb.add(f1, text="Geology")
+
+        f2 = tk.Frame(nb)
+        nb.add(f2, text="Count")
+
+        f3 = tk.Frame(nb)
+        nb.add(f3, text="Local Head")
+
+        f4 = tk.Frame(nb)
+        nb.add(f4, text="Local Gradient")
+
+        f5 = tk.Frame(nb)
+        nb.add(f5, text="Laplacian Zscore")
+
+        f6 = tk.Frame(nb)
+        nb.add(f6, text="Flow Direction")
+
+        nb.select(f1)
+        nb.enable_traversal()
 
     def show_parameters_dialog(self):
         dialog = ParametersDialog(self)
 
     def show_city_dialog(self):
         city_list = self.venue_data["city_list"]
-        choices = [row[0] for row in city_list]
-        dialog = VenueDialog(self, "City", choices)
+        dialog = VenueDialog(self, "City", city_list)
 
     def show_township_dialog(self):
         township_list = self.venue_data["township_list"]
-        choices = [row[0] for row in township_list]
-        dialog = VenueDialog(self, "Township", choices)
+        dialog = VenueDialog(self, "Township", township_list)
 
     def show_county_dialog(self):
         county_list = self.venue_data["county_list"]
-        choices = [row[0] for row in county_list]
-        dialog = VenueDialog(self, "County", choices)
+        dialog = VenueDialog(self, "County", county_list)
 
     def show_watershed_dialog(self):
         watershed_list = self.venue_data["watershed_list"]
-        choices = [row[0] for row in watershed_list]
-        dialog = VenueDialog(self, "Watershed", choices)
+        dialog = VenueDialog(self, "Watershed", watershed_list)
 
     def show_subregion_dialog(self):
         subregion_list = self.venue_data["subregion_list"]
-        choices = [row[0] for row in subregion_list]
-        dialog = VenueDialog(self, "Subregion", choices)
+        dialog = VenueDialog(self, "Subregion", subregion_list)
 
     def show_neighborhood_dialog(self):
-        print("Neighborhood dialog")
+        dialog = NeighborhoodDialog(self)
 
     def show_frame_dialog(self):
-        print("Frame dialog")
+        dialog = FrameDialog(self)
 
     def execute_akeyaa(self):
-        print("EXECUTE AKEYAA")
-        print(f"{self.venue}")
-        print(f"{self.parameters}")
+        self.run_callback(self.venue, self.parameters)

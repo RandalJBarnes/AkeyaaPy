@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from akeyaa.wells import Wells
+from akeyaa.model.wells import Wells
 
 __author__ = "Randal J Barnes"
 __version__ = "24 July 2020"

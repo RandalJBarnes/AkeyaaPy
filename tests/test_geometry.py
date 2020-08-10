@@ -1,7 +1,7 @@
 """Test akeyaa.geometry.py"""
 import numpy as np
 
-from akeyaa.geometry import Circle, Rectangle, Polygon
+from akeyaa.controller.geometry import Circle, Rectangle, Polygon
 
 
 def test_circle():

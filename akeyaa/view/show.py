@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 
-import akeyaa.model.pnorm as pnorm
+import akeyaa.controller.pnorm as pnorm
 
 __author__ = "Randal J Barnes"
 __version__ = "24 July 2020"

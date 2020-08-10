@@ -10,7 +10,7 @@ are part of the AkeyaaPy distribution.
 Requires
 --------
 * arcpy     this includes ESRI's arcgis and arcgispro.
-* pyproj    Python interface to the proj.4 library.
+* pyproj    Python hold to the proj.4 library.
 * bzip2
 
 Notes

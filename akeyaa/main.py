@@ -25,7 +25,7 @@ Model/View/Controller (MVC) design pattern.
 * The Controller
     - The controller owns the model instance.
     - The controller owns the view instance.
-    - The controller is the interface between the model and the view.
+    - The controller is the hold between the model and the view.
     - The controller has no knowledge of the UI protocol.
 
 """

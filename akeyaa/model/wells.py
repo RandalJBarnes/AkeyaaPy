@@ -9,93 +9,62 @@ from itertools import compress
 from operator import itemgetter
 import scipy
 
-
-from akeyaa.gis import get_all_well_data
-
 __author__ = "Randal J Barnes"
-__version__ = "24 July 2020"
+__version__ = "09 August 2020"
 
 
-class Wells(object):
-    """Create and manage the in-memory, python-based, well database.
+class Wells:
+    """Create and manage the in-memory, python-based, well database."""
 
-    Attributes
-    ----------
-    __welldata : list[tuple] (xy, z, aquifer, relateid)
-        xy : tuple (float, float)
-            The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
+    def __init__(self, well_list):
+        """Initialize the well database.
 
-        z : float
-            The recorded static water level [ft]
+        Attributes
+        ----------
+        welldata : list[tuple] (xy, z, aquifer, relateid)
+            xy : tuple (float, float)
+                The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
 
-        aquifer : str
-            The 4-character aquifer abbreviation string, as defined in
-            Minnesota Geologic Survey's coding system.
+            z : float
+                The recorded static water level [ft]
 
-        relateid : str
-            The unique 10-digit well number encoded as a string with
-            leading zeros.
+            aquifer : str
+                The 4-character aquifer abbreviation string, as defined in
+                Minnesota Geologic Survey's coding system.
 
-        date : int
-            Recorded measurement date writeen as YYYYMMDD.
+            relateid : str
+                The unique 10-digit well number encoded as a string with
+                leading zeros.
 
-        For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
+            date : int
+                Recorded measurement date writeen as YYYYMMDD.
 
-    __relateid : list[str]
-        The unique 10-digit well number encoded as a string with leading
-        zeros. This is a duplicate of the field realteid in __welldata to
-        be used as a search key.
+            For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
 
-    __tree : scipy.spatial.cKDTree
-        A kd-tree for all of the wells in fetch.welldata.
+        relateid : list[str]
+            The unique 10-digit well number encoded as a string with leading
+            zeros. This is a duplicate of the field realteid in __welldata to
+            be used as a search key.
 
-    Notes
-    -----
-    *   The welldata list contains data from all authorized wells taken across
-        the state. Wells that have multiple static water level measurements
-        will have multiple entries in this table -- one entry for every
-        measurement.
-
-    *   The welldata is sorted in ascending order by the relateid to allow for
-        quick searches on the relateid using the bisect tools.
-
-    *   The __relateid list is created as a search key.
-
-    See Also
-    --------
-    akeyaa.wells
-
-    """
-    __welldata = None
-    __relateid = None
-    __tree = None
-
-
-    @classmethod
-    def initialize(cls):
-        """Initialize the class attributes.
-
-        Initialize __welldata, __relateid, and __tree.  Specifically, extract
-        the well data from an external .gdb, setup the kd search tree, and
-        sort id list.
-
-        """
-        if cls.__welldata is None:
-            cls.__welldata = sorted(get_all_well_data(), key=itemgetter(3))
-            cls.__relateid = [row[3] for row in cls.__welldata]
-            cls.__tree = scipy.spatial.cKDTree([row[0] for row in cls.__welldata])
-
-    def __init__(self):
-        """Setup the data and kd-tree in memory.
+        tree : scipy.spatial.cKDTree
+            A kd-tree for all of the wells in fetch.welldata.
 
         Notes
         -----
-        The first call is slow (a few seconds) because this calls the class
-        initialize. Every call after the first is very fast.
+        *   The welldata list contains data from all authorized wells taken across
+            the state. Wells that have multiple static water level measurements
+            will have multiple entries in this table -- one entry for every
+            measurement.
+
+        *   The welldata is sorted in ascending order by the relateid to allow for
+            quick searches on the relateid using the bisect tools.
+
+        *   The __relateid list is created as a search key.
 
         """
-        if Wells.__welldata is None:
-            Wells.initialize()
+        self.welldata = sorted(well_list, key=itemgetter(3))
+        self.relateid = [row[3] for row in self.welldata]
+        self.tree = scipy.spatial.cKDTree([row[0] for row in self.welldata])
 
     def fetch(self, xytarget, radius, aquifers, before, after):
         """Fetch the nearby wells.
@@ -137,15 +106,15 @@ class Wells(object):
 
         """
         welldata = []
-        indx = Wells.__tree.query_ball_point(xytarget, radius)
+        indx = self.tree.query_ball_point(xytarget, radius)
         if indx:
             for i in indx:
                 if (
-                    ((aquifers is None) or (Wells.__welldata[i][2] in aquifers)) and
-                    ((after is None) or (Wells.__welldata[i][4] >= after)) and
-                    ((before is None) or (Wells.__welldata[i][4] <= before))
+                    ((aquifers is None) or (self.welldata[i][2] in aquifers)) and
+                    ((after is None) or (self.welldata[i][4] >= after)) and
+                    ((before is None) or (self.welldata[i][4] <= before))
                 ):
-                    welldata.append(Wells.__welldata[i])
+                    welldata.append(self.welldata[i])
         return welldata
 
     def fetch_by_venue(self, venue, aquifers, after, before):
@@ -216,7 +185,7 @@ class Wells(object):
         if isinstance(relateid, int):
             relateid = f"{relateid:010d}"
 
-        i = bisect_left(Wells.__relateid, relateid)
-        if i == len(Wells.__relateid) or Wells.__relateid[i] != relateid:
+        i = bisect_left(self.relateid, relateid)
+        if i == len(self.relateid) or self.relateid[i] != relateid:
             return None
-        return Wells.__welldata[i]
+        return self.welldata[i]

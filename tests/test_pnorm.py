@@ -1,7 +1,7 @@
 """Test akeyaa.pnorm.py"""
 import numpy as np
 
-from akeyaa.model.pnorm import pnormpdf, pnormcdf
+from akeyaa.controller.pnorm import pnormpdf, pnormcdf
 
 
 def test_pnormpdf():

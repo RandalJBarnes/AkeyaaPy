@@ -40,7 +40,7 @@ from akeyaa.gis import (
     get_county_data,
     get_state_data,
 )
-from akeyaa.geometry import Circle, Polygon, Rectangle
+from akeyaa.controller.geometry import Circle, Polygon, Rectangle
 
 __author__ = "Randal J Barnes"
 __version__ = "24 July 2020"
