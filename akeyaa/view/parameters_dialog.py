@@ -45,7 +45,7 @@ class ParametersDialog(tk.Toplevel):
         self.firstyear_text.grid(row=3, column=0, sticky="W", padx=5)
         self.firstyear_sb.grid(row=3, column=1, sticky="W", padx=5)
 
-        self.lastyear = tk.IntVar(self.parent.parameters["lastyear"])
+        self.lastyear = tk.IntVar(value=self.parent.parameters["lastyear"])
         self.lastyear_text = tk.Label(self.top_frame, text="last year")
         self.lastyear_sb = tk.Spinbox(self.top_frame, textvariable=self.lastyear)
         self.lastyear_text.grid(row=4, column=0, sticky="W", padx=5)

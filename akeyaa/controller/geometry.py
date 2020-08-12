@@ -27,7 +27,7 @@ import numpy as np
 from matplotlib.path import Path
 
 __author__ = "Randal J Barnes"
-__version__ = "24 July 2020"
+__version__ = "11 August 2020"
 
 
 class Shape(ABC):

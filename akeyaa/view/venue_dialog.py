@@ -1,7 +1,7 @@
 """Smart Combobox"""
 
 __author__ = "Randal J Barnes"
-__version__ = "08 August 2020"
+__version__ = "11 August 2020"
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -12,13 +12,14 @@ class VenueDialog(tk.Toplevel):
 
         self.parent = parent
         self.parent.wm_attributes("-disabled", True)        # Make the dialog modal
+        self.enumerated_venue_list = [(venue, index) for index, venue in enumerate(venue_list)]
 
-        self.venue = {
+        self.selected_venue = {
             "type" : venue_type,
             "name" : None,
-            "id" : None
+            "code" : None,
+            "index" : None
         }
-        self.venue_list = venue_list
 
         self.title(venue_type)
 
@@ -32,17 +33,18 @@ class VenueDialog(tk.Toplevel):
         self.var_text.trace('w', self.on_change)
 
         self.entry = tk.Entry(self.top_frame, textvariable=self.var_text)
+        self.entry.focus_set()
         self.entry.pack(fill=tk.X, expand=0)
 
         self.tree = ttk.Treeview(self.top_frame, columns=("ID"), selectmode="browse")
         self.tree.heading('#0', text='Name')
-        self.tree.heading('#1', text='ID')
+        self.tree.heading('#1', text='Code')
         self.tree.column('#0', stretch=tk.YES)
         self.tree.column('#1', width=100)
 
         self.tree.pack(fill=tk.BOTH, expand=1)
         self.tree.bind('<<TreeviewSelect>>', self.on_select)
-        self.tree_update(self.venue_list)
+        self.tree_update(self.enumerated_venue_list)
 
         # Setup the button frame.
         self.btn_okay = ttk.Button(self.btn_frame, text="OK", command=self.okay)
@@ -57,33 +59,38 @@ class VenueDialog(tk.Toplevel):
         value = value.strip().lower()
 
         if value == '':
-            venues = self.venue_list
+            venues = self.enumerated_venue_list
         else:
             venues = []
-            for row in self.venue_list:
-                if value in row[0].lower():
+            for row in self.enumerated_venue_list:
+                if value in row[0][0].lower():
                     venues.append(row)
         self.tree_update(venues)
+
+        self.selected_venue["name"] = None
+        self.selected_venue["code"] = None
+        self.selected_venue["index"] = None
 
         self.btn_okay["state"] = tk.DISABLED
 
     def tree_update(self, venues):
         self.tree.delete(*self.tree.get_children())
         for row in venues:
-            self.tree.insert('', 'end', text=row[0], values=f"{row[1]}")
+            self.tree.insert('', 'end', text=row[0][0], values=(f"{row[0][1]}", row[1]))
 
     def on_select(self, event):
         selection = self.tree.selection()
         item = self.tree.item(selection)
-
-        self.venue["name"] = item["text"]
-        self.venue["id"] = item["values"]
         self.var_text.set(item["text"])
+
+        self.selected_venue["name"] = item["text"]
+        self.selected_venue["code"] = item["values"][0]
+        self.selected_venue["index"] = item["values"][1]
 
         self.btn_okay["state"] = tk.NORMAL
 
     def okay(self):
-        self.parent.venue = self.venue
+        self.parent.selected_venue = self.selected_venue
         self.parent.wm_attributes("-disabled", False)
         self.destroy()
 

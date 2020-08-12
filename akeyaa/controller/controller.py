@@ -25,12 +25,15 @@
 import bz2
 import datetime
 import pickle
+import numpy as np
 
 from akeyaa.model.model import Model
 from akeyaa.view.view import View
+from akeyaa.controller.venues import City, Township, County, Watershed, Subregion, Neighborhood, Frame
+
 
 __author__ = "Randal J Barnes"
-__version__ = "09 August 2020"
+__version__ = "11 August 2020"
 
 
 class Controller:
@@ -55,17 +58,74 @@ class Controller:
         with bz2.open(pklzfile, "rb") as fileobject:
             self.well_list = pickle.load(fileobject)
 
-
         self.model = Model(self.well_list)
-
 
         self.view = View(self.parameters, self.venue_data, self.run_callback)
         self.view.mainloop()
 
+    def run_callback(self, selected_venue, parameters):
 
+        if selected_venue["type"] == "City":
+            city_list = self.venue_data["city_list"]
+            venue = City(
+                selected_venue["name"],
+                selected_venue["code"],
+                city_list[selected_venue["index"]][2]
+            )
 
-    def run_callback(self, venue, parameters):
+        elif selected_venue["type"] == "Township":
+            township_list = self.venue_data["township_list"]
+            venue = Township(
+                selected_venue["name"],
+                selected_venue["code"],
+                township_list[selected_venue["index"]][2]
+            )
+
+        elif selected_venue["type"] == "County":
+            county_list = self.venue_data["county_list"]
+            venue = County(
+                selected_venue["name"],
+                selected_venue["code"],
+                county_list[selected_venue["index"]][2]
+            )
+
+        elif selected_venue["type"] == "Watershed":
+            watershed_list = self.venue_data["watershed_list"]
+            venue = Watershed(
+                selected_venue["name"],
+                selected_venue["code"],
+                watershed_list[selected_venue["index"]][2]
+            )
+
+        elif selected_venue["type"] == "Subregion":
+            subregion_list = self.venue_data["subregion_list"]
+            venue = Subregion(
+                selected_venue["name"],
+                selected_venue["code"],
+                subregion_list[selected_venue["index"]][2]
+            )
+
+        elif selected_venue["type"] == "Neighborhood":
+            venue = Neighborhood(
+                selected_venue["name"],
+                np.array([selected_venue["easting"], selected_venue["northing"]], dtype=float),
+                selected_venue["radius"]
+            )
+
+        elif selected_venue["type"] == "Frame":
+            venue = Frame(
+                xmin = selected_venue["minimum_easting"],
+                xmax = selected_venue["maximum_easting"],
+                ymin = selected_venue["minimum_northing"],
+                ymax = selected_venue["maximum_northing"],
+            )
+
+        else:
+            raise ValueError("Unknown venue type")
+
         print("EXECUTE AKEYAA")
-        print(f"{venue}")
+        print(f"{selected_venue}")
         print(f"{parameters}")
+        print(f"{venue.fullname()}")
 
+        self.view.plot_venue(venue)

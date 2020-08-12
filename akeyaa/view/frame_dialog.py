@@ -1,7 +1,7 @@
 """Neighborhood Venue Dialog"""
 
 __author__ = "Randal J Barnes"
-__version__ = "09 August 2020"
+__version__ = "10 August 2020"
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -28,11 +28,11 @@ class FrameDialog(tk.Toplevel):
         self.top_frame.grid(row=0, column=0, padx=5, pady=5)
         self.btn_frame.grid(row=1, column=0, padx=5, pady=5, sticky="E")
 
-        if self.parent.venue["type"] == "Frame":
-            initial_minimum_easting = self.parent.frame["minimum_easting"]
-            initial_maximum_easting = self.parent.frame["maximum_easting"]
-            initial_minimum_northing = self.parent.frame["minimum_northing"]
-            initial_maximum_northing = self.parent.frame["maximum_northing"]
+        if self.parent.selected_venue["type"] == "Frame":
+            initial_minimum_easting = self.parent.selected_venue["minimum_easting"]
+            initial_maximum_easting = self.parent.selected_venue["maximum_easting"]
+            initial_minimum_northing = self.parent.selected_venue["minimum_northing"]
+            initial_maximum_northing = self.parent.selected_venue["maximum_northing"]
         else:
             initial_minimum_easting = 481738.99 - 10000     # Civil Engineering Building
             initial_maximum_easting = 481738.99 + 10000     # Univeristy of Minnesota
@@ -82,7 +82,7 @@ class FrameDialog(tk.Toplevel):
         self.venue["minimum_northing"] = self.minimum_northing.get()
         self.venue["maximum_northing"] = self.maximum_northing.get()
 
-        self.parent.venue = self.venue
+        self.parent.selected_venue = self.venue
         self.parent.wm_attributes("-disabled", False)
         self.destroy()
 

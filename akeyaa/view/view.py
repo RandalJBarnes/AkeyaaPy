@@ -3,13 +3,18 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
 from akeyaa.view.parameters_dialog import ParametersDialog
 from akeyaa.view.venue_dialog import VenueDialog
 from akeyaa.view.neighborhood_dialog import NeighborhoodDialog
 from akeyaa.view.frame_dialog import FrameDialog
 
 __author__ = "Randal J Barnes"
-__version__ = "09 August 2020"
+__version__ = "11 August 2020"
+
+FIGSIZE = (12, 10)
 
 
 class View(tk.Tk):
@@ -19,7 +24,10 @@ class View(tk.Tk):
         # Initialize.
         self.parameters = parameters
         self.venue_data = venue_data
-        self.venue = {"type" : None}
+        self.selected_venue = {
+            "type": None,
+            "aquifers": None
+        }
         self.run_callback = run_callback
 
         # Main window.
@@ -48,29 +56,72 @@ class View(tk.Tk):
         self.config(menu=main_menu)
 
         # Notebooks
-        nb = ttk.Notebook(self)
-        nb.pack()
+        self.nb = ttk.Notebook(self)
+        self.nb.pack()
 
-        f1 = tk.Frame(nb)
-        nb.add(f1, text="Geology")
+        # -----
+        self.frame1 = tk.Frame(self.nb)
+        self.nb.add(self.frame1, text="Geology")
 
-        f2 = tk.Frame(nb)
-        nb.add(f2, text="Count")
+        self.fig1 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas1 = FigureCanvasTkAgg(self.fig1, master=self.frame1)
+        self.toolbar1 = NavigationToolbar2Tk(self.canvas1, self.frame1)
+        self.toolbar1.update()
+        self.canvas1.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        f3 = tk.Frame(nb)
-        nb.add(f3, text="Local Head")
+        # -----
+        self.frame2 = tk.Frame(self.nb)
+        self.nb.add(self.frame2, text="Count")
 
-        f4 = tk.Frame(nb)
-        nb.add(f4, text="Local Gradient")
+        self.fig2 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas2 = FigureCanvasTkAgg(self.fig2, master=self.frame2)
+        self.toolbar2 = NavigationToolbar2Tk(self.canvas2, self.frame2)
+        self.toolbar2.update()
+        self.canvas2.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        f5 = tk.Frame(nb)
-        nb.add(f5, text="Laplacian Zscore")
+        # -----
+        self.frame3 = tk.Frame(self.nb)
+        self.nb.add(self.frame3, text="Local Head")
 
-        f6 = tk.Frame(nb)
-        nb.add(f6, text="Flow Direction")
+        self.fig3 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas3 = FigureCanvasTkAgg(self.fig3, master=self.frame3)
+        self.toolbar3 = NavigationToolbar2Tk(self.canvas3, self.frame3)
+        self.toolbar3.update()
+        self.canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        nb.select(f1)
-        nb.enable_traversal()
+        # -----
+        self.frame4 = tk.Frame(self.nb)
+        self.nb.add(self.frame4, text="Local Gradient")
+
+        self.fig4 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas4 = FigureCanvasTkAgg(self.fig4, master=self.frame4)
+        self.toolbar4 = NavigationToolbar2Tk(self.canvas4, self.frame4)
+        self.toolbar4.update()
+        self.canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        # -----
+        self.frame5 = tk.Frame(self.nb)
+        self.nb.add(self.frame5, text="Laplacian Zscore")
+
+        self.fig5 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas5 = FigureCanvasTkAgg(self.fig5, master=self.frame5)
+        self.toolbar5 = NavigationToolbar2Tk(self.canvas5, self.frame5)
+        self.toolbar5.update()
+        self.canvas5.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        # -----
+        self.frame6 = tk.Frame(self.nb)
+        self.nb.add(self.frame6, text="Flow Direction")
+
+        self.fig6 = Figure(figsize=FIGSIZE, dpi=100)
+        self.canvas6 = FigureCanvasTkAgg(self.fig6, master=self.frame6)
+        self.toolbar6 = NavigationToolbar2Tk(self.canvas6, self.frame6)
+        self.toolbar6.update()
+        self.canvas6.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        # -----
+        self.nb.select(self.frame1)
+        self.nb.enable_traversal()
 
     def show_parameters_dialog(self):
         dialog = ParametersDialog(self)
@@ -102,4 +153,16 @@ class View(tk.Tk):
         dialog = FrameDialog(self)
 
     def execute_akeyaa(self):
-        self.run_callback(self.venue, self.parameters)
+        self.run_callback(self.selected_venue, self.parameters)
+
+    def plot_venue(self, venue):
+        bdry = venue.boundary()
+
+
+        self.fig1.clear()
+        plt = self.fig1.add_subplot(1,1,1)
+        plt.fill(bdry[:, 0], bdry[:, 1], "0.80")
+        plt.axis("equal")
+        plt.set_xlabel("Easting [m]")
+        plt.set_ylabel("Northing [m]")
+        self.canvas1.draw()

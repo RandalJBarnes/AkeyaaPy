@@ -14,7 +14,6 @@ Notes
     - Subregion(Polygon)        administrative region
     - Neighborhood(Circle)      user-defined domain
     - Frame(Rectangle)          user-defined domain
-    - Patch(Polygon)            user-defined domain
 
 * All of the classes in this module are of the informal type Venue.
   But Venue is not a formal abstract base class. Nonetheless, any Venue must
@@ -32,18 +31,10 @@ See Also
 akeyaa.geometry
 
 """
-from akeyaa.gis import (
-    get_city_data,
-    get_township_data,
-    get_watershed_data,
-    get_subregion_data,
-    get_county_data,
-    get_state_data,
-)
 from akeyaa.controller.geometry import Circle, Polygon, Rectangle
 
 __author__ = "Randal J Barnes"
-__version__ = "24 July 2020"
+__version__ = "10 August 2020"
 
 
 class Error(Exception):
@@ -79,8 +70,7 @@ class City(Polygon):
 
     """
 
-    def __init__(self, *, name=None, gnis_id=None):
-        name, code, vertices = get_city_data(name=name, gnis_id=gnis_id)
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -120,8 +110,7 @@ class Township(Polygon):
 
     """
 
-    def __init__(self, *, name=None, gnis_id=None):
-        name, code, vertices = get_township_data(name=name, gnis_id=gnis_id)
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -161,8 +150,7 @@ class County(Polygon):
 
     """
 
-    def __init__(self, *, name=None, abbr=None, cty_fips=None):
-        name, code, vertices = get_county_data(name=name, abbr=abbr, cty_fips=cty_fips)
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -202,8 +190,7 @@ class Watershed(Polygon):
 
     """
 
-    def __init__(self, *, name=None, huc10=None):
-        name, code, vertices = get_watershed_data(name=name, huc10=huc10)
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -242,8 +229,7 @@ class Subregion(Polygon):
 
     """
 
-    def __init__(self, *, name=None, huc8=None):
-        name, code, vertices = get_subregion_data(name=name, huc8=huc8)
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -283,8 +269,7 @@ class State(Polygon):
 
     """
 
-    def __init__(self):
-        name, code, vertices = get_state_data()
+    def __init__(self, name, code, vertices):
         self.name = name
         self.code = code
         Polygon.__init__(self, vertices)
@@ -328,23 +313,12 @@ class Neighborhood(Circle):
 
     """
 
-    def __init__(self, *, name=None, relateid=None, point=None, radius=None):
-        if relateid is not None:
-            well_location = get_well_location(relateid)
-            point = well_location[0]
-
-        elif point is None:
-            raise MissingArgumentError("A relateid or point is required.")
-
-        if radius is not None:
-            Circle.__init__(point, radius)
-        else:
-            raise MissingArgumentError("A radius is required.")
-
+    def __init__(self, name, point, radius):
         if name is not None:
             self.name = name
         else:
             self.name = "Neighborhood"
+        Circle.__init__(point, radius)
 
     def __repr__(self):
         return (
@@ -387,7 +361,8 @@ class Frame(Rectangle):
 
     """
 
-    def __init__(self, *, name=None,
+    def __init__(
+            self, name,
             xmin=None, xmax=None, ymin=None, ymax=None,
             lowerleft=None, width=None, height=None,
             upperright=None, center=None,
@@ -404,7 +379,6 @@ class Frame(Rectangle):
                 [center, width, height]
 
         """
-
         if lowerleft is not None:
             xmin = lowerleft[0]
             ymin = lowerleft[1]
@@ -451,49 +425,6 @@ class Frame(Rectangle):
             and (self.xmax == other.xmax)
             and (self.ymin == other.ymin)
             and (self.ymax == other.ymax)
-        )
-
-    def fullname(self):
-        return f"User Defined: {self.name}"
-
-
-class Patch(Polygon):
-    """A general polygonal patch Venue-by-duck-type.
-
-    Attributes
-    ----------
-    name : str
-        The patch name.
-
-    vertices : ndarray, shape=(n, 2), dtype=float
-        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
-        The vertices are stored so that the domain is on the left, and the
-        first vertex is repeated as the last vertex.
-
-    """
-
-    def __init__(self, *, name=None, vertices=None):
-        if vertices is None:
-            raise MissingArgumentError("The vertices must be specified.")
-
-        Polygon.__init__(self, vertices)
-
-        if name is not None:
-            self.name = name
-        else:
-            self.name = "Patch"
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}("
-            f"name = '{self.name}', "
-            f"vertices = {self.vertices})"
-        )
-
-    def __eq__(self, other):
-        return (
-            (self.__class__ == other.__class__) and
-            (self.vertices == other.vertices)
         )
 
     def fullname(self):

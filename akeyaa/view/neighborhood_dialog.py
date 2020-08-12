@@ -1,7 +1,7 @@
 """Neighborhood Venue Dialog"""
 
 __author__ = "Randal J Barnes"
-__version__ = "08 August 2020"
+__version__ = "10 August 2020"
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -27,10 +27,10 @@ class NeighborhoodDialog(tk.Toplevel):
         self.top_frame.grid(row=0, column=0, padx=5, pady=5)
         self.btn_frame.grid(row=1, column=0, padx=5, pady=5, sticky="E")
 
-        if self.parent.venue["type"] == "Neighborhood":
-            initial_easting = self.parent.neighborhood["easting"]
-            initial_northing = self.parent.neighborhood["northing"]
-            initial_radius = self.parent.neighborhood["radius"]
+        if self.parent.selected_venue["type"] == "Neighborhood":
+            initial_easting = self.parent.selected_venue["easting"]
+            initial_northing = self.parent.selected_venue["northing"]
+            initial_radius = self.parent.selected_venue["radius"]
         else:
             initial_easting = 481738.99         # Civil Engineering Building
             initial_northing = 4980337.72       # Univeristy of Minnesota
@@ -70,7 +70,7 @@ class NeighborhoodDialog(tk.Toplevel):
         self.venue["northing"] = self.northing.get()
         self.venue["radius"] = self.radius.get()
 
-        self.parent.venue = self.venue
+        self.parent.selected_venue = self.venue
         self.parent.wm_attributes("-disabled", False)
         self.destroy()
 
