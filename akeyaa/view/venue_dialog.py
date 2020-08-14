@@ -46,6 +46,7 @@ class VenueDialog(tk.Toplevel):
         self.tree.bind('<<TreeviewSelect>>', self.on_select)
         self.tree_update(self.enumerated_venue_list)
 
+
         # Setup the button frame.
         self.btn_okay = ttk.Button(self.btn_frame, text="OK", command=self.okay)
         self.btn_okay["state"] = tk.DISABLED

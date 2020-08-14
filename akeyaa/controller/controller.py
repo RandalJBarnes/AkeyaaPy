@@ -23,12 +23,12 @@
 
 """
 import bz2
-import datetime
+
 import pickle
 import numpy as np
 
 from akeyaa.model.model import Model
-from akeyaa.view.view import View
+from akeyaa.input.view import View
 from akeyaa.controller.venues import City, Township, County, Watershed, Subregion, Neighborhood, Frame
 
 
@@ -40,13 +40,6 @@ class Controller:
     def __init__(self):
 
         # Initialize the parameters
-        self.parameters = {
-            "radius" : 3000,
-            "required" : 25,
-            "spacing" : 1000,
-            "firstyear" : 1871,
-            "lastyear" : datetime.datetime.now().year
-        }
 
         # Get the pre-digested venue data.
         pklzfile = r"..\data\Akeyaa_Venues.pklz"
@@ -60,10 +53,10 @@ class Controller:
 
         self.model = Model(self.well_list)
 
-        self.view = View(self.parameters, self.venue_data, self.run_callback)
+        self.view = View(self.venue_data, self.run_callback)
         self.view.mainloop()
 
-    def run_callback(self, selected_venue, parameters):
+    def run_callback(self, selected_venue, selected_aquifers, selected_parameters):
 
         if selected_venue["type"] == "City":
             city_list = self.venue_data["city_list"]
