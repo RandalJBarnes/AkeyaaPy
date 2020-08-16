@@ -4,10 +4,8 @@ import datetime
 import tkinter as tk
 import tkinter.ttk as ttk
 
-from akeyaa.input.venue_widget import VenueWidget
-
 __author__ = "Randal J Barnes"
-__version__ = "13 August 2020"
+__version__ = "16 August 2020"
 
 
 class View(tk.Tk):
@@ -15,10 +13,19 @@ class View(tk.Tk):
         super().__init__()
 
         # Initialize.
-        self.venue_data = venue_data
-        self.selected_venue = {
-            "type": None,
-            "aquifers": None
+        self.enumerated_venue_data = {
+            "City": [(venue, index) for index, venue in enumerate(venue_data["city_list"])],
+            "Township": [(venue, index) for index, venue in enumerate(venue_data["township_list"])],
+            "County": [(venue, index) for index, venue in enumerate(venue_data["county_list"])],
+            "Watershed": [(venue, index) for index, venue in enumerate(venue_data["watershed_list"])],
+            "Subregion": [(venue, index) for index, venue in enumerate(venue_data["subregion_list"])]
+        }
+        self.venue_codes = {
+            "City": "GNIS",
+            "Township": "GNIS",
+            "County": "FIPS",
+            "Watershed": "HUC10",
+            "Subregion": "HUC8"
         }
         self.run_callback = run_callback
 
@@ -38,7 +45,7 @@ class View(tk.Tk):
 
         # Fill the Venue frame
         venue_types = ["City", "Township", "County", "Watershed", "Subregion", "Neighborhood", "Frame"]
-        self.venue_type = tk.StringVar(value=self.selected_venue["type"])
+        self.venue_type = tk.StringVar(value=None)
 
         venue_text = ttk.Label(venue_frame, text="type")
         venue_cb = ttk.Combobox(
@@ -52,55 +59,61 @@ class View(tk.Tk):
         venue_text.grid(row=0, column=0, sticky=tk.W)
         venue_cb.grid(row=0, column=1, sticky=tk.W)
 
-        # Fill the City frame (a sub-frame in the Venue frame).
-        self.venue_city_frame = ttk.Frame(venue_frame)
-        venue_city_widget = VenueWidget(self.venue_city_frame, venue_data["city_list"])
-        venue_city_widget.pack()
+        # Fill the Selection frame (a sub-frame in the Venue frame).
+        self.selection_frame = ttk.Frame(venue_frame)
 
-        # Fill the Township frame (a sub-frame in the Venue frame).
-        self.venue_township_frame = ttk.Frame(venue_frame)
-        venue_township_widget = VenueWidget(self.venue_township_frame, venue_data["township_list"])
-        venue_township_widget.pack()
+        self.selection_index = None
+        self.enumerated_venue_list = None
 
-        # Fill the County frame (a sub-frame in the Venue frame).
-        self.venue_county_frame = ttk.Frame(venue_frame)
-        venue_county_widget = VenueWidget(self.venue_county_frame, venue_data["county_list"])
-        venue_county_widget.pack()
+        self.selection_text = tk.StringVar()
+        self.selection_text.trace('w', self.on_change_selection_text)
 
-        # Fill the Watershed frame (a sub-frame in the Venue frame).
-        self.venue_watershed_frame = ttk.Frame(venue_frame)
-        venue_watershed_widget = VenueWidget(self.venue_watershed_frame, venue_data["watershed_list"])
-        venue_watershed_widget.pack()
+        entry = ttk.Entry(self.selection_frame, textvariable=self.selection_text)
+        entry.focus_set()
+        entry.pack(fill=tk.X, expand=0)
 
-        # Fill the Subregion frame (a sub-frame in the Venue frame).
-        self.venue_subregion_frame = ttk.Frame(venue_frame)
-        venue_subregion_widget = VenueWidget(self.venue_subregion_frame, venue_data["subregion_list"])
-        venue_subregion_widget.pack()
+        # Fix for setting text colour for Tkinter 8.6.9
+        # From: https://core.tcl.tk/tk/info/509cafafae
+        style = ttk.Style()
+        style.map(
+            'Treeview',
+            foreground=[elm for elm in style.map('Treeview', query_opt='foreground') if elm[:2] != ('!disabled', '!selected')],
+            background=[elm for elm in style.map('Treeview', query_opt='background') if elm[:2] != ('!disabled', '!selected')]
+        )
+
+        self.selection_tree = ttk.Treeview(self.selection_frame, columns=("#1"), selectmode="browse")
+        self.selection_tree.heading("#0", text="Name")
+        self.selection_tree.heading("#1", text="Code")
+        self.selection_tree.column("#0", stretch=tk.YES)
+        self.selection_tree.column("#1", width=100)
+        self.selection_tree.pack(fill=tk.BOTH, expand=1)
+        self.selection_tree.bind("<<TreeviewSelect>>", self.on_selection)
+        self.selection_tree.tag_configure("current", background="orange")
 
         # Fill the Neighborhood frame (a sub-frame in the Venue frame).
-        self.venue_neighborhood_frame = ttk.Frame(venue_frame)
+        self.neighborhood_frame = ttk.Frame(venue_frame)
 
         self.neighborhood_easting = tk.DoubleVar(value=481738.99)               # Civil Engineering Building
         self.neighborhood_northing = tk.DoubleVar(value=4980337.72)             # Univeristy of Minnesota
         self.neighborhood_radius = tk.DoubleVar(value=10000)                    # Go Gophers!
 
-        easting_text = ttk.Label(self.venue_neighborhood_frame, text="easting")
+        easting_text = ttk.Label(self.neighborhood_frame, text="easting")
         easting_sb = ttk.Spinbox(
-            self.venue_neighborhood_frame,
+            self.neighborhood_frame,
             textvariable=self.neighborhood_easting,
             from_=189783, increment=100, to=761654                              # min & max for MN
         )
 
-        northing_text = ttk.Label(self.venue_neighborhood_frame, text="northing")
+        northing_text = ttk.Label(self.neighborhood_frame, text="northing")
         northing_sb = ttk.Spinbox(
-            self.venue_neighborhood_frame,
+            self.neighborhood_frame,
             textvariable=self.neighborhood_northing,
             from_=4816309, increment=100, to=5472347                            # min & max for MN
         )
 
-        radius_text = ttk.Label(self.venue_neighborhood_frame, text="radius")
+        radius_text = ttk.Label(self.neighborhood_frame, text="radius")
         radius_sb = ttk.Spinbox(
-            self.venue_neighborhood_frame,
+            self.neighborhood_frame,
             textvariable=self.neighborhood_radius,
             from_=0, increment=100, to=1000000
         )
@@ -113,39 +126,39 @@ class View(tk.Tk):
         radius_sb.grid(row=2, column=1, sticky=tk.W, pady=2)
 
         # Fill the Frame frame (a sub-frame in the Venue frame).
-        self.venue_frame_frame = ttk.Frame(venue_frame)
+        self.frame_frame = ttk.Frame(venue_frame)
 
-        self.minimum_easting = tk.DoubleVar(value=481738.99 - 10000)            # Civil Engineering Building
-        self.maximum_easting = tk.DoubleVar(value=481738.99 + 10000)            # Univeristy of Minnesota
-        self.minimum_northing = tk.DoubleVar(value=4980337.72 - 10000)          # Go Gophers!
-        self.maximum_northing = tk.DoubleVar(value=4980337.72 + 10000)
+        self.frame_minimum_easting = tk.DoubleVar(value=481738.99 - 10000)      # Civil Engineering Building
+        self.frame_maximum_easting = tk.DoubleVar(value=481738.99 + 10000)      # Univeristy of Minnesota
+        self.frame_minimum_northing = tk.DoubleVar(value=4980337.72 - 10000)    # Go Gophers!
+        self.frame_maximum_northing = tk.DoubleVar(value=4980337.72 + 10000)
 
-        easting_text = tk.Label(self.venue_frame_frame, text="easting")
-        northing_text = tk.Label(self.venue_frame_frame, text="northing")
-        minimum_text = tk.Label(self.venue_frame_frame, text="minimum")
-        maximum_text = tk.Label(self.venue_frame_frame, text="maximum")
+        easting_text = tk.Label(self.frame_frame, text="easting")
+        northing_text = tk.Label(self.frame_frame, text="northing")
+        minimum_text = tk.Label(self.frame_frame, text="minimum")
+        maximum_text = tk.Label(self.frame_frame, text="maximum")
 
         minimum_easting_sb = tk.Spinbox(
-            self.venue_frame_frame,
-            textvariable=self.minimum_easting,
+            self.frame_frame,
+            textvariable=self.frame_minimum_easting,
             from_=189783, increment=100, to=761654                              # min & max for MN
         )
 
         maximum_easting_sb = tk.Spinbox(
-            self.venue_frame_frame,
-            textvariable=self.maximum_easting,
+            self.frame_frame,
+            textvariable=self.frame_maximum_easting,
             from_=189783, increment=100, to=761654                              # min & max for MN
         )
 
         minimum_northing_sb = tk.Spinbox(
-            self.venue_frame_frame,
-            textvariable=self.minimum_northing,
+            self.frame_frame,
+            textvariable=self.frame_minimum_northing,
             from_=4816309, increment=100, to=5472347                            # min & max for MN
         )
 
         maximum_northing_sb = tk.Spinbox(
-            self.venue_frame_frame,
-            textvariable=self.maximum_northing,
+            self.frame_frame,
+            textvariable=self.frame_maximum_northing,
             from_=4816309, increment=100, to=5472347                            # min & max for MN
         )
 
@@ -242,67 +255,111 @@ class View(tk.Tk):
 
 
     def on_venue_type_select(self, event):
-        selected_venue_type = self.venue_type.get()
-        print(f"{selected_venue_type}")
+        self.selection_frame.grid_forget()
+        self.neighborhood_frame.grid_forget()
+        self.frame_frame.grid_forget()
 
-        self.venue_city_frame.grid_forget()
-        self.venue_township_frame.grid_forget()
-        self.venue_county_frame.grid_forget()
-        self.venue_watershed_frame.grid_forget()
-        self.venue_subregion_frame.grid_forget()
-        self.venue_neighborhood_frame.grid_forget()
-        self.venue_frame_frame.grid_forget()
-
-        if selected_venue_type == "City":
-            self.venue_city_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "Township":
-            self.venue_township_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "County":
-            self.venue_county_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "Watershed":
-            self.venue_watershed_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "Subregion":
-            self.venue_subregion_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "Neighborhood":
-            self.venue_neighborhood_frame.grid(row=1, column=1, columnspan=2)
-        elif selected_venue_type == "Frame":
-            self.venue_frame_frame.grid(row=1, column=1, columnspan=2)
+        if self.venue_type.get() == "Neighborhood":
+            self.neighborhood_frame.grid(row=1, column=1, columnspan=2)
+        elif self.venue_type.get() == "Frame":
+            self.frame_frame.grid(row=1, column=1, columnspan=2)
         else:
-            raise ValueError("Unknown venue type")
+            self.selection_name = None
+            self.selection_code = None
+            self.selection_index = None
+
+            self.selection_frame.grid(row=1, column=1, columnspan=2)
+            self.enumerated_venue_list = self.enumerated_venue_data[self.venue_type.get()]
+            self.selection_text.set("")
+            self.selection_tree.heading("#1", text=self.venue_codes[self.venue_type.get()])
+            self.selection_tree_update(self.enumerated_venue_list)
+
+    def on_change_selection_text(self, *args):
+        value = self.selection_text.get()
+        value = value.strip().lower()
+        if value == "":
+            venues = self.enumerated_venue_list
+        else:
+            venues = []
+            for row in self.enumerated_venue_list:
+                if value in row[0][0].lower():
+                    venues.append(row)
+        self.selection_tree_update(venues)
+
+    def selection_tree_update(self, venues):
+        self.selection_tree.delete(*self.selection_tree.get_children())
+        for row in venues:
+            if row[1] == self.selection_index:
+                self.selection_tree.insert('', 'end', text=row[0][0], values=(f"{row[0][1]}", row[1]), tags="current")
+            else:
+                self.selection_tree.insert('', 'end', text=row[0][0], values=(f"{row[0][1]}", row[1]))
+
+    def on_selection(self, event):
+        selection = self.selection_tree.selection()
+        item = self.selection_tree.item(selection)
+
+        self.selection_name = item["text"]
+        self.selection_code = item["values"][0]
+        self.selection_index = item["values"][1]
+
+        self.selection_text.set(item["text"])
 
     def run_button_pressed(self):
-        selected_venue_type = self.venue_type.get()
-        if selected_venue_type == "City":
-            self.venue_city_frame
-        elif selected_venue_type == "Township":
-            self.venue_township_frame
-        elif selected_venue_type == "County":
-            self.venue_county_frame
-        elif selected_venue_type == "Watershed":
-            self.venue_watershed_frame
-        elif selected_venue_type == "Subregion":
-            self.venue_subregion_frame
-        elif selected_venue_type == "Neighborhood":
-            self.venue_neighborhood_frame
-        elif selected_venue_type == "Frame":
-            self.venue_frame_frame
+        if self.venue_type.get() == "Neighborhood":
+            selected_venue = {
+                "type": "Neighborhood",
+                "name": "Neighborhood",
+                "easting": self.neighborhood_easting.get(),
+                "northing": self.neighborhood_northing.get(),
+                "radius": self.neighborhood_radius.get()
+            }
+        elif self.venue_type.get() == "Frame":
+            selected_venue = {
+                "type": "Frame",
+                "name": "Frame",
+                "minimum_easting": self.frame_minimum_easting.get(),
+                "maximum_easting": self.frame_maximum_easting.get(),
+                "minimum_northing": self.frame_minimum_northing.get(),
+                "maximum_northing": self.frame_maximum_northing.get()
+            }
         else:
-            raise ValueError("Unknown venue type")
+            selected_venue = {
+                "type": self.venue_type.get(),
+                "name": self.selection_name,
+                "code": self.selection_code,
+                "index": self.selection_index
+            }
 
+        selected_aquifers = ""
+        if self.cxxx.get():
+            selected_aquifers += "C"
+        if self.dxxx.get():
+            selected_aquifers += "D"
+        if self.ixxx.get():
+            selected_aquifers += "I"
+        if self.kxxx.get():
+            selected_aquifers += "K"
+        if self.mxxx.get():
+            selected_aquifers += "M"
+        if self.oxxx.get():
+            selected_aquifers += "O"
+        if self.pxxx.get():
+            selected_aquifers += "P"
+        if self.qxxx.get():
+            selected_aquifers += "Q"
+        if self.rxxx.get():
+            selected_aquifers += "R"
+        if self.uxxx.get():
+            selected_aquifers += "U"
 
-
-
-
-        selected_aquifers = {
-
-        }
         selected_parameters = {
-            "radius": self.radius,
-            "required": self.required,
-            "spacing": self.spacing,
-            "firstyear": self.firstyear,
-            "lastyear": self.lastyear
+            "radius": self.radius.get(),
+            "required": self.required.get(),
+            "spacing": self.spacing.get(),
+            "firstyear": self.firstyear.get(),
+            "lastyear": self.lastyear.get()
         }
+
         self.run_callback(selected_venue, selected_aquifers, selected_parameters)
 
     def save_button_pressed(self):

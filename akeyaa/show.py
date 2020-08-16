@@ -28,10 +28,10 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 
-import akeyaa.controller.pnorm as pnorm
+import akeyaa.pnorm as pnorm
 
 __author__ = "Randal J Barnes"
-__version__ = "24 July 2020"
+__version__ = "16 August 2020"
 
 
 # -----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ class EmptySelectionError(Error):
 
 
 # -----------------------------------------------------------------------------
-def by_venue(venue, results):
+def show_by_venue(venue, results):
     """Driver to plot the results for the venue.
 
     Make five plots that highlight the results of the run.
@@ -93,6 +93,7 @@ def by_venue(venue, results):
     local_laplacian_zscore(venue, results)
 
     plt.draw_all()
+    plt.show(block=False)
 
 
 # -----------------------------------------------------------------------------
@@ -270,7 +271,7 @@ def local_laplacian_zscore(venue, results):
     plt.axis("equal")
 
     plt.fill(bdry[:, 0], bdry[:, 1], "0.80")
-    divnorm = colors.DivergingNorm(vmin=-3, vcenter=0, vmax=3)
+    divnorm = colors.TwoSlopeNorm(vmin=-3, vcenter=0, vmax=3)
     plt.scatter(xtarget, ytarget, c=score, norm=divnorm, zorder=10, cmap="bwr")
     cbar = plt.colorbar()
     cbar.ax.set_title("z-score")

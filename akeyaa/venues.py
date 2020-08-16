@@ -20,9 +20,6 @@ Notes
   have the following methods in addition to all of the methods promised
   by the abstract base class geometry.Shape.
 
-    __eq__(self, other) -> bool
-        Return True is the two venues are the same.
-
     fullname(self) -> str
         Return a form of the venue's name appropriate for a plot title.
 
@@ -31,22 +28,10 @@ See Also
 akeyaa.geometry
 
 """
-from akeyaa.controller.geometry import Circle, Polygon, Rectangle
+from akeyaa.geometry import Circle, Polygon, Rectangle
 
 __author__ = "Randal J Barnes"
-__version__ = "10 August 2020"
-
-
-class Error(Exception):
-    """The base exception for the module."""
-
-
-class MissingArgumentError(Error):
-    """The call is missing one or more arguments."""
-
-
-class ConflictingArgumentError(Error):
-    """Two or more of the arguments are in conflict."""
+__version__ = "16 August 2020"
 
 
 class City(Polygon):
@@ -81,9 +66,6 @@ class City(Polygon):
             f"name = '{self.name}', "
             f"gnis_id = '{self.code}')"
         )
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
 
     def fullname(self):
         return f"City of {self.name}"
@@ -122,9 +104,6 @@ class Township(Polygon):
             f"gnis_id = '{self.code}')"
         )
 
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
-
     def fullname(self):
         return f"{self.name} Township"
 
@@ -161,9 +140,6 @@ class County(Polygon):
             f"name = '{self.name}', "
             f"cty_fips = {self.code})"
         )
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
 
     def fullname(self):
         return f"{self.name} County"
@@ -241,51 +217,8 @@ class Subregion(Polygon):
             f"huc8 = '{self.code}')"
         )
 
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
-
     def fullname(self):
         return f"{self.name} Subregion"
-
-
-class State(Polygon):
-    """State Venue-by-duck-type.
-
-    Attributes
-    ----------
-    name : str
-        The state name found in the .gdb.
-
-    code : int
-        The intial 2 digits of the unique 5-digit Federal Information
-        Processing Standards code -- i.e. the state FIPS code.
-
-        For example, The FIPS code for Minnesota = 27.
-
-    vertices : ndarray, shape=(n, 2), dtype=float
-        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
-        The vertices are stored so that the domain is on the left, and the
-        first vertex is repeated as the last vertex.
-
-    """
-
-    def __init__(self, name, code, vertices):
-        self.name = name
-        self.code = code
-        Polygon.__init__(self, vertices)
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}("
-            f"name = '{self.name}', "
-            f"fips = {self.code})"
-        )
-
-    def __eq__(self, other):
-        return (self.__class__ == other.__class__) and (self.code == other.code)
-
-    def fullname(self):
-        return f"State of {self.name}"
 
 
 class Neighborhood(Circle):
@@ -326,13 +259,6 @@ class Neighborhood(Circle):
             f"name = '{self.name}', "
             f"center = {self.center}, "
             f"radius = {self.radius})"
-        )
-
-    def __eq__(self, other):
-        return (
-            (self.__class__ == other.__class__) and
-            (self.center == other.center) and
-            (self.radius == other.radius)
         )
 
     def fullname(self):
@@ -418,14 +344,42 @@ class Frame(Rectangle):
             f"ymax = {self.ymax})"
         )
 
-    def __eq__(self, other):
+    def fullname(self):
+        return f"User Defined: {self.name}"
+
+
+class State(Polygon):
+    """State Venue-by-duck-type.
+
+    Attributes
+    ----------
+    name : str
+        The state name found in the .gdb.
+
+    code : int
+        The intial 2 digits of the unique 5-digit Federal Information
+        Processing Standards code -- i.e. the state FIPS code.
+
+        For example, The FIPS code for Minnesota = 27.
+
+    vertices : ndarray, shape=(n, 2), dtype=float
+        An array of vertices; i.e. a 2D numpy array of (x, y) corredinates [m].
+        The vertices are stored so that the domain is on the left, and the
+        first vertex is repeated as the last vertex.
+
+    """
+
+    def __init__(self, name, code, vertices):
+        self.name = name
+        self.code = code
+        Polygon.__init__(self, vertices)
+
+    def __repr__(self):
         return (
-            (self.__class__ == other.__class__)
-            and (self.xmin == other.xmin)
-            and (self.xmax == other.xmax)
-            and (self.ymin == other.ymin)
-            and (self.ymax == other.ymax)
+            f"{self.__class__.__name__}("
+            f"name = '{self.name}', "
+            f"fips = {self.code})"
         )
 
     def fullname(self):
-        return f"User Defined: {self.name}"
+        return f"State of {self.name}"

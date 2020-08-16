@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from akeyaa.model.wells import Wells
 
 __author__ = "Randal J Barnes"
-__version__ = "24 July 2020"
+__version__ = "16 August 2020"
 
 
 class Error(Exception):
@@ -16,7 +15,7 @@ class EmptySelectionError(Error):
     """There are no wells in the selection."""
 
 
-def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
+def show_aquifers_by_venue(wells, venue, aquifers, firstyear, lastyear):
     """Plot the wells in the venue coded by aquifer.
 
     Plot the locations of the authorized wells in the `venue` that are
@@ -24,23 +23,25 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
     measured date between `after` and `before`. The plotted marker for a well
     is color-coded by the aquifer in which it is completed.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
+    wells: Wells
+
+
     venue: type
         An instance of a political division, administrative region, or
         user-defined domain, as enumerated in `akeyaa.venues`.
         For example: a ``City``, ``Watershed``, or ``Neighborhood``.
 
-    aquifers : list, optional
+    aquifers : list
         List of four-character aquifer abbreviation strings, as defined in
-        Minnesota Geologic Survey's coding system. The default is None. If
-        None, then all aquifers present will be included.
+        Minnesota Geologic Survey's coding system.
 
-    after : int
-        Earliest measurement date to use; written as YYYYMMDD.
+    firstyear : int
+        Water levels measured before firstyear, YYYY, are not included.
 
-    before : int
-        Latest measurement date to use; written as YYYYMMDD.
+    lastyear : int
+        Water levels measured after lastyear, YYYY, are not included.
 
     Returns
     -------
@@ -55,9 +56,9 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
 
     """
     bdry = venue.boundary()
-    wells = Wells()
+    welldata = wells.fetch_by_venue(venue, aquifers, firstyear, lastyear)
 
-    welldata = wells.fetch_by_venue(venue, aquifers, after, before)
+    print(f"number of wells found = {len(welldata)}")
 
     xsel = [row[0][0] for row in welldata]
     ysel = [row[0][1] for row in welldata]
@@ -81,6 +82,7 @@ def aquifers_by_venue(venue, aquifers=None, after=None, before=None):
     plt.ylabel("Northing [m]")
     plt.title(venue.fullname() + " Wells Coded By Aquifer", {"fontsize": 24})
     plt.grid(True)
+    plt.show(block=False)
 
     aquifer_info = list(zip(uaq, naq))
     aquifer_info.sort(key=lambda tup: tup[1], reverse=True)
@@ -111,6 +113,8 @@ def geologic_color_map(aquifers):
         Dictionary of colors for each geologically-related color category.
 
     """
+
+    # C D I K M O P Q R U
     geo_hue_order = ["Qxxx", "Kxxx", "Dxxx", "Oxxx", "Cxxx", "Pxxx", "Mxxx", "other"]
     geo_palette = {
         "Qxxx": "gold",

@@ -10,7 +10,7 @@ from operator import itemgetter
 import scipy
 
 __author__ = "Randal J Barnes"
-__version__ = "09 August 2020"
+__version__ = "16 August 2020"
 
 
 class Wells:
@@ -66,7 +66,7 @@ class Wells:
         self.relateid = [row[3] for row in self.welldata]
         self.tree = scipy.spatial.cKDTree([row[0] for row in self.welldata])
 
-    def fetch(self, xytarget, radius, aquifers, before, after):
+    def fetch(self, xytarget, radius, aquifers, firstyear, lastyear):
         """Fetch the nearby wells.
 
         Fetch the welldata for all authorized wells within `radius` of the
@@ -74,8 +74,8 @@ class Wells:
         identified `aquifers`, and that have a measured date between `after`
         and `before`.
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         xytarget : tuple(float, float)
             x-coordinate (easting) and y-coordinate (northing) of the target
             location in NAD 83 UTM zone 15N [m].
@@ -88,9 +88,11 @@ class Wells:
             Minnesota Geologic Survey's coding system. If None, then wells
             from all aquifers will be included.
 
-        after : int
+        firstyear : int
+            Water levels measured before firstyear, YYYY, are not included.
 
-        before : int
+        lastyear : int
+            Water levels measured after lastyear, YYYY, are not included.
 
         Returns
         -------
@@ -110,14 +112,15 @@ class Wells:
         if indx:
             for i in indx:
                 if (
-                    ((aquifers is None) or (self.welldata[i][2] in aquifers)) and
-                    ((after is None) or (self.welldata[i][4] >= after)) and
-                    ((before is None) or (self.welldata[i][4] <= before))
+                    (self.welldata[i][2] in aquifers) and
+                    (self.welldata[i][4]//10000 >= firstyear) and
+                    (self.welldata[i][4]//10000 <= lastyear)
                 ):
                     welldata.append(self.welldata[i])
         return welldata
 
-    def fetch_by_venue(self, venue, aquifers, after, before):
+
+    def fetch_by_venue(self, venue, aquifers, firstyear, lastyear):
         """Fetch wells in the specified venue.
 
         Fetch the welldata for all authorized wells that are completed in one
@@ -136,11 +139,11 @@ class Wells:
             Minnesota Geologic Survey's coding system. If None, then wells from
             all aquifers will be included.
 
-        after : int
-            Earliest measurement date to use; written as YYYYMMDD.
+        firstyear : int
+            Water levels measured before firstyear, YYYY, are not included.
 
-        before : int
-            Latest measurement date to use; written as YYYYMMDD.
+        lastyear : int
+            Water levels measured after lastyear, YYYY, are not included.
 
         Returns
         -------
@@ -152,12 +155,13 @@ class Wells:
 
         """
         xycenter, radius = venue.circumcircle()
-        candidates = self.fetch(xycenter, radius, aquifers, after, before)
+        candidates = self.fetch(xycenter, radius, aquifers, firstyear, lastyear)
 
         if candidates:
             flag = venue.contains_points([row[0] for row in candidates])
             return list(compress(candidates, flag))
         return []
+
 
     def get_well(self, relateid):
         """Get the welldata for a single well by relateid.
