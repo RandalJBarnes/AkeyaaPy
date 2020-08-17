@@ -1,28 +1,8 @@
 """Implement the Driver class for AkeyaaPy.
 
-
-   well_list : list[tuple] (xy, z, aquifer, relateid)
-        xy : tuple (float, float)
-            The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
-
-        z : float
-            The recorded static water level [ft]
-
-        aquifer : str
-            The 4-character aquifer abbreviation string, as defined in
-            Minnesota Geologic Survey's coding system.
-
-        relateid : str
-            The unique 10-digit well number encoded as a string with
-            leading zeros.
-
-        date : int
-            Recorded measurement date written as YYYYMMDD.
-
-        For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
-
 """
 import bz2
+import csv
 import pickle
 import numpy as np
 
@@ -30,8 +10,7 @@ from akeyaa.wells import Wells
 from akeyaa.view import View
 from akeyaa.venues import City, Township, County, Watershed, Subregion, Neighborhood, Frame
 from akeyaa.model import model_by_venue
-from akeyaa.show import show_by_venue
-from akeyaa.geology import show_aquifers_by_venue
+from akeyaa.show import show_results_by_venue, show_aquifers_by_venue
 
 __author__ = "Randal J Barnes"
 __version__ = "16 August 2020"
@@ -76,6 +55,51 @@ ALL_AQUIFERS = {
 
 class Driver:
     def __init__(self):
+        """The controller/drive for the AkeyaaPy program.
+
+        Notes
+        -----
+        * This program imports two, large, externally created data sets from two
+            bzip2 pickle files:
+            -- Akeyaa_Wells.pklz --> well_list
+            -- Akeyaa_Venues.pklz --> venue_data
+
+        * The well_list contains select information for all "admissible" wells in
+            the Minnesota CWI database. For a well to be "admissible" it must have
+            the following five data fields: RELATEID, UTME, UTMN, MEAS_ELEV,
+            MEAS_DATE, and AQUIFER.
+
+        * The well_list is a list of tuple, with one tuple per well.
+            well_list : list[tuple] (xy, z, aquifer, relateid)
+                xy : tuple (float, float)
+                    The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
+
+                z : float
+                    The recorded static water level [ft]
+
+                aquifer : str
+                    The 4-character aquifer abbreviation string, as defined in
+                    Minnesota Geologic Survey's coding system.
+
+                relateid : str
+                    The unique 10-digit well number encoded as a string with
+                    leading zeros.
+
+                date : int
+                    Recorded measurement date written as YYYYMMDD.
+
+            For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
+
+        * There are five venue types included: City, Township, County, Watershed,
+            and Subregion.
+
+        * Each venue includes four components: a name, an identifying number or
+            id string, a list of polygon vertices, and the centroid of the polygon.
+
+        * All coordinates, polygon vertices and centroids, are given in Minnesota's
+            standard 'NAD 1983 UTM zone 15N' (EPSG:26915).
+
+        """
         # Get the pre-digested well data.
         pklzfile = r"..\data\Akeyaa_Wells.pklz"
         with bz2.open(pklzfile, "rb") as fileobject:
@@ -88,10 +112,25 @@ class Driver:
             self.venue_data = pickle.load(fileobject)
 
         # Execute the graphical user interface.
-        self.view = View(self.venue_data, self.run_callback)
+        self.view = View(self.venue_data, self.run_callback, self.save_callback)
         self.view.mainloop()
 
     def run_callback(self, selected_venue, selected_aquifers, parameters):
+        """Run the AkeyaaPy model.
+
+        Parameters
+        ----------
+        selected_venue :
+
+        selected_aquifers :
+
+        parameters :
+
+        Returns
+        -------
+        None
+
+        """
         # Create the requested Venue.
         if selected_venue["type"] == "City":
             city_list = self.venue_data["city_list"]
@@ -156,7 +195,37 @@ class Driver:
         print(f"{selected_aquifers}")
         print(f"{parameters}")
 
-        show_aquifers_by_venue(self.wells, venue, aquifers, parameters["firstyear"], parameters["lastyear"])
+        self.results = model_by_venue(self.wells, venue, aquifers, parameters)
+        self.target_values = show_results_by_venue(venue, self.results)
+        self.aquifer_info = show_aquifers_by_venue(self.wells, venue, aquifers, parameters)
 
-        results = model_by_venue(self.wells, venue, aquifers, parameters)
-        show_by_venue(venue, results)
+    def save_callback(self, filename):
+        """Save the most recent run results to a csv file.
+
+        Arguments
+        ---------
+        filename : string
+            The csv filename.
+
+        Returns
+        -------
+        None
+
+        """
+        with open(filename, mode="w", newline="") as csv_file:
+            writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerow(["xtarget", "ytarget", "xvec", "yvec", "p10", "ntarget", "head", "magnitude", "score"])
+
+            number_of_target_values = len(self.target_values["xtarget"])
+            for i in range(number_of_target_values):
+                writer.writerow([
+                    self.target_values["xtarget"][i],
+                    self.target_values["ytarget"][i],
+                    self.target_values["xvec"][i],
+                    self.target_values["yvec"][i],
+                    self.target_values["p10"][i],
+                    self.target_values["ntarget"][i],
+                    self.target_values["head"][i],
+                    self.target_values["magnitude"][i],
+                    self.target_values["score"][i]
+                ])

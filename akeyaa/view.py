@@ -1,15 +1,16 @@
-"""Implement the View class in the adapted MVC design pattern for AkeyaaPy."""
+"""Implement the graphical user interface, View class, for AkeyaaPy."""
 
 import datetime
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import messagebox, filedialog
 
 __author__ = "Randal J Barnes"
 __version__ = "16 August 2020"
 
 
 class View(tk.Tk):
-    def __init__(self, venue_data, run_callback):
+    def __init__(self, venue_data, run_callback, save_callback):
         super().__init__()
 
         # Initialize.
@@ -27,7 +28,9 @@ class View(tk.Tk):
             "Watershed": "HUC10",
             "Subregion": "HUC8"
         }
+
         self.run_callback = run_callback
+        self.save_callback = save_callback
 
         # Main window.
         self.title("AkeyaaPy")
@@ -47,16 +50,16 @@ class View(tk.Tk):
         venue_types = ["City", "Township", "County", "Watershed", "Subregion", "Neighborhood", "Frame"]
         self.venue_type = tk.StringVar(value=None)
 
-        venue_text = ttk.Label(venue_frame, text="type")
+        venue_label = ttk.Label(venue_frame, text="type")
         venue_cb = ttk.Combobox(
             venue_frame,
             state="readonly",
             textvariable=self.venue_type,
             values=venue_types
         )
-        venue_cb.bind('<<ComboboxSelected>>', self.on_venue_type_select)
+        venue_cb.bind("<<ComboboxSelected>>", self.on_venue_type_select)
 
-        venue_text.grid(row=0, column=0, sticky=tk.W)
+        venue_label.grid(row=0, column=0, sticky=tk.W)
         venue_cb.grid(row=0, column=1, sticky=tk.W)
 
         # Fill the Selection frame (a sub-frame in the Venue frame).
@@ -66,19 +69,18 @@ class View(tk.Tk):
         self.enumerated_venue_list = None
 
         self.selection_text = tk.StringVar()
-        self.selection_text.trace('w', self.on_change_selection_text)
+        self.selection_text.trace("w", self.on_change_selection_text)
 
-        entry = ttk.Entry(self.selection_frame, textvariable=self.selection_text)
+        selection_label = ttk.Label(self.selection_frame, text="name")
+        entry = ttk.Entry(self.selection_frame, textvariable=self.selection_text, width=33)
         entry.focus_set()
-        entry.pack(fill=tk.X, expand=0)
 
         # Fix for setting text colour for Tkinter 8.6.9
         # From: https://core.tcl.tk/tk/info/509cafafae
         style = ttk.Style()
         style.map(
-            'Treeview',
-            foreground=[elm for elm in style.map('Treeview', query_opt='foreground') if elm[:2] != ('!disabled', '!selected')],
-            background=[elm for elm in style.map('Treeview', query_opt='background') if elm[:2] != ('!disabled', '!selected')]
+            "Treeview",
+            background=[elm for elm in style.map("Treeview", query_opt="background") if elm[:2] != ('!disabled', '!selected')]
         )
 
         self.selection_tree = ttk.Treeview(self.selection_frame, columns=("#1"), selectmode="browse")
@@ -86,9 +88,16 @@ class View(tk.Tk):
         self.selection_tree.heading("#1", text="Code")
         self.selection_tree.column("#0", stretch=tk.YES)
         self.selection_tree.column("#1", width=100)
-        self.selection_tree.pack(fill=tk.BOTH, expand=1)
+
         self.selection_tree.bind("<<TreeviewSelect>>", self.on_selection)
         self.selection_tree.tag_configure("current", background="orange")
+
+        # entry.pack(fill=tk.X, expand=0)
+        # self.selection_tree.pack(fill=tk.BOTH, expand=1)
+
+        selection_label.grid(row=0, column=0)
+        entry.grid(row=0, column=1, sticky=tk.W)
+        self.selection_tree.grid(row=1, column=1, sticky=tk.W)
 
         # Fill the Neighborhood frame (a sub-frame in the Venue frame).
         self.neighborhood_frame = ttk.Frame(venue_frame)
@@ -215,19 +224,24 @@ class View(tk.Tk):
         self.lastyear = tk.IntVar(value=datetime.datetime.now().year)
 
         radius_text = ttk.Label(parameters_frame, text="radius")
-        radius_sb = ttk.Spinbox(parameters_frame, textvariable=self.radius, from_=0, increment=100, to=1000000)
+        radius_sb = ttk.Spinbox(parameters_frame, textvariable=self.radius,
+                                from_=1, increment=100, to=1000000)
 
         required_text = ttk.Label(parameters_frame, text="required")
-        required_sb = ttk.Spinbox(parameters_frame, textvariable=self.required, from_=0, increment=1, to=10000)
+        required_sb = ttk.Spinbox(parameters_frame, textvariable=self.required,
+                                  from_=6, increment=1, to=10000)
 
         spacing_text = ttk.Label(parameters_frame, text="spacing")
-        spacing_sb = ttk.Spinbox(parameters_frame, textvariable=self.spacing, from_=0, increment=100, to=100000)
+        spacing_sb = ttk.Spinbox(parameters_frame, textvariable=self.spacing,
+                                 from_=1, increment=100, to=100000)
 
         firstyear_text = ttk.Label(parameters_frame, text="first year")
-        firstyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.firstyear)
+        firstyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.firstyear,
+                                   from_=1871, increment=1, to=datetime.datetime.now().year)
 
         lastyear_text = ttk.Label(parameters_frame, text="last year")
-        lastyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.lastyear)
+        lastyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.lastyear,
+                                  from_=1871, increment=1, to=datetime.datetime.now().year)
 
         radius_text.grid(row=0, column=0, sticky=tk.W, pady=2)
         radius_sb.grid(row=0, column=1, sticky=tk.W, pady=2)
@@ -245,13 +259,15 @@ class View(tk.Tk):
         lastyear_sb.grid(row=4, column=1, sticky=tk.W, pady=2)
 
         # Fill the buttons frame
-        run_button = ttk.Button(buttons_frame, text="Run", command=self.run_button_pressed)
-        save_button = ttk.Button(buttons_frame, text="Save", command=self.save_button_pressed)
-        exit_button = ttk.Button(buttons_frame, text="Exit", command=self.exit_button_pressed)
+        self.run_button = ttk.Button(buttons_frame, text="Run", command=self.run_button_pressed)
+        self.save_button = ttk.Button(buttons_frame, text="Save", command=self.save_button_pressed, state=tk.DISABLED)
+        self.about_button = ttk.Button(buttons_frame, text="About", command=self.about_button_pressed)
+        self.exit_button = ttk.Button(buttons_frame, text="Exit", command=self.exit_button_pressed)
 
-        exit_button.pack(side=tk.BOTTOM, pady=2)
-        save_button.pack(side=tk.BOTTOM, pady=2)
-        run_button.pack(side=tk.BOTTOM, pady=2)
+        self.exit_button.pack(side=tk.BOTTOM, pady=2)
+        self.about_button.pack(side=tk.BOTTOM, pady=2)
+        self.save_button.pack(side=tk.BOTTOM, pady=2)
+        self.run_button.pack(side=tk.BOTTOM, pady=2)
 
 
     def on_venue_type_select(self, event):
@@ -260,15 +276,15 @@ class View(tk.Tk):
         self.frame_frame.grid_forget()
 
         if self.venue_type.get() == "Neighborhood":
-            self.neighborhood_frame.grid(row=1, column=1, columnspan=2)
+            self.neighborhood_frame.grid(row=1, column=1, columnspan=3)
         elif self.venue_type.get() == "Frame":
-            self.frame_frame.grid(row=1, column=1, columnspan=2)
+            self.frame_frame.grid(row=1, column=1, columnspan=3)
         else:
             self.selection_name = None
             self.selection_code = None
             self.selection_index = None
 
-            self.selection_frame.grid(row=1, column=1, columnspan=2)
+            self.selection_frame.grid(row=1, column=1, columnspan=3)
             self.enumerated_venue_list = self.enumerated_venue_data[self.venue_type.get()]
             self.selection_text.set("")
             self.selection_tree.heading("#1", text=self.venue_codes[self.venue_type.get()])
@@ -290,9 +306,9 @@ class View(tk.Tk):
         self.selection_tree.delete(*self.selection_tree.get_children())
         for row in venues:
             if row[1] == self.selection_index:
-                self.selection_tree.insert('', 'end', text=row[0][0], values=(f"{row[0][1]}", row[1]), tags="current")
+                self.selection_tree.insert("", "end", text=row[0][0], values=(f"{row[0][1]}", row[1]), tags="current")
             else:
-                self.selection_tree.insert('', 'end', text=row[0][0], values=(f"{row[0][1]}", row[1]))
+                self.selection_tree.insert("", "end", text=row[0][0], values=(f"{row[0][1]}", row[1]))
 
     def on_selection(self, event):
         selection = self.selection_tree.selection()
@@ -305,31 +321,42 @@ class View(tk.Tk):
         self.selection_text.set(item["text"])
 
     def run_button_pressed(self):
-        if self.venue_type.get() == "Neighborhood":
-            selected_venue = {
-                "type": "Neighborhood",
-                "name": "Neighborhood",
-                "easting": self.neighborhood_easting.get(),
-                "northing": self.neighborhood_northing.get(),
-                "radius": self.neighborhood_radius.get()
-            }
-        elif self.venue_type.get() == "Frame":
-            selected_venue = {
-                "type": "Frame",
-                "name": "Frame",
-                "minimum_easting": self.frame_minimum_easting.get(),
-                "maximum_easting": self.frame_maximum_easting.get(),
-                "minimum_northing": self.frame_minimum_northing.get(),
-                "maximum_northing": self.frame_maximum_northing.get()
-            }
-        else:
-            selected_venue = {
-                "type": self.venue_type.get(),
-                "name": self.selection_name,
-                "code": self.selection_code,
-                "index": self.selection_index
-            }
+        valid_run = True
 
+        # Set up the venue.
+        try:
+            if self.venue_type.get() == "Neighborhood":
+                selected_venue = {
+                    "type": "Neighborhood",
+                    "name": "Neighborhood",
+                    "easting": self.neighborhood_easting.get(),
+                    "northing": self.neighborhood_northing.get(),
+                    "radius": self.neighborhood_radius.get()
+                }
+            elif self.venue_type.get() == "Frame":
+                selected_venue = {
+                    "type": "Frame",
+                    "name": "Frame",
+                    "minimum_easting": self.frame_minimum_easting.get(),
+                    "maximum_easting": self.frame_maximum_easting.get(),
+                    "minimum_northing": self.frame_minimum_northing.get(),
+                    "maximum_northing": self.frame_maximum_northing.get()
+                }
+            elif self.venue_type.get() in ["City", "Township", "County", "Watershed", "Subregion"]:
+                selected_venue = {
+                    "type": self.venue_type.get(),
+                    "name": self.selection_name,
+                    "code": self.selection_code,
+                    "index": self.selection_index
+                }
+            else:
+                raise NotImplementedError
+
+        except (NotImplementedError, TypeError):
+            valid_run = False
+            messagebox.showerror(title="AkeyaPy", message="You must select a venue first.")
+
+        # Set up the aquifers
         selected_aquifers = ""
         if self.cxxx.get():
             selected_aquifers += "C"
@@ -352,6 +379,11 @@ class View(tk.Tk):
         if self.uxxx.get():
             selected_aquifers += "U"
 
+        if not selected_aquifers:
+            valid_run = False
+            messagebox.showerror(title="AkeyaPy", message="At least one aquifer class must be selected.")
+
+        # Set up the parameters
         selected_parameters = {
             "radius": self.radius.get(),
             "required": self.required.get(),
@@ -359,11 +391,26 @@ class View(tk.Tk):
             "firstyear": self.firstyear.get(),
             "lastyear": self.lastyear.get()
         }
+        if selected_parameters["firstyear"] > selected_parameters["lastyear"]:
+            valid_run = False
+            messagebox.showerror(title="AkeyaPy", message="The first year must be less than or equal to last year.")
 
-        self.run_callback(selected_venue, selected_aquifers, selected_parameters)
+        # Run the model
+        if valid_run:
+            self.run_callback(selected_venue, selected_aquifers, selected_parameters)
+            self.save_button["state"] = tk.NORMAL
 
     def save_button_pressed(self):
         print("<save> button pressed")
+        filename = filedialog.asksaveasfilename(defaultextension="csv")
+        if filename:
+            self.save_callback(filename)
+
+    def about_button_pressed(self):
+        messagebox.showinfo(
+            title="AkeyaaPy",
+            message="AkeyaaPy 0.9\n16 August 2020\nUniversity of Minnesota"
+        )
 
     def exit_button_pressed(self):
         print("<exit> button pressed")

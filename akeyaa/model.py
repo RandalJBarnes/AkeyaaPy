@@ -55,7 +55,28 @@ def model_by_venue(wells, venue, aquifers, parameters):
         aquifers present will be included. The default is DEFAULT_AQUIFERS.
 
     parameters : dictionary
+        ["radius"]:
+            "required": self.required.get(),
+            "spacing": self.spacing.get(),
+            "firstyear": self.firstyear.get(),
+            "lastyear": self.lastyear.get()
 
+        ["radius"] : float
+            Search radius for neighboring wells. radius >= 1.
+
+        ["required"] : int
+            Required number of neighboring wells. If fewer are found, the
+            target location is skipped. required >= 6.
+
+        ["spacing"] : float
+            Grid spacing for target locations across the county. spacing >= 1.
+
+
+        ["firstyear"] : int
+            Water levels measured before firstyear, YYYY, are not included.
+
+        ["lastyear"] : int
+            Water levels measured after lastyear, YYYY, are not included.
 
     Returns
     -------

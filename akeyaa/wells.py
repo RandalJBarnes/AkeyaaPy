@@ -1,9 +1,5 @@
-"""Define and implement the wells database.
+"""Create Wells database for very fast lookup based on coordinates or relateid."""
 
-Extract all of the necessary well data from the .gdb, and create an
-associated database for very fast lookup based on coordinates or relateid.
-
-"""
 from bisect import bisect_left
 from itertools import compress
 from operator import itemgetter
@@ -21,7 +17,10 @@ class Wells:
 
         Attributes
         ----------
-        welldata : list[tuple] (xy, z, aquifer, relateid)
+        welldata : list[tuple]
+            A list of well tuples sorted on the realteid. Each well tuple
+            includes (xy, z, aquifer, relateid), where
+
             xy : tuple (float, float)
                 The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
 
@@ -59,7 +58,7 @@ class Wells:
         *   The welldata is sorted in ascending order by the relateid to allow for
             quick searches on the relateid using the bisect tools.
 
-        *   The __relateid list is created as a search key.
+        *   The relateid list is created as a search key.
 
         """
         self.welldata = sorted(well_list, key=itemgetter(3))
@@ -163,7 +162,7 @@ class Wells:
         return []
 
 
-    def get_well(self, relateid):
+    def fetch_by_relateid(self, relateid):
         """Get the welldata for a single well by relateid.
 
         Parameters
