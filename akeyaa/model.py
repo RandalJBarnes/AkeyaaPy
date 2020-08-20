@@ -208,7 +208,7 @@ def fit_conic_potential(xytarget, xyz):
     """
     x = np.array([row[0][0] for row in xyz], dtype=float) - xytarget[0]
     y = np.array([row[0][1] for row in xyz], dtype=float) - xytarget[1]
-    z = np.array([row[1] for row in xyz], dtype=float) * 0.3048     # [ft] to [m].
+    z = np.array([row[1] for row in xyz], dtype=float) * 0.3048                 # [ft] to [m].
 
     exog = np.stack([x**2, y**2, x*y, x, y, np.ones(x.shape)], axis=1)
 
