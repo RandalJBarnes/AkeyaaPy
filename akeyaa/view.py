@@ -1,4 +1,9 @@
-"""Implement the graphical user interface, View class, for AkeyaaPy."""
+"""Implement the graphical user interface, View class, for AkeyaaPy.
+
+This file contains the entire graphical user interface for AkeyaaPy. This GUI
+is all built on tkinter, which is the default python GUI.
+
+"""
 
 import datetime
 import tkinter as tk
@@ -6,7 +11,7 @@ import tkinter.ttk as ttk
 from tkinter import messagebox, filedialog
 
 __author__ = "Randal J Barnes"
-__version__ = "16 August 2020"
+__version__ = "24 August 2020"
 
 
 class View(tk.Tk):

@@ -1,6 +1,5 @@
-"""Implement the Driver class for AkeyaaPy.
+"""Implement the Driver class for AkeyaaPy."""
 
-"""
 import bz2
 import csv
 import pickle
@@ -13,7 +12,7 @@ from akeyaa.model import model_by_venue
 from akeyaa.show import show_results_by_venue, show_aquifers_by_venue
 
 __author__ = "Randal J Barnes"
-__version__ = "16 August 2020"
+__version__ = "24 August 2020"
 
 
 # The following is a complete list of all 4-character aquifer codes used in
@@ -56,6 +55,10 @@ ALL_AQUIFERS = {
 class Driver:
     def __init__(self):
         """The controller/drive for the AkeyaaPy program.
+
+        The class is the go-between driver for the AkeyaaPy project. This driver controls
+        the comunication between the input from the graphical user interface, the computations,
+        and the output.
 
         Notes
         -----
@@ -116,15 +119,59 @@ class Driver:
         self.view.mainloop()
 
     def run_callback(self, selected_venue, selected_aquifers, parameters):
-        """Run the AkeyaaPy model.
+        """Run the AkeyaaPy model and create the resulting plots.
 
-        Parameters
-        ----------
-        selected_venue :
+        Arguments
+        ---------
+        selected_venue : dictionary
+            The contents of the dictionary depends on the venue type. In all
+            cases the dictionary includes a string value named "type".
 
-        selected_aquifers :
+            If selected_venue["type"] == "Neighborhood" then the dictionary also
+            includes:
+                "name" : the name of the neighborhood.
+                "easting": the neighborhood's center point easting.
+                "northing": the neighborhood's center point northing.
+                "radius": the radius of the neighborhood.
 
-        parameters :
+            If selected_venue["type"] == "Frame " then the dictionary also
+            includes:
+                "name": the name of the frame.
+                "minimum_easting": the frame's minimum easting (left).
+                "maximum_easting": the frame's maximum easting (right).
+                "minimum_northing": the frame's minimum northing (bottom).
+                "maximum_northing": the frame's maximum northing (top).
+
+            If selected_venue["type"] in ["City", "Township", "County",
+            "Watershed", "Subregion"] then the dictionary also includes:
+                "name": the name of the venue.
+                "code": the venue's unique code.
+                "index": the venue's index into the corresponding list.
+
+        selected_aquifers : string
+            A single character string including the first letter of each
+            geologic aquifer group to be included in the analysis. For example,
+            if the selected_aquifers == "CDIKMOPQRU", then all aquifers would
+            be included. If selected_aquifers == "Q" then only aquifers with a
+            quaternary code ("QBAA", "QBUA", "QUUU", "QWTA") would be included
+            in the analysis.
+
+        parameters : dictionary
+            "radius": float
+                The search radius for each Akeyaa analysis.
+            "required": int
+                The minimum required number of measurements within the serach
+                radius for a valid analysis.
+            "spacing": float
+                The grid spacing within the venue.
+            "firstyear": int
+                Only water level measurements taken during this year or later
+                are used in the Akeyaa analysis. firstyear is of the form
+                "YYYY". For example 1985.
+            "lastyear": int
+                Only water level measurements taken during this year or earlier
+                are used in the Akeyaa analysis. lastyear is of the form
+                "YYYY". For example 2020.
 
         Returns
         -------

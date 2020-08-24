@@ -2,7 +2,7 @@
 AkeyaaPy
 ========
 
-Compute flow directions using a locally-fitted conic discharge potential model.
+Compute a grid of flow directions across a specified venue using a locally-fitted conic discharge potential model.
 
 
 Venues
@@ -17,7 +17,6 @@ currently include:
     - Subregion
     - Neighborhood
     - Frame
-    - Patch
 
 
 Data
@@ -68,8 +67,8 @@ For each remaining target location, all wells that satisfy the following criteri
 
 - the well is within a horizontal distance of `radius` of the target location,
 - the well is completed in one or more of the `aquifers`,
-- the water level measurement date is on or after `after`, and
-- the water level measurement date is on or before `before`.
+- the water level measurement date is on or after `firstyear`, and
+- the water level measurement date is on or before `lastyear`.
 
 If a target location has fewer than `required` identified (neighboring) wells it is discarded.
 
