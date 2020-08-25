@@ -53,56 +53,59 @@ ALL_AQUIFERS = {
 
 
 class Driver:
+    """The controller/driver for the AkeyaaPy program.
+
+    The class is the go-between driver for the AkeyaaPy project. This driver controls
+    the comunication between the input from the graphical user interface, the computations,
+    and the output.
+
+    Notes
+    -----
+    * This program imports two, large, externally created data sets from two
+        bzip2 pickle files:
+        -- Akeyaa_Wells.pklz --> well_list
+        -- Akeyaa_Venues.pklz --> venue_data
+
+    * The well_list contains select information for all "admissible" wells in
+        the Minnesota CWI database. For a well to be "admissible" it must have
+        the following five data fields: RELATEID, UTME, UTMN, MEAS_ELEV,
+        MEAS_DATE, and AQUIFER.
+
+    * The well_list is a list of tuple, with one tuple per well.
+        well_list : list[tuple] (xy, z, aquifer, relateid)
+            xy : tuple (float, float)
+                The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
+
+            z : float
+                The recorded static water level [ft]
+
+            aquifer : str
+                The 4-character aquifer abbreviation string, as defined in
+                Minnesota Geologic Survey's coding system.
+
+            relateid : str
+                The unique 10-digit well number encoded as a string with
+                leading zeros.
+
+            date : int
+                Recorded measurement date written as YYYYMMDD.
+
+        For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
+
+    * There are five venue types included in the venue_data: City, Township,
+        County, Watershed, and Subregion.
+
+    * Each venue includes four components: a name, an identifying number or
+        id string, a list of polygon vertices, and the centroid of the polygon.
+
+    * All coordinates, polygon vertices and centroids, are given in Minnesota's
+        standard 'NAD 1983 UTM zone 15N' (EPSG:26915).
+
+    """
+
     def __init__(self):
-        """The controller/drive for the AkeyaaPy program.
+        """Initialize the entire AkeyaaPy system."""
 
-        The class is the go-between driver for the AkeyaaPy project. This driver controls
-        the comunication between the input from the graphical user interface, the computations,
-        and the output.
-
-        Notes
-        -----
-        * This program imports two, large, externally created data sets from two
-            bzip2 pickle files:
-            -- Akeyaa_Wells.pklz --> well_list
-            -- Akeyaa_Venues.pklz --> venue_data
-
-        * The well_list contains select information for all "admissible" wells in
-            the Minnesota CWI database. For a well to be "admissible" it must have
-            the following five data fields: RELATEID, UTME, UTMN, MEAS_ELEV,
-            MEAS_DATE, and AQUIFER.
-
-        * The well_list is a list of tuple, with one tuple per well.
-            well_list : list[tuple] (xy, z, aquifer, relateid)
-                xy : tuple (float, float)
-                    The x- and y-coordinates in "NAD 83 UTM 15N" (EPSG:26915) [m].
-
-                z : float
-                    The recorded static water level [ft]
-
-                aquifer : str
-                    The 4-character aquifer abbreviation string, as defined in
-                    Minnesota Geologic Survey's coding system.
-
-                relateid : str
-                    The unique 10-digit well number encoded as a string with
-                    leading zeros.
-
-                date : int
-                    Recorded measurement date written as YYYYMMDD.
-
-            For example: ((232372.0, 5377518.0), 964.0, 'QBAA', '0000153720', '19650322')
-
-        * There are five venue types included: City, Township, County, Watershed,
-            and Subregion.
-
-        * Each venue includes four components: a name, an identifying number or
-            id string, a list of polygon vertices, and the centroid of the polygon.
-
-        * All coordinates, polygon vertices and centroids, are given in Minnesota's
-            standard 'NAD 1983 UTM zone 15N' (EPSG:26915).
-
-        """
         # Get the pre-digested well data.
         pklzfile = r"..\data\Akeyaa_Wells.pklz"
         with bz2.open(pklzfile, "rb") as fileobject:
@@ -113,6 +116,11 @@ class Driver:
         pklzfile = r"..\data\Akeyaa_Venues.pklz"
         with bz2.open(pklzfile, "rb") as fileobject:
             self.venue_data = pickle.load(fileobject)
+
+        # Initialize the results.
+        self.results = None
+        self.target_values = None
+        self.aquifer_info = None
 
         # Execute the graphical user interface.
         self.view = View(self.venue_data, self.run_callback, self.save_callback)

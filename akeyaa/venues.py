@@ -251,6 +251,7 @@ class Neighborhood(Circle):
             self.name = name
         else:
             self.name = "Neighborhood"
+
         Circle.__init__(point, radius)
 
     def __repr__(self):

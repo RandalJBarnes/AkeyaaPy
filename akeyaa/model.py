@@ -33,7 +33,7 @@ import numpy as np
 import statsmodels.api as sm
 
 __author__ = "Randal J Barnes"
-__version__ = "16 August 2020"
+__version__ = "24 August 2020"
 
 
 def model_by_venue(wells, venue, aquifers, parameters):
@@ -96,7 +96,7 @@ def model_by_venue(wells, venue, aquifers, parameters):
     akeyaa.wells
 
     """
-    targets = layout_the_targets(wells, venue, parameters["spacing"])
+    targets = layout_the_targets(venue, parameters["spacing"])
 
     results = []
     for xytarget in targets:
@@ -115,7 +115,7 @@ def model_by_venue(wells, venue, aquifers, parameters):
     return results
 
 
-def layout_the_targets(self, venue, spacing):
+def layout_the_targets(venue, spacing):
     """Determine the evenly-spaced locations of the x and y grid lines.
 
     The grid lines of target locations are anchored at the centroid of the
@@ -163,7 +163,7 @@ def layout_the_targets(self, venue, spacing):
     xygrd = []
     for x in xgrd:
         for y in ygrd:
-            xygrd.append((x,y))
+            xygrd.append((x, y))
     flag = venue.contains_points(xygrd)
     return list(compress(xygrd, flag))
 

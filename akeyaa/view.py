@@ -15,6 +15,8 @@ __version__ = "24 August 2020"
 
 
 class View(tk.Tk):
+    """The tkinter-based View class."""
+
     def __init__(self, venue_data, run_callback, save_callback):
         super().__init__()
 
@@ -70,6 +72,8 @@ class View(tk.Tk):
         # Fill the Selection frame (a sub-frame in the Venue frame).
         self.selection_frame = ttk.Frame(venue_frame)
 
+        self.selection_name = None
+        self.selection_code = None
         self.selection_index = None
         self.enumerated_venue_list = None
 
@@ -85,7 +89,8 @@ class View(tk.Tk):
         style = ttk.Style()
         style.map(
             "Treeview",
-            background=[elm for elm in style.map("Treeview", query_opt="background") if elm[:2] != ('!disabled', '!selected')]
+            background=[elm for elm in style.map("Treeview", query_opt="background")
+                        if elm[:2] != ('!disabled', '!selected')]
         )
 
         self.selection_tree = ttk.Treeview(self.selection_frame, columns=("#1"), selectmode="browse")
@@ -274,8 +279,9 @@ class View(tk.Tk):
         self.save_button.pack(side=tk.BOTTOM, pady=2)
         self.run_button.pack(side=tk.BOTTOM, pady=2)
 
-
     def on_venue_type_select(self, event):
+        """When a venue-type is selected setup the selection tree."""
+
         self.selection_frame.grid_forget()
         self.neighborhood_frame.grid_forget()
         self.frame_frame.grid_forget()
@@ -296,6 +302,8 @@ class View(tk.Tk):
             self.selection_tree_update(self.enumerated_venue_list)
 
     def on_change_selection_text(self, *args):
+        """When the selection text changes update the set of candidate venues."""
+
         value = self.selection_text.get()
         value = value.strip().lower()
         if value == "":
@@ -308,6 +316,8 @@ class View(tk.Tk):
         self.selection_tree_update(venues)
 
     def selection_tree_update(self, venues):
+        """Reinitialize the tree with the current candidates."""
+
         self.selection_tree.delete(*self.selection_tree.get_children())
         for row in venues:
             if row[1] == self.selection_index:
@@ -316,16 +326,20 @@ class View(tk.Tk):
                 self.selection_tree.insert("", "end", text=row[0][0], values=(f"{row[0][1]}", row[1]))
 
     def on_selection(self, event):
+        """When a specific venue is selected, update the internal variables."""
+
         selection = self.selection_tree.selection()
         item = self.selection_tree.item(selection)
 
         self.selection_name = item["text"]
         self.selection_code = item["values"][0]
         self.selection_index = item["values"][1]
-
         self.selection_text.set(item["text"])
 
     def run_button_pressed(self):
+        """When the run button is pressed, check that the current input is valid
+        and complete, then execute the run callback."""
+
         valid_run = True
 
         # Set up the venue.
@@ -406,17 +420,24 @@ class View(tk.Tk):
             self.save_button["state"] = tk.NORMAL
 
     def save_button_pressed(self):
+        """When the save button is pressed, execute the save callback."""
+
         print("<save> button pressed")
         filename = filedialog.asksaveasfilename(defaultextension="csv")
         if filename:
             self.save_callback(filename)
 
     def about_button_pressed(self):
+        """When the about button is pressed, popup a simple about box."""
+
         messagebox.showinfo(
             title="AkeyaaPy",
-            message="AkeyaaPy 0.9\n16 August 2020\nUniversity of Minnesota"
+            message="AkeyaaPy 0.9\n24 August 2020\nUniversity of Minnesota"
         )
 
     def exit_button_pressed(self):
+        """When the exit button is pressed, destroy the gui windows and return
+        to the driver."""
+
         print("<exit> button pressed")
         self.destroy()
