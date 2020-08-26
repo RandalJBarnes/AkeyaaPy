@@ -40,7 +40,7 @@ import seaborn as sns
 import akeyaa.pnorm as pnorm
 
 __author__ = "Randal J Barnes"
-__version__ = "24 August 2020"
+__version__ = "26 August 2020"
 
 FIGSIZE = (10, 8)               # initial figure size [in]
 
@@ -152,7 +152,7 @@ def local_flow_direction(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Local Flow Directions", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" +"Vertically-averaged Flow Directions", {"fontsize": 18})
     plt.grid(True)
 
     return (xtarget, ytarget, xvec, yvec, p10)
@@ -182,7 +182,7 @@ def local_number_of_wells(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Number of Local Wells", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" +"Well Count", {"fontsize": 18})
     plt.grid(True)
 
     return (xtarget, ytarget, ntarget)
@@ -215,7 +215,7 @@ def local_head(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Local Vertically-averaged Head", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" + "Vertically-averaged Head", {"fontsize": 18})
     plt.grid(True)
 
     return (xtarget, ytarget, head)
@@ -249,7 +249,7 @@ def local_gradient(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Local Vertically-averaged Gradient", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" + "Vertically-averaged Gradient", {"fontsize": 18})
     plt.grid(True)
 
     return (xtarget, ytarget, magnitude)
@@ -290,7 +290,7 @@ def local_laplacian_zscore(venue, results):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Local Vertically-averaged Laplacian Z-score", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" + "Vertically-averaged Laplacian Z-score", {"fontsize": 18})
     plt.grid(True)
 
     return (xtarget, ytarget, score)
@@ -382,7 +382,7 @@ def show_aquifers_by_venue(wells, venue, aquifers, parameters):
 
     plt.xlabel("Easting [m]")
     plt.ylabel("Northing [m]")
-    plt.title(venue.fullname() + " Wells Coded By Aquifer", {"fontsize": 18})
+    plt.title(venue.fullname() + "\n" + "Well Aquifer Codes", {"fontsize": 18})
     plt.grid(True)
     plt.show(block=False)
 

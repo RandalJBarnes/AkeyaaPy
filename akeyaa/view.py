@@ -8,10 +8,11 @@ is all built on tkinter, which is the default python GUI.
 import datetime
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.font as tkfont
 from tkinter import messagebox, filedialog
 
 __author__ = "Randal J Barnes"
-__version__ = "24 August 2020"
+__version__ = "26 August 2020"
 
 
 class View(tk.Tk):
@@ -19,6 +20,19 @@ class View(tk.Tk):
 
     def __init__(self, venue_data, run_callback, save_callback):
         super().__init__()
+
+        # Use the official University of Minnesota colors of maroon (#7a0019) and gold (#ffcc33)
+
+        default_font = tkfont.nametofont("TkDefaultFont")
+        default_font.configure(size=12)
+
+        self.configure(background="#ffcc33")
+        self.option_add("*background", "#ffcc33")
+        self.option_add("*TCombobox*Listbox*background", "#ffffff")
+
+        s = ttk.Style()
+        s.configure(".", background="#ffcc33")
+        s.configure("TButton", font=("calibri", 14, "bold"), foreground="#7a0019")
 
         # Initialize.
         self.enumerated_venue_data = {
@@ -40,24 +54,26 @@ class View(tk.Tk):
         self.save_callback = save_callback
 
         # Main window.
+        self.iconphoto(False, tk.PhotoImage(file='M.png'))
         self.title("AkeyaaPy")
+        self.resizable(False, False)
 
         # Set up the four main frames
-        venue_frame = ttk.LabelFrame(self, text="Venue", padding=5)
-        parameters_frame = ttk.LabelFrame(self, text="Parameters", padding=5)
-        aquifers_frame = ttk.LabelFrame(self, text="Aquifers", padding=5)
-        buttons_frame = ttk.Frame(self, padding=5)
+        venue_frame = tk.LabelFrame(self,      text="Venue",      padx=10, pady=10)
+        parameters_frame = tk.LabelFrame(self, text="Parameters", padx=10, pady=10)
+        aquifers_frame = tk.LabelFrame(self,   text="Aquifers",   padx=10, pady=10)
+        buttons_frame = tk.Frame(self,                            padx=10, pady=10)
 
-        venue_frame.grid(row=0, column=0, rowspan=2, sticky=tk.NW)
-        aquifers_frame.grid(row=0, column=1, rowspan=2, sticky=tk.NW)
-        parameters_frame.grid(row=0, column=2, sticky=tk.NW)
-        buttons_frame.grid(row=1, column=2, columnspan=2, sticky=tk.E)
+        venue_frame.grid(     row=0, column=0, rowspan=2,    padx=5, pady=5, sticky=tk.NW)
+        aquifers_frame.grid(  row=0, column=1, rowspan=2,    padx=5, pady=5, sticky=tk.NW)
+        parameters_frame.grid(row=0, column=2,               padx=5, pady=5, sticky=tk.NW)
+        buttons_frame.grid(   row=1, column=2, columnspan=2, padx=5, pady=5, sticky=tk.E)
 
         # Fill the Venue frame
         venue_types = ["City", "Township", "County", "Watershed", "Subregion", "Neighborhood", "Frame"]
         self.venue_type = tk.StringVar(value=None)
 
-        venue_label = ttk.Label(venue_frame, text="type")
+        venue_label = ttk.Label(venue_frame, text="Type ", justify=tk.LEFT)
         venue_cb = ttk.Combobox(
             venue_frame,
             state="readonly",
@@ -80,7 +96,7 @@ class View(tk.Tk):
         self.selection_text = tk.StringVar()
         self.selection_text.trace("w", self.on_change_selection_text)
 
-        selection_label = ttk.Label(self.selection_frame, text="name")
+        selection_label = ttk.Label(self.selection_frame, text="Name ")
         entry = ttk.Entry(self.selection_frame, textvariable=self.selection_text, width=33)
         entry.focus_set()
 
@@ -100,7 +116,7 @@ class View(tk.Tk):
         self.selection_tree.column("#1", width=100)
 
         self.selection_tree.bind("<<TreeviewSelect>>", self.on_selection)
-        self.selection_tree.tag_configure("current", background="orange")
+        self.selection_tree.tag_configure("current", background="#ffcc33")
 
         # entry.pack(fill=tk.X, expand=0)
         # self.selection_tree.pack(fill=tk.BOTH, expand=1)
@@ -116,21 +132,21 @@ class View(tk.Tk):
         self.neighborhood_northing = tk.DoubleVar(value=4980337.72)             # Univeristy of Minnesota
         self.neighborhood_radius = tk.DoubleVar(value=10000)                    # Go Gophers!
 
-        easting_text = ttk.Label(self.neighborhood_frame, text="easting")
+        easting_text = ttk.Label(self.neighborhood_frame, text="Easting ")
         easting_sb = ttk.Spinbox(
             self.neighborhood_frame,
             textvariable=self.neighborhood_easting,
             from_=189783, increment=100, to=761654                              # min & max for MN
         )
 
-        northing_text = ttk.Label(self.neighborhood_frame, text="northing")
+        northing_text = ttk.Label(self.neighborhood_frame, text="Northing ")
         northing_sb = ttk.Spinbox(
             self.neighborhood_frame,
             textvariable=self.neighborhood_northing,
             from_=4816309, increment=100, to=5472347                            # min & max for MN
         )
 
-        radius_text = ttk.Label(self.neighborhood_frame, text="radius")
+        radius_text = ttk.Label(self.neighborhood_frame, text="Radius ")
         radius_sb = ttk.Spinbox(
             self.neighborhood_frame,
             textvariable=self.neighborhood_radius,
@@ -152,10 +168,10 @@ class View(tk.Tk):
         self.frame_minimum_northing = tk.DoubleVar(value=4980337.72 - 10000)    # Go Gophers!
         self.frame_maximum_northing = tk.DoubleVar(value=4980337.72 + 10000)
 
-        easting_text = tk.Label(self.frame_frame, text="easting")
-        northing_text = tk.Label(self.frame_frame, text="northing")
-        minimum_text = tk.Label(self.frame_frame, text="minimum")
-        maximum_text = tk.Label(self.frame_frame, text="maximum")
+        easting_text = tk.Label(self.frame_frame, text="Easting ")
+        northing_text = tk.Label(self.frame_frame, text="Northing ")
+        minimum_text = tk.Label(self.frame_frame, text="Minimum")
+        maximum_text = tk.Label(self.frame_frame, text="Maximum")
 
         minimum_easting_sb = tk.Spinbox(
             self.frame_frame,
@@ -233,23 +249,23 @@ class View(tk.Tk):
         self.firstyear = tk.IntVar(value=1871)
         self.lastyear = tk.IntVar(value=datetime.datetime.now().year)
 
-        radius_text = ttk.Label(parameters_frame, text="radius")
+        radius_text = ttk.Label(parameters_frame, text="Radius ")
         radius_sb = ttk.Spinbox(parameters_frame, textvariable=self.radius,
                                 from_=1, increment=100, to=1000000)
 
-        required_text = ttk.Label(parameters_frame, text="required")
+        required_text = ttk.Label(parameters_frame, text="Required ")
         required_sb = ttk.Spinbox(parameters_frame, textvariable=self.required,
                                   from_=6, increment=1, to=10000)
 
-        spacing_text = ttk.Label(parameters_frame, text="spacing")
+        spacing_text = ttk.Label(parameters_frame, text="Spacing ")
         spacing_sb = ttk.Spinbox(parameters_frame, textvariable=self.spacing,
                                  from_=1, increment=100, to=100000)
 
-        firstyear_text = ttk.Label(parameters_frame, text="first year")
+        firstyear_text = ttk.Label(parameters_frame, text="First year ")
         firstyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.firstyear,
                                    from_=1871, increment=1, to=datetime.datetime.now().year)
 
-        lastyear_text = ttk.Label(parameters_frame, text="last year")
+        lastyear_text = ttk.Label(parameters_frame, text="Last year ")
         lastyear_sb = ttk.Spinbox(parameters_frame, textvariable=self.lastyear,
                                   from_=1871, increment=1, to=datetime.datetime.now().year)
 
@@ -269,7 +285,7 @@ class View(tk.Tk):
         lastyear_sb.grid(row=4, column=1, sticky=tk.W, pady=2)
 
         # Fill the buttons frame
-        self.run_button = ttk.Button(buttons_frame, text="Run", command=self.run_button_pressed)
+        self.run_button = ttk.Button(buttons_frame, text="Run", command=self.run_button_pressed, state=tk.DISABLED)
         self.save_button = ttk.Button(buttons_frame, text="Save", command=self.save_button_pressed, state=tk.DISABLED)
         self.about_button = ttk.Button(buttons_frame, text="About", command=self.about_button_pressed)
         self.exit_button = ttk.Button(buttons_frame, text="Exit", command=self.exit_button_pressed)
@@ -281,7 +297,6 @@ class View(tk.Tk):
 
     def on_venue_type_select(self, event):
         """When a venue-type is selected setup the selection tree."""
-
         self.selection_frame.grid_forget()
         self.neighborhood_frame.grid_forget()
         self.frame_frame.grid_forget()
@@ -303,7 +318,6 @@ class View(tk.Tk):
 
     def on_change_selection_text(self, *args):
         """When the selection text changes update the set of candidate venues."""
-
         value = self.selection_text.get()
         value = value.strip().lower()
         if value == "":
@@ -313,21 +327,24 @@ class View(tk.Tk):
             for row in self.enumerated_venue_list:
                 if value in row[0][0].lower():
                     venues.append(row)
+
+        if len(venues) > 1:
+            self.selection_index = None
         self.selection_tree_update(venues)
 
     def selection_tree_update(self, venues):
         """Reinitialize the tree with the current candidates."""
-
         self.selection_tree.delete(*self.selection_tree.get_children())
         for row in venues:
             if row[1] == self.selection_index:
                 self.selection_tree.insert("", "end", text=row[0][0], values=(f"{row[0][1]}", row[1]), tags="current")
             else:
                 self.selection_tree.insert("", "end", text=row[0][0], values=(f"{row[0][1]}", row[1]))
+        if len(venues) > 1:
+            self.run_button["state"] = tk.DISABLED
 
     def on_selection(self, event):
         """When a specific venue is selected, update the internal variables."""
-
         selection = self.selection_tree.selection()
         item = self.selection_tree.item(selection)
 
@@ -335,11 +352,11 @@ class View(tk.Tk):
         self.selection_code = item["values"][0]
         self.selection_index = item["values"][1]
         self.selection_text.set(item["text"])
+        self.run_button["state"] = tk.NORMAL
 
     def run_button_pressed(self):
         """When the run button is pressed, check that the current input is valid
         and complete, then execute the run callback."""
-
         valid_run = True
 
         # Set up the venue.
@@ -421,7 +438,6 @@ class View(tk.Tk):
 
     def save_button_pressed(self):
         """When the save button is pressed, execute the save callback."""
-
         print("<save> button pressed")
         filename = filedialog.asksaveasfilename(defaultextension="csv")
         if filename:
@@ -429,15 +445,13 @@ class View(tk.Tk):
 
     def about_button_pressed(self):
         """When the about button is pressed, popup a simple about box."""
-
         messagebox.showinfo(
             title="AkeyaaPy",
-            message="AkeyaaPy 0.9\n24 August 2020\nUniversity of Minnesota"
+            message=f"AkeyaaPy 0.0.1\n{__version__}\nUniversity of Minnesota"
         )
 
     def exit_button_pressed(self):
         """When the exit button is pressed, destroy the gui windows and return
         to the driver."""
-
         print("<exit> button pressed")
         self.destroy()
